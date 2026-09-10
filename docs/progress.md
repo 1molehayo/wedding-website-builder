@@ -6,7 +6,54 @@ v1 is **one wedding per deploy**. Product: Marvelous & Lillian. Domain direction
 
 ---
 
-## What was pending when the chat stopped
+## Sep 10, 2026 — new backlog (do not forget)
+
+Logged after you reopened the project. Visual reference for the invitation card: the Marvelous & Lillian “Important communication” artwork (cream / navy / gold, florals, M | L).
+
+### Pending tasks
+
+1. **Public footer — drop “Built with Ìgbéyàwówa”**  
+   Keep `© Ìgbéyàwówa 2026`. Remove the extra “Built with …” line on the wedding site footer (`PublicShell`). Landing page has a similar line — confirm whether that stays.
+
+2. **RSVP + invite email: invitation image (soft copy of the card)**  
+   Feel like a physical invite: less body copy, prominent card image.  
+   - Default: generate a card with canvas (bride + groom names), save as an image, include it in the RSVP page and guest email.  
+   - Admin can upload a real invitation image; that **replaces** the generated default.  
+   - Needs a dedicated image section on RSVP (and matching email layout).  
+   Use the supplied invitation artwork as the design reference.
+
+3. **Clarify wedding settings `status`**  
+   Values today: **Planning**, **Date confirmed**, **Invitations sent**, **Completed**.  
+   **What it actually does in code now:**
+   - Saved as a field on the wedding row; shown as a badge on admin overview.
+   - **Publish date** can bump `planning` → `date_confirmed`.
+   - **RSVP closes** when status is `completed` (`isRsvpOpen`).
+   - It does **not** send invites, publish the date, or drive most public UI. Date visibility is `date_published_at`; emails are separate.  
+   **Open product question:** keep as a manual lifecycle, auto-derive from publish/invites, or remove the control so it is not confusing.
+
+4. **New page block: text content**  
+   Title + paragraph (reusable, not only “Our Story”). There is already a **Story** block (`title` + `body`) with a hardcoded nav label “Story”. Confirm whether this is a new generic `text` block (multiple times, nav from title) or a Story improvement.
+
+5. **Image block nav**  
+   Use the **block title** as the in-page nav link. Today every image block is labelled **Photos** (`getPublicSectionNav`).
+
+6. **Image block lightbox**  
+   Clicking the image opens a full-screen preview: keep aspect ratio (`object-contain`, not `object-cover`), max height = viewport.
+
+7. **Registry — especially Amazon gift registry**  
+   Registry UI exists (gift links + bank accounts + soft reserve) but **Amazon gift registry was never successfully tested**. Finish/verify that path.
+
+### Bugs
+
+1. **Guest invitation not reliable**  
+   Guest content is not persistent. Send / Saved changes looks **disabled**. Adding an email did **not** send the invite. Investigate save vs send, form dirty/disabled state, and Resend.
+
+2. **Admin route loader covers the whole page**  
+   Navigating to another admin page shows a loader over **sidebar + content**. Loader should cover **content only**. Sidebar stays visible but **must not be clickable** while loading. (`AdminOutletPending` is outlet-sized in code — check if a parent `RoutePending` / full-shell pending is still wrapping the layout.)
+
+---
+
+## What was pending when the chat stopped (Aug 13)
 
 ### 1. Needs your testing (code landed, not signed off)
 
@@ -100,10 +147,13 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 ## Suggested next session
 
-1. Smoke-test the overnight slice (emails, registry, date publish, admin chrome, slug/preview).
-2. Close remaining UI bugs: hero light overlay + Celeste navy with photo, navbar rest colour, admin dark flash, 404 flash, country/phone fields.
-3. Decide plus-one **policies** vs keep a number.
-4. Announcement bar, then last-phase Motion discussion.
-5. Launch checklist + Resend domain.
+1. **Fix Sep 10 bugs:** guest invite save/send + disabled button; admin loader overlay (content only, sidebar inert).
+2. Footer: remove “Built with Ìgbéyàwówa”; keep © line.
+3. Image block: title as nav + lightbox (`object-contain`, viewport max height).
+4. Text content block (title + paragraph).
+5. RSVP/email invitation card image (generated default + admin upload replace).
+6. Explain or simplify wedding **status**.
+7. Registry: test Amazon gift-registry flow.
+8. Then older smoke-test / UI bugs / announcement bar. Motion still last.
 
 Do not start Motion until you confirm the list above.
