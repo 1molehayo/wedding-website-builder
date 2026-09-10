@@ -20,7 +20,7 @@ export function ImageBlock({
     >
       <figure className="public-reveal">
         {block.fields.title || block.fields.description ? (
-          <figcaption className="mt-5 max-w-2xl">
+          <figcaption className="mb-5 max-w-2xl">
             {block.fields.title ? (
               <p className="font-serif text-2xl italic md:text-3xl">
                 {block.fields.title}

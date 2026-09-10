@@ -34,8 +34,11 @@ Logged after you reopened the project. Visual reference for the invitation card:
 4. **New page block: text content**  
    Title + paragraph (reusable, not only “Our Story”). There is already a **Story** block (`title` + `body`) with a hardcoded nav label “Story”. Confirm whether this is a new generic `text` block (multiple times, nav from title) or a Story improvement.
 
-5. **Image block nav**  
-   Use the **block title** as the in-page nav link. Today every image block is labelled **Photos** (`getPublicSectionNav`).
+5. **Image block nav (title is required)**  
+   Use the **block title** as the in-page nav link. Today every image block is labelled **Photos** (`getPublicSectionNav`).  
+   - Title is **compulsory** (cannot save an image block without one).  
+   - That title is what appears in the public nav.  
+   - **Max length** so it fits the nav (working default: **24 characters**; lock the number when implementing). Validate in admin and schema.
 
 6. **Image block lightbox**  
    Clicking the image opens a full-screen preview: keep aspect ratio (`object-contain`, not `object-cover`), max height = viewport.
@@ -149,7 +152,7 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 1. **Fix Sep 10 bugs:** guest invite save/send + disabled button; admin loader overlay (content only, sidebar inert).
 2. Footer: remove “Built with Ìgbéyàwówa”; keep © line.
-3. Image block: title as nav + lightbox (`object-contain`, viewport max height).
+3. Image block: required title (max ~24 chars) as nav + lightbox (`object-contain`, viewport max height).
 4. Text content block (title + paragraph).
 5. RSVP/email invitation card image (generated default + admin upload replace).
 6. Explain or simplify wedding **status**.
