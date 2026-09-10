@@ -21,7 +21,7 @@ export function ImageBlock({
       <figure className="public-reveal">
         <div
           className={cn(
-            'border-border bg-background-secondary relative aspect-[4/5] w-full overflow-hidden rounded-sm border md:aspect-[16/10]',
+            'relative aspect-4/5 w-full overflow-hidden rounded-sm md:aspect-16/10',
             !showImage && 'flex items-center justify-center',
           )}
         >
@@ -32,7 +32,7 @@ export function ImageBlock({
               loading="lazy"
               decoding="async"
               sizes="(min-width: 1024px) 64rem, 100vw"
-              className="public-image h-full w-full object-cover"
+              className="public-image h-full w-full object-contain"
               onError={() => setFailed(true)}
             />
           ) : (
