@@ -129,46 +129,6 @@ export function isPageContentLive(data: PageContentEditorData) {
   )
 }
 
-function isEmptyBlocks(blocks: PageBlock[]) {
-  return blocks.length === 0
-}
-
-/**
- * Empty JSON used to mean “starter sections”, not a blank page.
- * Keep a deliberate reset (empty draft newer than live) as empty.
- */
-export function resolveLoadedPageContent(
-  data: PageContentEditorData,
-  recoveredVersions: PageBlock[][] = [],
-): PageContentEditorData {
-  const { published, draftUpdatedAt, publishedAt } = data
-  const draft = data.draft
-  const resetAfterPublish =
-    isEmptyBlocks(draft) &&
-    !isEmptyBlocks(published) &&
-    draftUpdatedAt != null &&
-    publishedAt != null &&
-    new Date(draftUpdatedAt).getTime() > new Date(publishedAt).getTime()
-
-  if (resetAfterPublish) {
-    return data
-  }
-
-  if (isEmptyBlocks(draft) && !isEmptyBlocks(published)) {
-    return { ...data, draft: published }
-  }
-
-  if (isEmptyBlocks(draft) && isEmptyBlocks(published)) {
-    const recovered = recoveredVersions.find((blocks) => blocks.length > 0)
-    return {
-      ...data,
-      draft: recovered ?? createDefaultPageBlocks(),
-    }
-  }
-
-  return data
-}
-
 export function createDefaultPageBlocks(): PageBlock[] {
   return [
     createDefaultBlock('hero'),

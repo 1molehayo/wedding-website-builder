@@ -19,6 +19,7 @@
     "supabase:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:migrate": "npx supabase migration up",
+    "db:seed": "node scripts/db-seed.mjs",
     "db:link": "node scripts/db-link.mjs",
     "db:push": "node scripts/db-link.mjs && npx supabase db push"
   },

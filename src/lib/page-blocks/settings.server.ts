@@ -4,9 +4,7 @@ import {
   pageContentSchemaUserMessage,
 } from '@/lib/page-blocks/schema-error'
 import {
-  createDefaultPageBlocks,
   PAGE_CONTENT_VERSION_LIMIT,
-  resolveLoadedPageContent,
 } from '@/lib/page-blocks/types'
 import type {
   PageBlock,
@@ -41,7 +39,7 @@ function readStoredPageBlocks(value: unknown): PageBlock[] {
   try {
     return parsePageBlocks(value ?? [])
   } catch {
-    return createDefaultPageBlocks()
+    return []
   }
 }
 
@@ -161,40 +159,10 @@ async function recordPublishedVersion(
   }
 }
 
-async function recoverPageContent(
-  admin: ReturnType<typeof createAdminSupabaseClient>,
-  weddingId: string,
-  loaded: PageContentEditorData,
-): Promise<PageContentEditorData> {
-  if (loaded.draft.length > 0) return loaded
-
-  let recoveredVersions: PageBlock[][] = []
-  if (loaded.published.length === 0) {
-    const versions = await admin
-      .from('page_content_versions')
-      .select('page_blocks')
-      .eq('wedding_id', weddingId)
-      .order('published_at', { ascending: false })
-      .limit(PAGE_CONTENT_VERSION_LIMIT)
-
-    if (!versions.error) {
-      recoveredVersions = versions.data.map((row) =>
-        readVersionPageBlocks(row.page_blocks),
-      )
-    }
-  }
-
-  return resolveLoadedPageContent(loaded, recoveredVersions)
-}
-
 export async function getPageBlocksHandler(): Promise<PageContentEditorData> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
-  return recoverPageContent(
-    admin,
-    session.wedding.id,
-    toEditorData(await loadPageContentRow(admin, session.wedding.id)),
-  )
+  return toEditorData(await loadPageContentRow(admin, session.wedding.id))
 }
 
 export async function savePageBlocksDraftHandler(
@@ -330,12 +298,8 @@ export async function restorePageContentVersionHandler(
 
 async function resolvePublicPageBlocks(input: {
   slug: string
-  weddingId: string
-  admin: ReturnType<typeof createAdminSupabaseClient>
   liveBlocks: unknown
   draftBlocks: unknown
-  draftUpdatedAt: string | null
-  publishedAt: string | null
   preview: boolean
 }): Promise<{ page_blocks: PageBlock[]; isPreview: boolean }> {
   const published = readStoredPageBlocks(input.liveBlocks)
@@ -355,15 +319,8 @@ async function resolvePublicPageBlocks(input: {
     }
   }
 
-  const resolved = await recoverPageContent(input.admin, input.weddingId, {
-    draft: readStoredPageBlocks(input.draftBlocks ?? input.liveBlocks),
-    published,
-    draftUpdatedAt: input.draftUpdatedAt,
-    publishedAt: input.publishedAt,
-  })
-
   return {
-    page_blocks: resolved.draft,
+    page_blocks: readStoredPageBlocks(input.draftBlocks ?? input.liveBlocks),
     isPreview: true,
   }
 }
@@ -376,7 +333,7 @@ export async function getPublicHomeDataHandler(
   const liveSelect =
     'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks' as const
   const previewSelect =
-    'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks, page_blocks_draft, page_draft_updated_at, page_published_at' as const
+    'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks, page_blocks_draft' as const
   let servePreview = preview
   let result = servePreview
     ? await admin
@@ -415,8 +372,6 @@ export async function getPublicHomeDataHandler(
     id: string
     page_blocks: unknown
     page_blocks_draft?: unknown
-    page_draft_updated_at?: string | null
-    page_published_at?: string | null
     groom_name: string
     bride_name: string
     wedding_date: string | null
@@ -431,12 +386,8 @@ export async function getPublicHomeDataHandler(
 
   const { page_blocks, isPreview } = await resolvePublicPageBlocks({
     slug: weddingSlug,
-    weddingId: weddingRow.id,
-    admin,
     liveBlocks: weddingRow.page_blocks,
     draftBlocks: weddingRow.page_blocks_draft ?? weddingRow.page_blocks,
-    draftUpdatedAt: weddingRow.page_draft_updated_at ?? null,
-    publishedAt: weddingRow.page_published_at ?? null,
     preview: servePreview,
   })
   const imageUrls: Record<string, string> = {}
