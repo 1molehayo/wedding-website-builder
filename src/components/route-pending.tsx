@@ -12,7 +12,7 @@ export function RoutePending() {
 /** Inline pending state for admin shell outlet transitions. */
 export function AdminOutletPending() {
   return (
-    <div className="flex min-h-48 items-center justify-center py-16">
+    <div className="flex min-h-full flex-1 items-center justify-center py-16">
       <Spinner size="lg" className="text-accent" />
     </div>
   )

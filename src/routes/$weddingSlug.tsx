@@ -1,4 +1,9 @@
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
+import {
+  Link,
+  createFileRoute,
+  notFound,
+  redirect,
+} from '@tanstack/react-router'
 import { DynamicBlock } from '@/components/blocks/dynamic-block'
 import { RegistrySection } from '@/components/blocks/registry-section'
 import { PublicShell } from '@/components/public-shell'
@@ -33,7 +38,21 @@ function buildPublicDescription(input: {
   return `${parts.join(' · ')}.`
 }
 
+type PublicHomeSearch = {
+  preview?: boolean
+}
+
+function parsePreviewFlag(value: unknown) {
+  return value === true || value === '1' || value === 'true'
+}
+
 export const Route = createFileRoute('/$weddingSlug')({
+  validateSearch: (search: Record<string, unknown>): PublicHomeSearch => {
+    return parsePreviewFlag(search.preview) ? { preview: true } : {}
+  },
+  loaderDeps: ({ search }: { search: PublicHomeSearch }) => ({
+    preview: Boolean(search.preview),
+  }),
   beforeLoad: ({ params }) => {
     // Prefer redirects for platform paths so a match race never flashes 404
     // while navigating into /admin (same rule as FCP: notFound = missing resource only).
@@ -47,9 +66,11 @@ export const Route = createFileRoute('/$weddingSlug')({
       throw notFound()
     }
   },
-  loader: async ({ params }) => {
+  loader: async ({ params, deps }) => {
     try {
-      return await getPublicHomeData({ data: { slug: params.weddingSlug } })
+      return await getPublicHomeData({
+        data: { slug: params.weddingSlug, preview: deps.preview },
+      })
     } catch {
       throw notFound()
     }
@@ -74,12 +95,13 @@ export const Route = createFileRoute('/$weddingSlug')({
       ? `${origin}/api/photo?path=${encodeURIComponent(loaderData.ogImagePath)}`
       : undefined
     const isPlanning = loaderData?.status === 'planning'
+    const hideFromIndex = isPlanning || Boolean(loaderData?.isPreview)
 
     return {
       meta: [
         { title: coupleLabel },
         { name: 'description', content: description },
-        ...(isPlanning
+        ...(hideFromIndex
           ? [{ name: 'robots', content: 'noindex,nofollow' }]
           : []),
         { property: 'og:type', content: 'website' },
@@ -113,24 +135,34 @@ function WeddingPublicPage() {
   ]
 
   return (
-    <PublicShell
-      theme={home.active_public_theme}
-      coupleLabel={formatCoupleNames(home.groom_name, home.bride_name)}
-      weddingDate={home.wedding_date}
-      sectionNav={sectionNav}
-      homePath={`/${weddingSlug}`}
-    >
-      <main>
-        {home.page_blocks.map((block) => (
-          <DynamicBlock
-            key={block.id}
-            block={block}
-            wedding={home}
-            imageUrl={home.imageUrls[block.id]}
-          />
-        ))}
-        <RegistrySection initial={home.registry} />
-      </main>
-    </PublicShell>
+    <>
+      {home.isPreview ? (
+        <div className="bg-foreground text-background relative z-50 px-4 py-2 text-center text-sm">
+          Draft preview — not live.{' '}
+          <Link to="/admin/pages" className="underline underline-offset-2">
+            Back to editor
+          </Link>
+        </div>
+      ) : null}
+      <PublicShell
+        theme={home.active_public_theme}
+        coupleLabel={formatCoupleNames(home.groom_name, home.bride_name)}
+        weddingDate={home.wedding_date}
+        sectionNav={sectionNav}
+        homePath={`/${weddingSlug}`}
+      >
+        <main>
+          {home.page_blocks.map((block) => (
+            <DynamicBlock
+              key={block.id}
+              block={block}
+              wedding={home}
+              imageUrl={home.imageUrls[block.id]}
+            />
+          ))}
+          <RegistrySection initial={home.registry} />
+        </main>
+      </PublicShell>
+    </>
   )
 }

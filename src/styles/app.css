@@ -435,23 +435,18 @@ html[data-mode='dark'] .public-hero-photo-overlay {
 }
 
 .public-reveal {
-  opacity: 0;
-  transform: translateY(0.75rem);
-}
-
-.public-reveal.public-reveal-visible {
   animation: public-reveal 700ms var(--ease-emphasized-decelerate) both;
 }
 
-.public-reveal-delay-1.public-reveal-visible {
+.public-reveal-delay-1 {
   animation-delay: 120ms;
 }
 
-.public-reveal-delay-2.public-reveal-visible {
+.public-reveal-delay-2 {
   animation-delay: 220ms;
 }
 
-.public-reveal-delay-3.public-reveal-visible {
+.public-reveal-delay-3 {
   animation-delay: 320ms;
 }
 

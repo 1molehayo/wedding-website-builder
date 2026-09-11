@@ -16,7 +16,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState  } from 'react'
+import type {ReactNode} from 'react';
 import { OverviewCard } from '@/components/admin/overview-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -233,7 +234,7 @@ function AdminGuestsPage() {
     const payload = {
       first_name: parsed.firstName,
       last_name: parsed.lastName,
-      email: parsed.email ?? '',
+      email: parsed.email,
       phone: parsed.phone ?? '',
       party_name: parsed.partyName ?? '',
       plus_ones: parsed.plusOnes,
@@ -883,7 +884,7 @@ function AdminGuestsPage() {
                           <Field.Control>
                             <Input
                               type="email"
-                              value={field.state.value ?? ''}
+                              value={field.state.value}
                               invalid={invalid}
                               onBlur={field.handleBlur}
                               onChange={(event) =>
@@ -907,7 +908,7 @@ function AdminGuestsPage() {
                           <Field.Label>Phone</Field.Label>
                           <Field.Control>
                             <Input
-                              value={field.state.value ?? ''}
+                              value={field.state.value}
                               invalid={invalid}
                               onBlur={field.handleBlur}
                               onChange={(event) =>
@@ -927,7 +928,7 @@ function AdminGuestsPage() {
                         <Field.Label>Party / household</Field.Label>
                         <Field.Control>
                           <Input
-                            value={field.state.value ?? ''}
+                            value={field.state.value}
                             onBlur={field.handleBlur}
                             onChange={(event) =>
                               field.handleChange(event.target.value)
@@ -975,7 +976,7 @@ function AdminGuestsPage() {
                         <Field.Control>
                           <Textarea
                             rows={4}
-                            value={field.state.value ?? ''}
+                            value={field.state.value}
                             onBlur={field.handleBlur}
                             onChange={(event) =>
                               field.handleChange(event.target.value)
@@ -1215,6 +1216,7 @@ function AdminGuestsPage() {
           {!isCreating && selectedGuest ? (
             <Button
               type="button"
+              size="sm"
               variant="destructive"
               onClick={() => setDeleteOpen(true)}
             >
@@ -1223,7 +1225,7 @@ function AdminGuestsPage() {
           ) : (
             <span />
           )}
-          <Button type="submit" size="md" isLoading={isSaving}>
+          <Button type="submit" size="sm" isLoading={isSaving}>
             {isCreating ? 'Add guest' : 'Save changes'}
           </Button>
         </SideDrawer.Footer>

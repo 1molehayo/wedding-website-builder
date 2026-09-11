@@ -538,6 +538,7 @@ function AdminRegistryPage() {
         <SideDrawer.Footer>
           <Button
             type="button"
+            size="sm"
             variant="outline"
             onClick={() => setItemDrawerOpen(false)}
           >
@@ -545,6 +546,7 @@ function AdminRegistryPage() {
           </Button>
           <Button
             type="button"
+            size="sm"
             isLoading={isSavingItem}
             onClick={() => void saveItem()}
           >
@@ -680,6 +682,7 @@ function AdminRegistryPage() {
         <SideDrawer.Footer>
           <Button
             type="button"
+            size="sm"
             variant="outline"
             onClick={() => setAccountDrawerOpen(false)}
           >
@@ -687,6 +690,7 @@ function AdminRegistryPage() {
           </Button>
           <Button
             type="button"
+            size="sm"
             isLoading={isSavingAccount}
             onClick={() => void saveAccount()}
           >

@@ -361,7 +361,7 @@ function AdminMediaPage() {
           </p>
         </div>
         {tab === 'shares' ? (
-          <Button type="button" size="md" onClick={openCreateShare}>
+          <Button type="button" size="sm" onClick={openCreateShare}>
             <PlusIcon />
             New share
           </Button>
@@ -893,6 +893,7 @@ function AdminMediaPage() {
         <SideDrawer.Footer>
           <Button
             type="button"
+            size="sm"
             variant="outline"
             onClick={() => setDrawerOpen(false)}
           >
@@ -900,6 +901,7 @@ function AdminMediaPage() {
           </Button>
           <Button
             type="submit"
+            size="sm"
             form="photo-share-form"
             isLoading={isSavingShare}
           >

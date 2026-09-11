@@ -9,7 +9,8 @@ const badgeStyle = cva({
       neutral: 'bg-background text-foreground/80 ring-foreground/10',
       success: 'bg-success/10 text-success ring-success/20',
       error: 'bg-error/10 text-error ring-error/20',
-      warning: 'bg-warning/10 text-warning ring-warning/20',
+      warning: 'bg-amber-200 text-amber-950 ring-amber-800/30',
+      draft: 'bg-amber-200 text-amber-950 ring-amber-800/30',
       info: 'bg-info/10 text-info ring-info/20',
     },
     size: {

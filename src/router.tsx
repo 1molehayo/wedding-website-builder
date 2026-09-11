@@ -1,5 +1,4 @@
-import { useRouterState } from '@tanstack/react-router'
-import { createRouter as createTanStackRouter } from '@tanstack/react-router'
+import { useRouterState, createRouter as createTanStackRouter  } from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
 import { AdminOutletPending, RoutePending } from '@/components/route-pending'
 import { routeTree } from './routeTree.gen'

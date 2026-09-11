@@ -24,6 +24,8 @@ type AppErrorContentProps = {
   errorId?: string
   onRetry?: () => void
   actions: ErrorAction[]
+  /** Fill the remaining admin pane instead of the full viewport. */
+  embedded?: boolean
 }
 
 export function AppErrorContent({
@@ -33,17 +35,26 @@ export function AppErrorContent({
   errorId,
   onRetry,
   actions,
+  embedded = false,
 }: AppErrorContentProps) {
   return (
-    <div className="bg-background text-foreground flex min-h-dvh w-full items-center justify-center px-6 py-16">
+    <div
+      className={
+        embedded
+          ? 'bg-background text-foreground flex min-h-full w-full flex-1 items-center justify-center py-10'
+          : 'bg-background text-foreground flex min-h-dvh w-full items-center justify-center px-6 py-16'
+      }
+    >
       <div className="flex max-w-lg flex-col items-center text-center">
         <p className="font-serif text-2xl italic">{PRODUCT_SHORT_NAME}</p>
         <p className="text-foreground-secondary mt-1 text-[0.65rem] tracking-[0.2em] uppercase">
           {PRODUCT_TAGLINE}
         </p>
 
-        <p className="public-kicker mt-10 mb-6">{status}</p>
-        <h1 className="public-section-title">{title}</h1>
+        <p className="font-serif mt-8 text-6xl leading-none font-medium italic tracking-tight sm:text-7xl">
+          {status}
+        </p>
+        <h1 className="public-section-title mt-4">{title}</h1>
         <p className="text-foreground-secondary mt-4 text-sm leading-relaxed">
           {message}
         </p>
@@ -123,6 +134,7 @@ export function NotFoundPage() {
       status={404}
       title="Page not found"
       message="That link doesn't match anything on this site."
+      embedded={isAdminPath}
       actions={[
         {
           to: isAdminPath ? '/admin' : '/',
@@ -178,6 +190,7 @@ export function AppRouteError({ error, reset }: ErrorComponentProps) {
   return (
     <AppErrorContent
       {...contentFromRouteError(routeError, isAdminPath, onRetry)}
+      embedded={isAdminPath}
     />
   )
 }

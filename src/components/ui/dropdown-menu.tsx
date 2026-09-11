@@ -16,12 +16,14 @@ export function DropdownMenu({
   label = 'Actions',
   items,
   align = 'end',
+  side = 'bottom',
   trigger,
   className,
 }: {
   label?: string
   items: DropdownMenuItem[]
   align?: 'start' | 'end'
+  side?: 'top' | 'bottom'
   trigger?: React.ReactNode
   className?: string
 }) {
@@ -66,8 +68,9 @@ export function DropdownMenu({
           id={menuId}
           role="menu"
           className={cn(
-            'border-border bg-background absolute z-50 mt-1 min-w-44 rounded-xl border py-1 shadow-md',
+            'border-border bg-background absolute z-50 min-w-44 rounded-xl border py-1 shadow-md',
             align === 'end' ? 'right-0' : 'left-0',
+            side === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
           {items.map((item) => (

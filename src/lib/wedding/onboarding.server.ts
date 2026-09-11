@@ -46,6 +46,9 @@ export async function completeOnboardingHandler(
     weddingDate: data.wedding_date,
   })
 
+  const pageBlocks = createDefaultPageBlocks()
+  const now = new Date().toISOString()
+
   const created = await admin
     .from('weddings')
     .insert({
@@ -58,7 +61,10 @@ export async function completeOnboardingHandler(
       dress_code: data.dress_code,
       active_public_theme: data.active_public_theme ?? FALLBACK_PUBLIC_THEME,
       public_slug: publicSlug,
-      page_blocks: createDefaultPageBlocks(),
+      page_blocks: pageBlocks,
+      page_blocks_draft: pageBlocks,
+      page_draft_updated_at: now,
+      page_published_at: now,
     })
     .select('*')
     .single()
@@ -74,6 +80,16 @@ export async function completeOnboardingHandler(
 
   if (linked.error) {
     throw new Error(linked.error.message)
+  }
+
+  const version = await admin.from('page_content_versions').insert({
+    wedding_id: created.data.id,
+    page_blocks: pageBlocks,
+    published_at: now,
+  })
+
+  if (version.error) {
+    throw new Error(version.error.message)
   }
 
   return created.data

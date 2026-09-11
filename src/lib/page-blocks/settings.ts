@@ -1,33 +1,68 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { PageBlock } from '@/lib/page-blocks/types'
-import { parseUpdatePageBlocksInput } from '@/lib/page-blocks/validation'
-import type { Wedding } from '@/lib/supabase/types'
+import type {
+  PageBlock,
+  PageContentEditorData,
+  PageContentVersion,
+} from '@/lib/page-blocks/types'
+import {
+  parseSavePageDraftInput,
+  parseUpdatePageBlocksInput,
+} from '@/lib/page-blocks/validation'
 
 export const getPageBlocks = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<PageBlock[]> => {
+  async (): Promise<PageContentEditorData> => {
     const { getPageBlocksHandler } = await import('./settings.server')
     return getPageBlocksHandler()
   },
 )
 
-export const updatePageBlocks = createServerFn({ method: 'POST' })
+export const savePageBlocksDraft = createServerFn({ method: 'POST' })
+  .validator((data: { page_blocks: PageBlock[] }) =>
+    parseSavePageDraftInput(data),
+  )
+  .handler(async ({ data }): Promise<PageContentEditorData> => {
+    const { savePageBlocksDraftHandler } = await import('./settings.server')
+    return savePageBlocksDraftHandler(data.page_blocks)
+  })
+
+export const publishPageBlocks = createServerFn({ method: 'POST' })
   .validator((data: { page_blocks: PageBlock[] }) =>
     parseUpdatePageBlocksInput(data),
   )
-  .handler(async ({ data }): Promise<Wedding> => {
-    const { updatePageBlocksHandler } = await import('./settings.server')
-    return updatePageBlocksHandler(data.page_blocks)
+  .handler(async ({ data }): Promise<PageContentEditorData> => {
+    const { publishPageBlocksHandler } = await import('./settings.server')
+    return publishPageBlocksHandler(data.page_blocks)
+  })
+
+export const listPageContentVersions = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<PageContentVersion[]> => {
+    const { listPageContentVersionsHandler } = await import('./settings.server')
+    return listPageContentVersionsHandler()
+  },
+)
+
+export const restorePageContentVersion = createServerFn({ method: 'POST' })
+  .validator((data: { versionId: string }) => {
+    const versionId = data.versionId.trim()
+    if (!versionId) throw new Error('Version is required.')
+    return { versionId }
+  })
+  .handler(async ({ data }): Promise<PageContentEditorData> => {
+    const { restorePageContentVersionHandler } = await import(
+      './settings.server'
+    )
+    return restorePageContentVersionHandler(data.versionId)
   })
 
 export const getPublicHomeData = createServerFn({ method: 'GET' })
-  .validator((data: { slug: string }) => {
+  .validator((data: { slug: string; preview?: boolean }) => {
     const slug = String(data.slug).trim().toLowerCase()
     if (!slug) throw new Error('Wedding slug is required.')
-    return { slug }
+    return { slug, preview: Boolean(data.preview) }
   })
   .handler(async ({ data }) => {
     const { getPublicHomeDataHandler } = await import('./settings.server')
-    return getPublicHomeDataHandler(data.slug)
+    return getPublicHomeDataHandler(data.slug, data.preview)
   })
 
 export const getSignedPhotoUrl = createServerFn({ method: 'POST' })

@@ -157,12 +157,13 @@ function AdminOnboardingPage() {
         </div>
 
         <PageActionBar>
-          <Button type="submit" size="md" isLoading={isSubmitting}>
+          <Button type="submit" size="sm" isLoading={isSubmitting}>
             Create wedding
           </Button>
           {isSuper ? (
             <Button
               type="button"
+              size="sm"
               variant="outline"
               disabled={isSubmitting}
               onClick={() => navigate({ to: '/admin' })}

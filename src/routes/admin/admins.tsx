@@ -515,7 +515,7 @@ function AdminAdminsPage() {
               </Field>
             </SideDrawer.Content>
             <SideDrawer.Footer>
-              <Button type="submit" size="md" isLoading={isInviting}>
+              <Button type="submit" size="sm" isLoading={isInviting}>
                 Send invite
               </Button>
             </SideDrawer.Footer>
@@ -583,7 +583,7 @@ function AdminAdminsPage() {
                       instead.
                     </Field.Description>
                   </Field>
-                  <Button type="submit" size="md" isLoading={isSavingNames}>
+                  <Button type="submit" size="sm" isLoading={isSavingNames}>
                     Save name
                   </Button>
                 </form>
@@ -649,7 +649,7 @@ function AdminAdminsPage() {
               <SideDrawer.Footer>
                 <Button
                   type="button"
-                  size="md"
+                  size="sm"
                   variant="destructive"
                   onClick={() => setRemoveOpen(true)}
                 >

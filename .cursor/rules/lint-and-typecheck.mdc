@@ -1,0 +1,17 @@
+---
+description: After code edits, run pnpm lint:fix then pnpm typecheck and fix failures before finishing.
+alwaysApply: true
+---
+
+# Lint fix and typecheck after edits
+
+After changing application code in this repo, run both before you finish:
+
+```bash
+pnpm lint:fix
+pnpm typecheck
+```
+
+If either fails, fix the issues and re-run. Do not skip for small diffs.
+
+Do **not** run `pnpm build`, `pnpm dev`, `pnpm start`, `pnpm preview`, or deploy as a substitute.

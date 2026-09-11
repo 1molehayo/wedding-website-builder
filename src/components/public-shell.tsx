@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '@/components/color-mode-toggle'
 import { PublicRevealObserver } from '@/components/public-reveal-observer'
-import {
-  PRODUCT_NAME,
-  productBuiltWithCredit,
-} from '@/lib/constants'
+import { PRODUCT_NAME } from '@/lib/constants'
 import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
 import type { PublicThemeId } from '@/lib/site-settings'
 import type { PublicSectionNavItem } from '@/lib/page-blocks/types'
@@ -204,7 +200,9 @@ export function PublicShell({
           <div
             className={cn(
               'px-4 py-2.5 sm:hidden',
-              scrolled ? 'border-border border-t' : 'border-t border-transparent',
+              scrolled
+                ? 'border-border border-t'
+                : 'border-t border-transparent',
             )}
           >
             <SectionNav
@@ -222,7 +220,9 @@ export function PublicShell({
 
       <footer className="border-border mt-auto border-t">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-2 px-6 py-10 text-center md:py-12">
-          <p className="font-serif text-2xl italic md:text-3xl">{coupleLabel}</p>
+          <p className="font-serif text-2xl italic md:text-3xl">
+            {coupleLabel}
+          </p>
           {showWeddingDate ? (
             <p className="text-foreground-secondary text-sm tracking-[0.12em] uppercase">
               {formatWeddingDate(weddingDate)}
@@ -231,14 +231,14 @@ export function PublicShell({
           <p className="text-foreground-secondary mt-4 text-xs tracking-[0.14em] uppercase">
             © {new Date().getFullYear()} {PRODUCT_NAME}
           </p>
-          <p className="text-foreground-secondary text-sm">
+          {/* <p className="text-foreground-secondary text-sm">
             <Link
               to="/"
               className="text-foreground underline-offset-4 transition hover:underline"
             >
               {productBuiltWithCredit()}
             </Link>
-          </p>
+          </p> */}
         </div>
       </footer>
     </div>

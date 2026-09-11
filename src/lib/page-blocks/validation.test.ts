@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   createDefaultPageBlocks,
+  isPageContentLive,
   isPlaceholderStoryBody,
+  resolveLoadedPageContent,
 } from '@/lib/page-blocks/types'
 import {
   parsePageBlocks,
@@ -20,6 +22,11 @@ describe('page blocks validation', () => {
     const blocks = createDefaultPageBlocks()
     expect(parsePageBlocks(blocks)).toHaveLength(3)
     expect(parsePageBlocksStrict(blocks)).toHaveLength(3)
+  })
+
+  it('allows an empty page on publish (reset)', () => {
+    expect(parsePageBlocksStrict([])).toEqual([])
+    expect(validatePageBlocksClient([]).ok).toBe(true)
   })
 
   it('rejects unknown block types', () => {
@@ -86,5 +93,70 @@ describe('page blocks validation', () => {
       type: 'hero',
       fields: { imagePath: null },
     })
+  })
+
+  it('treats matching draft and live as published only when published_at is set', () => {
+    const blocks = createDefaultPageBlocks()
+    expect(
+      isPageContentLive({
+        draft: blocks,
+        published: blocks,
+        draftUpdatedAt: '2026-09-11T00:00:00.000Z',
+        publishedAt: '2026-09-11T00:00:00.000Z',
+      }),
+    ).toBe(true)
+    expect(
+      isPageContentLive({
+        draft: blocks,
+        published: blocks,
+        draftUpdatedAt: '2026-09-11T00:00:00.000Z',
+        publishedAt: null,
+      }),
+    ).toBe(false)
+    expect(
+      isPageContentLive({
+        draft: [],
+        published: blocks,
+        draftUpdatedAt: '2026-09-11T00:00:00.000Z',
+        publishedAt: '2026-09-11T00:00:00.000Z',
+      }),
+    ).toBe(false)
+  })
+})
+
+describe('resolveLoadedPageContent', () => {
+  const publishedAt = '2026-09-11T00:00:00.000Z'
+
+  it('copies live blocks into an empty draft that was not reset later', () => {
+    const live = createDefaultPageBlocks()
+    const resolved = resolveLoadedPageContent({
+      draft: [],
+      published: live,
+      draftUpdatedAt: publishedAt,
+      publishedAt,
+    })
+    expect(resolved.draft).toEqual(live)
+  })
+
+  it('keeps a reset draft empty when it is newer than live', () => {
+    const live = createDefaultPageBlocks()
+    const resolved = resolveLoadedPageContent({
+      draft: [],
+      published: live,
+      draftUpdatedAt: '2026-09-11T01:00:00.000Z',
+      publishedAt,
+    })
+    expect(resolved.draft).toEqual([])
+  })
+
+  it('restores starter sections when both draft and live are empty', () => {
+    const resolved = resolveLoadedPageContent({
+      draft: [],
+      published: [],
+      draftUpdatedAt: publishedAt,
+      publishedAt,
+    })
+    expect(resolved.draft).toHaveLength(3)
+    expect(resolved.published).toEqual([])
   })
 })

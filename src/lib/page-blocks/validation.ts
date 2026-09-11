@@ -152,7 +152,7 @@ export function parsePageBlocks(value: unknown): PageBlock[] {
   return parsed.data
 }
 
-/** Strict parse for save / server-fn validation. */
+/** Strict parse for publish / server-fn validation. */
 export function parsePageBlocksStrict(value: unknown): PageBlock[] {
   const parsed = pageBlocksSchema.safeParse(value)
   if (!parsed.success) {
@@ -169,6 +169,20 @@ export function parseUpdatePageBlocksInput(data: unknown): {
   }
   return {
     page_blocks: parsePageBlocksStrict(
+      (data as { page_blocks?: unknown }).page_blocks,
+    ),
+  }
+}
+
+/** Draft save may be empty or incomplete (story/image still in progress). */
+export function parseSavePageDraftInput(data: unknown): {
+  page_blocks: PageBlock[]
+} {
+  if (typeof data !== 'object' || data === null) {
+    throw new Error('Invalid page blocks payload.')
+  }
+  return {
+    page_blocks: parsePageBlocks(
       (data as { page_blocks?: unknown }).page_blocks,
     ),
   }

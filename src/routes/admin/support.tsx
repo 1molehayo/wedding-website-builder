@@ -134,7 +134,7 @@ function AdminSupportPage() {
         </Field>
 
         <PageActionBar>
-          <Button type="submit" size="md" isLoading={isSubmitting}>
+          <Button type="submit" size="sm" isLoading={isSubmitting}>
             Send to super admin
           </Button>
         </PageActionBar>

@@ -75,6 +75,7 @@ export function ConfirmDialog({
           <Button
             type="button"
             variant="outline"
+            size="sm"
             disabled={isConfirming}
             onClick={() => onOpenChange(false)}
           >
@@ -82,6 +83,7 @@ export function ConfirmDialog({
           </Button>
           <Button
             type="button"
+            size="sm"
             variant={tone === 'destructive' ? 'destructive' : 'primary'}
             isLoading={isConfirming}
             className={cn(tone === 'destructive' && 'text-white')}

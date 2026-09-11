@@ -186,7 +186,10 @@ function AdminTopbar({
             {crumbs.map((crumb, index) => {
               const isLast = index === crumbs.length - 1
               return (
-                <li key={`${crumb.label}-${index}`} className="flex items-center gap-1.5">
+                <li
+                  key={`${crumb.label}-${index}`}
+                  className="flex items-center gap-1.5"
+                >
                   {index > 0 ? (
                     <span className="text-foreground-secondary" aria-hidden>
                       /
@@ -231,9 +234,7 @@ function AdminTopbar({
             variant="outline"
             square
             aria-label="Notifications"
-            onClick={() =>
-              toast.message('Notifications are coming soon.')
-            }
+            onClick={() => toast.message('Notifications are coming soon.')}
           >
             <BellIcon />
           </Button>
@@ -378,7 +379,7 @@ export function AdminShell({
           />
         </aside>
 
-        <div className="bg-background flex min-w-0 flex-col">
+        <div className="bg-background flex min-h-dvh min-w-0 flex-col md:min-h-full">
           <AdminTopbar
             onOpenNav={() => setMobileNavOpen((open) => !open)}
             navOpen={mobileNavOpen}
@@ -388,7 +389,7 @@ export function AdminShell({
           />
           <div
             className={cn(
-              'min-w-0 flex-1 p-6 md:p-8',
+              'flex min-h-0 min-w-0 flex-1 flex-col p-6 md:p-8',
               isContentLoading && 'pointer-events-none',
             )}
             aria-busy={isContentLoading}

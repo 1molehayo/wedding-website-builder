@@ -256,7 +256,7 @@ function AdminProfilePage() {
         </form.Subscribe>
 
         <PageActionBar>
-          <Button type="submit" size="md" isLoading={isSaving}>
+          <Button type="submit" size="sm" isLoading={isSaving}>
             Save profile
           </Button>
         </PageActionBar>

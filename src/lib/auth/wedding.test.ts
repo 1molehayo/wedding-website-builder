@@ -16,6 +16,9 @@ describe('wedding date contract', () => {
       active_public_theme: 'celeste',
       public_slug: 'lillian-marvelous-2026',
       page_blocks: [],
+      page_blocks_draft: [],
+      page_draft_updated_at: null,
+      page_published_at: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }

@@ -51,7 +51,7 @@ function findConflicts(
   excludeGuestId?: string,
 ): GuestConflictMatch[] {
   const nameKey = guestNameKey(input.first_name, input.last_name)
-  const email = input.email?.trim().toLowerCase() || null
+  const email = input.email.trim().toLowerCase() || null
   const phone = normalizePhone(input.phone)
   const matches: GuestConflictMatch[] = []
 

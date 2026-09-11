@@ -100,6 +100,7 @@ function AdminWeddingSettingsPage() {
   const [notifyOnPublish, setNotifyOnPublish] = useState(true)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isUnpublishing, setIsUnpublishing] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState(wedding?.updated_at ?? null)
 
   useEffect(() => {
     if (!wedding) return
@@ -169,6 +170,7 @@ function AdminWeddingSettingsPage() {
         data: { notifyGuests: notifyOnPublish },
       })
       setForm(weddingToForm(result.wedding))
+      setUpdatedAt(result.wedding.updated_at)
       if (!notifyOnPublish) {
         toast.success('Wedding date is now public.')
       } else if (result.failed.length === 0) {
@@ -200,6 +202,7 @@ function AdminWeddingSettingsPage() {
     try {
       const updated = await unpublishWeddingDate()
       setForm(weddingToForm(updated))
+      setUpdatedAt(updated.updated_at)
       toast.success('Date hidden from the public site (draft kept).')
       await router.invalidate()
     } catch (err) {
@@ -247,6 +250,7 @@ function AdminWeddingSettingsPage() {
         },
       })
       setForm(weddingToForm(updated))
+      setUpdatedAt(updated.updated_at)
       toast.success('Wedding settings saved.')
       await router.invalidate()
     } catch (err) {
@@ -464,10 +468,10 @@ function AdminWeddingSettingsPage() {
           />
         </div>
 
-        <PageActionBar>
+        <PageActionBar lastUpdatedAt={updatedAt}>
           <Button
             type="submit"
-            size="md"
+            size="sm"
             isLoading={isSubmitting}
             disabled={slugBlocksSave}
           >

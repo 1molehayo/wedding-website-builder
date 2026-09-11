@@ -1,36 +1,54 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router'
 import {
+  ArrowCounterClockwiseIcon,
   CaretDownIcon,
   CaretUpIcon,
+  ClockCounterClockwiseIcon,
   CopySimpleIcon,
   DotsSixVerticalIcon,
+  EyeIcon,
+  FloppyDiskIcon,
   PlusIcon,
   TrashIcon,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
-import { PageActionBar } from '@/components/admin/page-action-bar'
+import { PageActionBar, formatLastUpdated } from '@/components/admin/page-action-bar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
+import { SideDrawer } from '@/components/ui/side-drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import {
   getPageBlocks,
   getSignedPhotoUrl,
-  updatePageBlocks,
+  listPageContentVersions,
+  publishPageBlocks,
+  restorePageContentVersion,
+  savePageBlocksDraft,
   uploadPageBlockImage,
 } from '@/lib/page-blocks/settings'
 import {
   PAGE_BLOCK_TYPES,
   PAGE_BLOCK_TYPE_LABELS,
   createDefaultBlock,
+  isPageContentLive,
+  pageBlocksEqual,
 } from '@/lib/page-blocks/types'
-import type { PageBlock, PageBlockType } from '@/lib/page-blocks/types'
+import type {
+  PageBlock,
+  PageBlockType,
+  PageContentEditorData,
+  PageContentVersion,
+} from '@/lib/page-blocks/types'
 import type { PageBlockFieldErrors } from '@/lib/page-blocks/validation'
 import { validatePageBlocksClient } from '@/lib/page-blocks/validation'
 import { cn } from '@/lib/utils'
+import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/pages')({
   beforeLoad: ({ context }) => {
@@ -121,13 +139,17 @@ function BlockEditor({
           dataBase64,
         },
       })
-      onChange({
-        ...block,
-        fields: {
-          ...block.fields,
-          imagePath: uploaded.path,
-        },
-      })
+      if (block.type === 'hero') {
+        onChange({
+          ...block,
+          fields: { ...block.fields, imagePath: uploaded.path },
+        })
+      } else if (block.type === 'image') {
+        onChange({
+          ...block,
+          fields: { ...block.fields, imagePath: uploaded.path },
+        })
+      }
       setPreviewUrl(uploaded.signedUrl)
       toast.success(successMessage)
     } catch (err) {
@@ -187,8 +209,7 @@ function BlockEditor({
               block.fields.imagePath ? 'Drop a photo to replace' : undefined
             }
             onFiles={(files) => {
-              const file = files[0]
-              if (file) void uploadSelectedFile(file, 'Hero background uploaded.')
+              void uploadSelectedFile(files[0], 'Hero background uploaded.')
             }}
           />
         </Field>
@@ -276,8 +297,7 @@ function BlockEditor({
               block.fields.imagePath ? 'Drop a photo to replace' : undefined
             }
             onFiles={(files) => {
-              const file = files[0]
-              if (file) void uploadSelectedFile(file, 'Image uploaded.')
+              void uploadSelectedFile(files[0], 'Image uploaded.')
             }}
           />
         </Field>
@@ -365,21 +385,94 @@ function BlockEditor({
   )
 }
 
+function AddItemMenu({
+  onAdd,
+  className,
+  triggerClassName,
+}: {
+  onAdd: (type: PageBlockType) => void
+  className?: string
+  triggerClassName?: string
+}) {
+  return (
+    <DropdownMenu
+      label="Add item"
+      align="start"
+      className={className}
+      trigger={
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={cn('border-dashed', triggerClassName)}
+        >
+          <PlusIcon />
+          Add item
+        </Button>
+      }
+      items={PAGE_BLOCK_TYPES.map((type) => ({
+        id: type,
+        label: PAGE_BLOCK_TYPE_LABELS[type],
+        onSelect: () => onAdd(type),
+      }))}
+    />
+  )
+}
+
 function AdminPagesPage() {
-  const initialBlocks = Route.useLoaderData()
+  const initial = Route.useLoaderData()
+  const { session } = AdminRoute.useRouteContext()
   const router = useRouter()
-  const [blocks, setBlocks] = useState<PageBlock[]>(initialBlocks)
+  const [blocks, setBlocks] = useState<PageBlock[]>(initial.draft)
+  const [persistedDraft, setPersistedDraft] = useState<PageBlock[]>(
+    initial.draft,
+  )
+  const [published, setPublished] = useState<PageBlock[]>(initial.published)
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState(initial.draftUpdatedAt)
+  const [publishedAt, setPublishedAt] = useState(initial.publishedAt)
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set())
-  const [isSaving, setIsSaving] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const [isRestoring, setIsRestoring] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<PageBlockFieldErrors>({})
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  const [versions, setVersions] = useState<PageContentVersion[]>([])
+  const [versionsLoading, setVersionsLoading] = useState(false)
   const dragIdRef = useRef<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragEnabled, setDragEnabled] = useState(false)
 
+  const publicSlug = session?.wedding?.public_slug.trim()
+  const isLive = isPageContentLive({
+    draft: blocks,
+    published,
+    draftUpdatedAt,
+    publishedAt,
+  })
+  const canPreviewDraft =
+    Boolean(publicSlug) &&
+    !isPageContentLive({
+      draft: persistedDraft,
+      published,
+      draftUpdatedAt,
+      publishedAt,
+    })
+  const busy = isSavingDraft || isPublishing || isResetting || isRestoring
+
+  const applyEditor = (data: PageContentEditorData) => {
+    setBlocks(data.draft)
+    setPersistedDraft(data.draft)
+    setPublished(data.published)
+    setDraftUpdatedAt(data.draftUpdatedAt)
+    setPublishedAt(data.publishedAt)
+  }
+
   useEffect(() => {
-    setBlocks(initialBlocks)
+    applyEditor(initial)
     setFieldErrors({})
-  }, [initialBlocks])
+  }, [initial])
 
   const toggleOpen = (id: string) => {
     setOpenIds((current) => {
@@ -404,37 +497,118 @@ function AdminPagesPage() {
     })
   }
 
-  const onSave = async () => {
+  const showPublishErrors = (validated: {
+    fieldErrors: PageBlockFieldErrors
+    message: string
+  }) => {
+    setFieldErrors(validated.fieldErrors)
+    const invalidIds = Object.keys(validated.fieldErrors)
+    if (invalidIds.length > 0) {
+      setOpenIds((current) => {
+        const next = new Set(current)
+        for (const id of invalidIds) next.add(id)
+        return next
+      })
+    }
+    toast.error(validated.message)
+  }
+
+  const onSaveDraft = async () => {
+    setIsSavingDraft(true)
+    try {
+      const data = await savePageBlocksDraft({
+        data: { page_blocks: blocks },
+      })
+      applyEditor(data)
+      setFieldErrors({})
+      toast.success('Draft saved. Preview it, then publish to go live.')
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to save draft.',
+      )
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  const onPublish = async () => {
     const validated = validatePageBlocksClient(blocks)
     if (!validated.ok) {
-      setFieldErrors(validated.fieldErrors)
-      const invalidIds = Object.keys(validated.fieldErrors)
-      if (invalidIds.length > 0) {
-        setOpenIds((current) => {
-          const next = new Set(current)
-          for (const id of invalidIds) next.add(id)
-          return next
-        })
-      }
-      toast.error(validated.message)
+      showPublishErrors(validated)
       return
     }
 
-    setIsSaving(true)
+    setIsPublishing(true)
     try {
-      const wedding = await updatePageBlocks({
+      const data = await publishPageBlocks({
         data: { page_blocks: validated.blocks },
       })
-      setBlocks(wedding.page_blocks)
+      applyEditor(data)
       setFieldErrors({})
       toast.success('Page content published.')
       await router.invalidate()
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : 'Unable to save page content.',
+        err instanceof Error ? err.message : 'Unable to publish page content.',
       )
     } finally {
-      setIsSaving(false)
+      setIsPublishing(false)
+    }
+  }
+
+  const onOpenHistory = async () => {
+    setHistoryOpen(true)
+    setVersionsLoading(true)
+    try {
+      setVersions(await listPageContentVersions())
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to load publish history.',
+      )
+    } finally {
+      setVersionsLoading(false)
+    }
+  }
+
+  const onRestoreVersion = async (versionId: string) => {
+    setIsRestoring(true)
+    try {
+      const data = await restorePageContentVersion({
+        data: { versionId },
+      })
+      applyEditor(data)
+      setFieldErrors({})
+      setHistoryOpen(false)
+      toast.success('Restored into draft. Publish to make it live.')
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to restore that version.',
+      )
+    } finally {
+      setIsRestoring(false)
+    }
+  }
+
+  const onResetDraft = async () => {
+    setIsResetting(true)
+    try {
+      const data = await savePageBlocksDraft({
+        data: { page_blocks: [] },
+      })
+      applyEditor(data)
+      setOpenIds(new Set())
+      setFieldErrors({})
+      setResetOpen(false)
+      toast.success('Draft reset. Publish to replace the live page.')
+      await router.invalidate()
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to reset the draft.',
+      )
+    } finally {
+      setIsResetting(false)
     }
   }
 
@@ -476,12 +650,18 @@ function AdminPagesPage() {
   const allOpen = blocks.length > 0 && blocks.every((block) => openIds.has(block.id))
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="admin-page-title">Page content</h1>
-          <p className="text-foreground-secondary mt-2 text-sm">
-            Sections on the public home page. Drag to reorder, then publish.
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="admin-page-title">Page content</h1>
+            <Badge size="sm" variant={isLive ? 'success' : 'draft'}>
+              {isLive ? 'Published' : 'Draft'}
+            </Badge>
+          </div>
+          <p className="text-foreground-secondary mt-2 max-w-xl text-sm leading-relaxed">
+            Sections on the public home page. Save a draft to preview, then
+            publish to go live.
           </p>
         </div>
         {blocks.length > 0 ? (
@@ -498,8 +678,20 @@ function AdminPagesPage() {
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        {blocks.map((block) => {
+      {blocks.length === 0 ? (
+        <div className="border-border bg-surface rounded-xl border border-dashed px-6 py-12 text-center">
+          <p className="text-lg font-medium">No sections yet</p>
+          <p className="text-foreground-secondary mx-auto mt-2 max-w-md text-sm leading-relaxed">
+            Add a hero, story, photo, or details block. This draft stays off
+            the live site until you publish.
+          </p>
+          <div className="mt-6 flex justify-center">
+            <AddItemMenu onAdd={onAdd} triggerClassName="px-4" />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {blocks.map((block) => {
           const open = openIds.has(block.id)
           const hasError = Boolean(fieldErrors[block.id])
           return (
@@ -621,33 +813,152 @@ function AdminPagesPage() {
           )
         })}
 
-        <DropdownMenu
-          label="Add item"
-          align="start"
-          className="w-full"
-          trigger={
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full border-dashed"
-            >
-              <PlusIcon />
-              Add item
-            </Button>
-          }
-          items={PAGE_BLOCK_TYPES.map((type) => ({
-            id: type,
-            label: PAGE_BLOCK_TYPE_LABELS[type],
-            onSelect: () => onAdd(type),
-          }))}
-        />
-      </div>
+        <AddItemMenu onAdd={onAdd} className="w-full" triggerClassName="w-full" />
+        </div>
+      )}
 
-      <PageActionBar>
-        <Button type="button" size="md" onClick={onSave} isLoading={isSaving}>
-          Publish
+      <PageActionBar lastUpdatedAt={draftUpdatedAt}>
+        {canPreviewDraft && publicSlug ? (
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="max-md:w-(--button-height) max-md:px-0"
+          >
+            <Link
+              to="/$weddingSlug"
+              params={{ weddingSlug: publicSlug }}
+              search={{ preview: true }}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Preview draft"
+              title="Preview draft"
+            >
+              <EyeIcon />
+              <span className="hidden md:inline">Preview draft</span>
+            </Link>
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="max-md:w-(--button-height) max-md:px-0"
+          aria-label="Save draft"
+          title="Save draft"
+          onClick={() => void onSaveDraft()}
+          isLoading={isSavingDraft}
+          disabled={busy && !isSavingDraft}
+        >
+          <FloppyDiskIcon />
+          <span className="hidden md:inline">Save draft</span>
         </Button>
+        <div className="inline-flex">
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-r-none"
+            onClick={() => void onPublish()}
+            isLoading={isPublishing}
+            disabled={busy && !isPublishing}
+          >
+            Publish
+          </Button>
+          <DropdownMenu
+            label="Publish options"
+            side="top"
+            trigger={
+              <Button
+                type="button"
+                size="sm"
+                square
+                className="rounded-l-none"
+                aria-label="Publish options"
+                disabled={busy}
+              >
+                <CaretDownIcon />
+              </Button>
+            }
+            items={[
+              {
+                id: 'history',
+                label: 'History',
+                icon: <ClockCounterClockwiseIcon />,
+                onSelect: () => void onOpenHistory(),
+              },
+              {
+                id: 'reset',
+                label: 'Reset draft',
+                icon: <ArrowCounterClockwiseIcon />,
+                tone: 'destructive',
+                onSelect: () => setResetOpen(true),
+              },
+            ]}
+          />
+        </div>
       </PageActionBar>
+
+      <SideDrawer open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SideDrawer.Header
+          title="Publish history"
+          drawerDescription="Last 10 published versions. Restore copies one into draft."
+        />
+        <SideDrawer.Content className="space-y-1">
+          {versionsLoading ? (
+            <p className="text-foreground-secondary text-sm">Loading…</p>
+          ) : versions.length === 0 ? (
+            <p className="text-foreground-secondary text-sm">
+              No published versions yet.
+            </p>
+          ) : (
+            versions.map((version) => {
+              const publishedLabel = formatLastUpdated(version.published_at)
+              const isCurrentLive = pageBlocksEqual(
+                version.page_blocks,
+                published,
+              )
+              return (
+                <div
+                  key={version.id}
+                  className="border-border flex items-center justify-between gap-3 border-b py-3 last:border-b-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {publishedLabel ?? 'Unknown date'}
+                    </p>
+                    {isCurrentLive ? (
+                      <p className="text-foreground-secondary text-xs">
+                        Currently live
+                      </p>
+                    ) : null}
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    isLoading={isRestoring}
+                    disabled={busy && !isRestoring}
+                    onClick={() => void onRestoreVersion(version.id)}
+                  >
+                    Restore
+                  </Button>
+                </div>
+              )
+            })
+          )}
+        </SideDrawer.Content>
+      </SideDrawer>
+
+      <ConfirmDialog
+        open={resetOpen}
+        title="Reset draft?"
+        description="This clears every block from your draft. The live site stays as-is until you publish. If you publish after resetting, guests will see an empty page and the current live content will be replaced."
+        confirmLabel="Reset draft"
+        tone="destructive"
+        isConfirming={isResetting}
+        onConfirm={() => void onResetDraft()}
+        onOpenChange={setResetOpen}
+      />
     </div>
   )
 }

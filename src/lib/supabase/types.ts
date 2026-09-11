@@ -52,6 +52,9 @@ export type Wedding = {
   active_public_theme: PublicThemeId
   public_slug: string
   page_blocks: PageBlock[]
+  page_blocks_draft: PageBlock[]
+  page_draft_updated_at: string | null
+  page_published_at: string | null
   created_at: string
   updated_at: string
 }
