@@ -1,20 +1,32 @@
+import { useRouterState } from '@tanstack/react-router'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
-import { AppRouteError, NotFoundPage } from '#/components/app-error-page'
-import { RoutePending } from '#/components/route-pending'
+import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
+import { AdminOutletPending, RoutePending } from '@/components/route-pending'
 import { routeTree } from './routeTree.gen'
+
+function DefaultPending() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const isDashboard =
+    pathname.startsWith('/admin') &&
+    pathname !== '/admin/login' &&
+    !pathname.startsWith('/admin/invite/')
+
+  if (isDashboard) {
+    return <AdminOutletPending />
+  }
+
+  return <RoutePending />
+}
 
 export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
-    // Match FCP: no intent preload. Intent + `/$weddingSlug` notFound() races
-    // were flashing the root 404 UI during authenticated navigations.
     defaultPreload: false,
     notFoundMode: 'root',
     defaultNotFoundComponent: NotFoundPage,
     defaultErrorComponent: AppRouteError,
-    defaultPendingComponent: RoutePending,
-    defaultPendingMs: 0,
+    defaultPendingComponent: DefaultPending,
   })
 
   return router

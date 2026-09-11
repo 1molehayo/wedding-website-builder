@@ -3,7 +3,7 @@ import {
   maxAttendingForPlusOnes,
   parseAdminRsvpInput,
   parsePublicRsvpInput,
-} from '#/lib/rsvp/schema'
+} from '@/lib/rsvp/schema'
 
 describe('rsvp schema', () => {
   it('computes max attending from plus-ones', () => {

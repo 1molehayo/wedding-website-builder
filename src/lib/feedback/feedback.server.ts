@@ -1,14 +1,14 @@
-import { requireAdminSession } from '#/lib/auth/session.server'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
+import { requireAdminSession } from '@/lib/auth/session.server'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_STATUSES,
-} from '#/lib/feedback/categories'
+} from '@/lib/feedback/categories'
 import type {
   FeedbackCategoryId,
   FeedbackStatus,
-} from '#/lib/feedback/categories'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+} from '@/lib/feedback/categories'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 export type ProductFeedbackRow = {
   id: string

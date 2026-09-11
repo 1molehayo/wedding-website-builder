@@ -1,7 +1,7 @@
-import { CaretDown } from '@phosphor-icons/react'
+import { CaretDownIcon } from '@phosphor-icons/react'
 import type { VariantProps } from 'cva'
-import { inputStyle } from '#/components/ui/input'
-import { cn } from '#/lib/utils'
+import { inputStyle } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 export interface SelectProps
   extends
@@ -31,7 +31,7 @@ const Select = ({
         )}
         {...props}
       />
-      <CaretDown
+      <CaretDownIcon
         aria-hidden
         className="text-foreground-secondary pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
       />

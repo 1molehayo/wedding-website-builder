@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { AddressSuggestion } from '#/lib/places/cache'
+import type { AddressSuggestion } from '@/lib/places/cache'
 
 export type { AddressSuggestion }
 

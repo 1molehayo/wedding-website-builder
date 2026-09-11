@@ -1,4 +1,4 @@
-import type { AdminProfile, AdminRole } from '#/lib/supabase/types'
+import type { AdminProfile, AdminRole } from '@/lib/supabase/types'
 
 /** Production super admin — hardcoded by product decision. */
 export const PRODUCTION_SUPER_ADMIN_EMAIL = 'omilabuolusegun@gmail.com'

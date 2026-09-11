@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Wedding } from '#/lib/supabase/types'
+import type { Wedding } from '@/lib/supabase/types'
 
 describe('wedding date contract', () => {
   it('allows a wedding record with a null date', () => {

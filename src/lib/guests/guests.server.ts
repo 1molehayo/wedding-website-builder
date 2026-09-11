@@ -1,17 +1,17 @@
-import { requireWeddingSession } from '#/lib/auth/session.server'
-import { getAppUrl } from '#/lib/app-url'
-import { formatCoupleNames } from '#/lib/constants'
-import { sendGuestRsvpInviteEmail } from '#/lib/email/resend.server'
-import { resolveEmailThemeId } from '#/lib/email/theme'
-import { guestNameKey } from '#/lib/guests/name-key'
-import type { GuestInput } from '#/lib/guests/schema'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import type { Guest } from '#/lib/supabase/types'
-import type { PublicThemeId } from '#/lib/site-settings'
+import { requireWeddingSession } from '@/lib/auth/session.server'
+import { getAppUrl } from '@/lib/app-url'
+import { formatCoupleNames } from '@/lib/constants'
+import { sendGuestRsvpInviteEmail } from '@/lib/email/resend.server'
+import { resolveEmailThemeId } from '@/lib/email/theme'
+import { guestNameKey } from '@/lib/guests/name-key'
+import type { GuestInput } from '@/lib/guests/schema'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import type { Guest } from '@/lib/supabase/types'
+import type { PublicThemeId } from '@/lib/site-settings'
 import {
   formatWeddingDate,
   resolvePublicWeddingDate,
-} from '#/lib/wedding/public-settings'
+} from '@/lib/wedding/public-settings'
 
 const GUEST_SELECT =
   'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'

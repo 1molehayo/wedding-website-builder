@@ -1,7 +1,7 @@
-import type { DetailsPageBlock } from '#/lib/page-blocks/types'
-import { publicSectionId } from '#/lib/page-blocks/types'
-import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
-import { cn } from '#/lib/utils'
+import type { DetailsPageBlock } from '@/lib/page-blocks/types'
+import { publicSectionId } from '@/lib/page-blocks/types'
+import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
+import { cn } from '@/lib/utils'
 
 function mapsSearchUrl(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`

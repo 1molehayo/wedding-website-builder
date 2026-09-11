@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import type { Guest } from '#/lib/supabase/types'
+import {
+  isValidOptionalPhone,
+  toStoredPhone,
+} from '@/lib/auth/phone'
+import type { Guest } from '@/lib/supabase/types'
 
 const requiredName = (label: string) =>
   z
@@ -8,32 +12,30 @@ const requiredName = (label: string) =>
     .min(1, `${label} is required.`)
     .max(80, `${label} must be 80 characters or fewer.`)
 
-const optionalText = (label: string, max = 200) =>
+const optionalText = (label: string, max: number) =>
   z
-    .union([z.string(), z.null(), z.undefined()])
-    .transform((value) => {
-      if (value === null || value === undefined) return null
-      const trimmed = value.trim()
-      return trimmed.length === 0 ? null : trimmed
-    })
-    .refine((value) => value === null || value.length <= max, {
-      message: `${label} must be ${max} characters or fewer.`,
-    })
+    .string()
+    .trim()
+    .max(max, `${label} must be ${max} characters or fewer.`)
+    .transform((value) => (value.length === 0 ? null : value))
 
 export const guestFormSchema = z.object({
   firstName: requiredName('First name'),
   lastName: requiredName('Last name'),
   email: z
-    .union([z.string(), z.null(), z.undefined()])
-    .transform((value) => {
-      if (value === null || value === undefined) return null
-      const trimmed = value.trim().toLowerCase()
-      return trimmed.length === 0 ? null : trimmed
+    .string()
+    .trim()
+    .min(1, 'Email is required.')
+    .max(200, 'Email must be 200 characters or fewer.')
+    .email('Enter a valid email.')
+    .transform((value) => value.toLowerCase()),
+  phone: z
+    .string()
+    .trim()
+    .refine(isValidOptionalPhone, {
+      message: 'Enter a valid phone number.',
     })
-    .refine((value) => value === null || value.includes('@'), {
-      message: 'Enter a valid email.',
-    }),
-  phone: optionalText('Phone', 40),
+    .transform((value) => toStoredPhone(value)),
   partyName: optionalText('Party name', 120),
   plusOnes: z.coerce
     .number()
@@ -43,12 +45,21 @@ export const guestFormSchema = z.object({
   notes: optionalText('Notes', 2000),
 })
 
-export type GuestFormValues = z.infer<typeof guestFormSchema>
+/** Form draft values (before Zod transforms). */
+export type GuestFormValues = {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  partyName: string
+  plusOnes: number
+  notes: string
+}
 
 export type GuestInput = {
   first_name: string
   last_name: string
-  email: string | null
+  email: string
   phone: string | null
   party_name: string | null
   plus_ones: number
@@ -64,11 +75,11 @@ export function parseGuestInput(data: unknown): GuestInput {
   const parsed = guestFormSchema.safeParse({
     firstName: record.first_name ?? record.firstName ?? '',
     lastName: record.last_name ?? record.lastName ?? '',
-    email: record.email,
-    phone: record.phone,
-    partyName: record.party_name ?? record.partyName,
+    email: record.email ?? '',
+    phone: record.phone ?? '',
+    partyName: record.party_name ?? record.partyName ?? '',
     plusOnes: record.plus_ones ?? record.plusOnes ?? 0,
-    notes: record.notes,
+    notes: record.notes ?? '',
   })
 
   if (!parsed.success) {

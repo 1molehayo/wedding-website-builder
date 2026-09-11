@@ -1,14 +1,16 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Select } from '#/components/ui/select'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
-import { submitSupport } from '#/lib/auth/profile'
-import { SUPPORT_CATEGORIES } from '#/lib/support/categories'
-import type { SupportCategoryId } from '#/lib/support/categories'
+import { PageActionBar } from '@/components/admin/page-action-bar'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { PhotoDropzone } from '@/components/ui/photo-dropzone'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
+import { submitSupport } from '@/lib/auth/profile'
+import { SUPPORT_CATEGORIES } from '@/lib/support/categories'
+import type { SupportCategoryId } from '@/lib/support/categories'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/support')({
@@ -118,38 +120,25 @@ function AdminSupportPage() {
 
         <Field>
           <Field.Label>Image (optional)</Field.Label>
-          <Field.Control>
-            <InputFile
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(event) => setImage(event.target.files?.[0] ?? null)}
-            />
-          </Field.Control>
-          <Field.Description>
-            JPEG, PNG, or WebP up to about 4.5MB. Attached to the email.
-          </Field.Description>
+          <PhotoDropzone
+            accept={['image/jpeg', 'image/png', 'image/webp']}
+            maxBytes={Math.floor(4.5 * 1024 * 1024)}
+            hint={
+              image
+                ? image.name
+                : 'Optional screenshot. Attached to the email.'
+            }
+            replaceLabel={image ? 'Drop a photo to replace' : undefined}
+            onFiles={(files) => setImage(files[0] ?? null)}
+          />
         </Field>
 
-        <Button type="submit" size="md" isLoading={isSubmitting}>
-          Send to super admin
-        </Button>
+        <PageActionBar>
+          <Button type="submit" size="md" isLoading={isSubmitting}>
+            Send to super admin
+          </Button>
+        </PageActionBar>
       </form>
     </div>
-  )
-}
-
-function InputFile({
-  accept,
-  onChange,
-}: {
-  accept: string
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-}) {
-  return (
-    <input
-      type="file"
-      accept={accept}
-      onChange={onChange}
-      className="border-border bg-background block w-full rounded-xl border px-3 py-2 text-sm"
-    />
   )
 }

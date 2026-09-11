@@ -1,6 +1,6 @@
-import type { PublicThemeId } from '#/lib/site-settings'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
-import type { Wedding, WeddingStatus } from '#/lib/supabase/types'
+import type { PublicThemeId } from '@/lib/site-settings'
+import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
+import type { Wedding, WeddingStatus } from '@/lib/supabase/types'
 
 export type PublicWeddingSettings = {
   groom_name: string

@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { PAGE_BLOCK_TYPES } from '#/lib/page-blocks/types'
-import type { PageBlock } from '#/lib/page-blocks/types'
+import { PAGE_BLOCK_TYPES } from '@/lib/page-blocks/types'
+import type { PageBlock } from '@/lib/page-blocks/types'
 
 const nullableTrimmedString = z
   .union([z.string(), z.null(), z.undefined()])

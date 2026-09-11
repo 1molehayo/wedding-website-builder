@@ -1,6 +1,6 @@
 import { useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { cn } from '#/lib/utils'
+import { cn } from '@/lib/utils'
 
 /**
  * Thin top progress bar while TanStack Router loads the next route

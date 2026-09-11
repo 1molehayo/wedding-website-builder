@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import type { ImagePageBlock } from '#/lib/page-blocks/types'
-import { publicSectionId } from '#/lib/page-blocks/types'
-import { cn } from '#/lib/utils'
+import type { ImagePageBlock } from '@/lib/page-blocks/types'
+import { publicSectionId } from '@/lib/page-blocks/types'
+import { cn } from '@/lib/utils'
 
 export function ImageBlock({
   block,

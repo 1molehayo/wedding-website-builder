@@ -1,5 +1,5 @@
-import { PUBLIC_THEMES } from '#/lib/site-settings'
-import type { PublicThemeId } from '#/lib/site-settings'
+import { PUBLIC_THEMES } from '@/lib/site-settings'
+import type { PublicThemeId } from '@/lib/site-settings'
 
 export type OnboardingInput = {
   groom_name: string

@@ -1,8 +1,8 @@
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import {
   buildWeddingPublicSlug,
   withPublicSlugUuid,
-} from '#/lib/wedding/slug'
+} from '@/lib/wedding/slug'
 
 type AllocateSlugInput = {
   brideName: string

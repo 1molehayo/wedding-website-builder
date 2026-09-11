@@ -1,13 +1,13 @@
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
-import { DynamicBlock } from '#/components/blocks/dynamic-block'
-import { RegistrySection } from '#/components/blocks/registry-section'
-import { PublicShell } from '#/components/public-shell'
-import { getAppUrl } from '#/lib/app-url'
-import { formatCoupleNames } from '#/lib/constants'
-import { getPublicHomeData } from '#/lib/page-blocks/settings'
-import { getPublicSectionNav } from '#/lib/page-blocks/types'
-import { isReservedPublicSlug } from '#/lib/wedding/slug'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import { DynamicBlock } from '@/components/blocks/dynamic-block'
+import { RegistrySection } from '@/components/blocks/registry-section'
+import { PublicShell } from '@/components/public-shell'
+import { getAppUrl } from '@/lib/app-url'
+import { formatCoupleNames } from '@/lib/constants'
+import { getPublicHomeData } from '@/lib/page-blocks/settings'
+import { getPublicSectionNav } from '@/lib/page-blocks/types'
+import { isReservedPublicSlug } from '@/lib/wedding/slug'
+import { formatWeddingDate } from '@/lib/wedding/public-settings'
 
 function buildPublicDescription(input: {
   coupleLabel: string

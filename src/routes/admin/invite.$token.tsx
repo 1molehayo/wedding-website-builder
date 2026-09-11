@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { Button } from '#/components/ui/button'
-import { acceptAdminInvite } from '#/lib/auth/admins'
+import { Button } from '@/components/ui/button'
+import { acceptAdminInvite } from '@/lib/auth/admins'
 
 export const Route = createFileRoute('/admin/invite/$token')({
   component: AcceptInvitePage,

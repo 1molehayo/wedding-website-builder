@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
-import { Modal } from '#/components/ui/modal'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Select } from '#/components/ui/select'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import { FEEDBACK_CATEGORIES } from '#/lib/feedback/categories'
-import type { FeedbackCategoryId } from '#/lib/feedback/categories'
-import { submitProductFeedback } from '#/lib/feedback/feedback'
+import { Modal } from '@/components/ui/modal'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import { FEEDBACK_CATEGORIES } from '@/lib/feedback/categories'
+import type { FeedbackCategoryId } from '@/lib/feedback/categories'
+import { submitProductFeedback } from '@/lib/feedback/feedback'
 
 const MAX_LEN = 4000
 

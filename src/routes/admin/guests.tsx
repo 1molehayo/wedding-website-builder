@@ -2,11 +2,12 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { Route as AdminRoute } from './route'
 import {
-  CopySimple,
-  EnvelopeSimple,
-  LinkSimple,
-  LockOpen,
-  WhatsappLogo,
+  CopySimpleIcon,
+  EnvelopeSimpleIcon,
+  LinkSimpleIcon,
+  LockOpenIcon,
+  PlusIcon,
+  WhatsappLogoIcon,
 } from '@phosphor-icons/react'
 import {
   getCoreRowModel,
@@ -15,20 +16,23 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
-import { useEffect, useMemo, useState } from 'react'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { ConfirmDialog } from '#/components/ui/confirm-dialog'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
-import { SideDrawer } from '#/components/ui/side-drawer'
-import { TableView } from '#/components/ui/table-view'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import { fieldErrorMessage } from '#/lib/forms/field-error'
-import { zodFormFieldErrors } from '#/lib/forms/zod-form-errors'
-import { formatCoupleNames } from '#/lib/constants'
+import { useMemo, useState, type ReactNode } from 'react'
+import { OverviewCard } from '@/components/admin/overview-card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DropdownMenu } from '@/components/ui/dropdown-menu'
+import type { DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { SideDrawer } from '@/components/ui/side-drawer'
+import { TableView } from '@/components/ui/table-view'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import { fieldErrorMessage } from '@/lib/forms/field-error'
+import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
+import { formatCoupleNames } from '@/lib/constants'
 import {
   createGuest,
   deleteGuest,
@@ -37,16 +41,16 @@ import {
   sendGuestInvitesBulk,
   unlockGuestRsvp,
   updateGuest,
-} from '#/lib/guests/guests'
-import type { GuestConflictMatch } from '#/lib/guests/guests'
+} from '@/lib/guests/guests'
+import type { GuestConflictMatch } from '@/lib/guests/guests'
 import {
   guestFormSchema,
   guestFullName,
   toGuestFormValues,
-} from '#/lib/guests/schema'
-import type { GuestFormValues } from '#/lib/guests/schema'
-import { whatsappRsvpShareUrl } from '#/lib/guests/whatsapp'
-import { updateGuestRsvp } from '#/lib/rsvp/rsvp'
+} from '@/lib/guests/schema'
+import type { GuestFormValues } from '@/lib/guests/schema'
+import { whatsappRsvpShareUrl } from '@/lib/guests/whatsapp'
+import { updateGuestRsvp } from '@/lib/rsvp/rsvp'
 import {
   RSVP_STATUS_LABELS,
   RSVP_STATUSES,
@@ -54,10 +58,10 @@ import {
   maxAttendingForPlusOnes,
   rsvpStatusBadgeVariant,
   toAdminRsvpFormValues,
-} from '#/lib/rsvp/schema'
-import type { AdminRsvpFormValues } from '#/lib/rsvp/schema'
-import type { Guest } from '#/lib/supabase/types'
-import { internalError, raiseRouteError } from '#/lib/errors/route-error'
+} from '@/lib/rsvp/schema'
+import type { AdminRsvpFormValues } from '@/lib/rsvp/schema'
+import type { Guest } from '@/lib/supabase/types'
+import { internalError, raiseRouteError, shouldRethrowRouteFailure } from '@/lib/errors/route-error'
 
 export const Route = createFileRoute('/admin/guests')({
   beforeLoad: ({ context }) => {
@@ -69,6 +73,9 @@ export const Route = createFileRoute('/admin/guests')({
     try {
       return await listGuests()
     } catch (cause) {
+      if (shouldRethrowRouteFailure(cause)) {
+        throw cause
+      }
       throw raiseRouteError(
         internalError({
           message: 'Failed to load guests for /admin/guests',
@@ -105,6 +112,52 @@ function guestRsvpPath(token: string) {
 function guestAdminDisplayName(guest: Guest) {
   const name = guestFullName(guest)
   return guest.admin_label ? `${name} (${guest.admin_label})` : name
+}
+
+function useGuestDrawerForms(
+  guest: Guest | null,
+  isCreating: boolean,
+  onSubmit: (
+    value: GuestFormValues,
+    rsvpValues: AdminRsvpFormValues,
+  ) => Promise<void>,
+) {
+  const rsvpForm = useForm({
+    defaultValues:
+      guest && !isCreating ? toAdminRsvpFormValues(guest) : emptyRsvpForm,
+  })
+  const form = useForm({
+    defaultValues: guest ? toGuestFormValues(guest) : emptyGuestForm,
+    validators: {
+      onSubmit: ({ value }) => {
+        const parsed = guestFormSchema.safeParse(value)
+        if (parsed.success) return undefined
+        return zodFormFieldErrors(parsed.error)
+      },
+    },
+    onSubmit: async ({ value }) => {
+      await onSubmit(value, rsvpForm.state.values)
+    },
+  })
+
+  return { form, rsvpForm }
+}
+
+function GuestDrawerForms({
+  guest,
+  isCreating,
+  onSubmit,
+  children,
+}: {
+  guest: Guest | null
+  isCreating: boolean
+  onSubmit: (
+    value: GuestFormValues,
+    rsvpValues: AdminRsvpFormValues,
+  ) => Promise<void>
+  children: (ctx: ReturnType<typeof useGuestDrawerForms>) => ReactNode
+}) {
+  return children(useGuestDrawerForms(guest, isCreating, onSubmit))
 }
 
 function AdminGuestsPage() {
@@ -151,129 +204,112 @@ function AdminGuestsPage() {
     unknown
   > | null>(null)
 
-  useEffect(() => {
-    setGuests(initialGuests)
-  }, [initialGuests])
-
   const selectedGuest = useMemo(
     () => guests.find((guest) => guest.id === selectedId) ?? null,
     [guests, selectedId],
   )
 
-  const rsvpForm = useForm({
-    defaultValues: emptyRsvpForm,
-  })
+  const openNameConflict = (
+    payload: Record<string, unknown>,
+    matches: GuestConflictMatch[],
+  ) => {
+    setPendingPayload(payload)
+    setConflictMatches(matches)
+    setConflictNeedsLabels(false)
+    setNewAdminLabel(adminLabelDraft.trim())
+    setExistingLabels(
+      Object.fromEntries(
+        matches.map((match) => [match.id, match.admin_label ?? '']),
+      ),
+    )
+    setConflictOpen(true)
+  }
 
-  const form = useForm({
-    defaultValues: emptyGuestForm,
-    validators: {
-      onSubmit: ({ value }) => {
-        const parsed = guestFormSchema.safeParse(value)
-        if (parsed.success) return undefined
-        return zodFormFieldErrors(parsed.error)
-      },
-    },
-    onSubmit: async ({ value }) => {
-      const parsed = guestFormSchema.parse(value)
-      setIsSaving(true)
-      try {
-        const payload = {
-          first_name: parsed.firstName,
-          last_name: parsed.lastName,
-          email: parsed.email ?? '',
-          phone: parsed.phone ?? '',
-          party_name: parsed.partyName ?? '',
-          plus_ones: parsed.plusOnes,
-          notes: parsed.notes ?? '',
-          admin_label: adminLabelDraft.trim() || null,
-        }
-        if (isCreating) {
-          const result = await createGuest({ data: payload })
-          if (result.status === 'conflict') {
-            setPendingPayload(payload)
-            setConflictMatches(result.matches)
-            setConflictNeedsLabels(false)
-            setNewAdminLabel(adminLabelDraft.trim())
-            setExistingLabels(
-              Object.fromEntries(
-                result.matches.map((match) => [
-                  match.id,
-                  match.admin_label ?? '',
-                ]),
-              ),
-            )
-            setConflictOpen(true)
-            return
-          }
-          toast.success('Guest added.')
-        } else if (selectedGuest) {
-          const rsvpValues = rsvpForm.state.values
-          const maxAttending = maxAttendingForPlusOnes(parsed.plusOnes)
-          const rsvpNormalized = {
-            ...rsvpValues,
-            attendingCount:
-              rsvpValues.status === 'attending'
-                ? rsvpValues.attendingCount
-                : 0,
-          }
-          const rsvpParsed = adminRsvpFormSchema.safeParse(rsvpNormalized)
-          if (!rsvpParsed.success) {
-            throw new Error(
-              rsvpParsed.error.issues[0]?.message ?? 'Invalid RSVP details.',
-            )
-          }
-          if (
-            rsvpParsed.data.status === 'attending' &&
-            rsvpParsed.data.attendingCount > maxAttending
-          ) {
-            throw new Error(
-              `Attending count cannot exceed ${maxAttending} for this guest.`,
-            )
-          }
+  const saveGuestRecord = async (
+    value: GuestFormValues,
+    rsvpValues: AdminRsvpFormValues,
+  ): Promise<{ status: 'saved'; guest: Guest } | { status: 'conflict' }> => {
+    const parsed = guestFormSchema.parse(value)
+    const payload = {
+      first_name: parsed.firstName,
+      last_name: parsed.lastName,
+      email: parsed.email ?? '',
+      phone: parsed.phone ?? '',
+      party_name: parsed.partyName ?? '',
+      plus_ones: parsed.plusOnes,
+      notes: parsed.notes ?? '',
+      admin_label: adminLabelDraft.trim() || null,
+    }
 
-          const result = await updateGuest({
-            data: { guestId: selectedGuest.id, ...payload },
-          })
-          if (result.status === 'conflict') {
-            setPendingPayload({ guestId: selectedGuest.id, ...payload })
-            setConflictMatches(result.matches)
-            setConflictNeedsLabels(false)
-            setNewAdminLabel(adminLabelDraft.trim())
-            setExistingLabels(
-              Object.fromEntries(
-                result.matches.map((match) => [
-                  match.id,
-                  match.admin_label ?? '',
-                ]),
-              ),
-            )
-            setConflictOpen(true)
-            return
-          }
-          await updateGuestRsvp({
-            data: {
-              guestId: selectedGuest.id,
-              status: rsvpParsed.data.status,
-              attending_count: rsvpParsed.data.attendingCount,
-              dietary_notes: rsvpParsed.data.dietaryNotes,
-              rsvp_message: rsvpParsed.data.message,
-            },
-          })
-          toast.success('Guest updated.')
-        }
-        setDrawerOpen(false)
-        setSelectedId(null)
-        setIsCreating(false)
-        await router.invalidate()
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : 'Unable to save guest.',
-        )
-      } finally {
-        setIsSaving(false)
+    if (isCreating) {
+      const result = await createGuest({ data: payload })
+      if (result.status === 'conflict') {
+        openNameConflict(payload, result.matches)
+        return { status: 'conflict' }
       }
-    },
-  })
+      return { status: 'saved', guest: result.guest }
+    }
+
+    if (!selectedGuest) {
+      throw new Error('Select a guest to save.')
+    }
+
+    const maxAttending = maxAttendingForPlusOnes(parsed.plusOnes)
+    const rsvpNormalized = {
+      ...rsvpValues,
+      attendingCount:
+        rsvpValues.status === 'attending' ? rsvpValues.attendingCount : 0,
+    }
+    const rsvpParsed = adminRsvpFormSchema.safeParse(rsvpNormalized)
+    if (!rsvpParsed.success) {
+      throw new Error(
+        rsvpParsed.error.issues[0]?.message ?? 'Invalid RSVP details.',
+      )
+    }
+    if (
+      rsvpParsed.data.status === 'attending' &&
+      rsvpParsed.data.attendingCount > maxAttending
+    ) {
+      throw new Error(
+        `Attending count cannot exceed ${maxAttending} for this guest.`,
+      )
+    }
+
+    const result = await updateGuest({
+      data: { guestId: selectedGuest.id, ...payload },
+    })
+    if (result.status === 'conflict') {
+      openNameConflict(
+        { guestId: selectedGuest.id, ...payload },
+        result.matches,
+      )
+      return { status: 'conflict' }
+    }
+
+    const updatedRsvp = await updateGuestRsvp({
+      data: {
+        guestId: selectedGuest.id,
+        status: rsvpParsed.data.status,
+        attending_count: rsvpParsed.data.attendingCount,
+        dietary_notes: rsvpParsed.data.dietaryNotes,
+        rsvp_message: rsvpParsed.data.message,
+      },
+    })
+
+    return { status: 'saved', guest: updatedRsvp }
+  }
+
+  const applySavedGuest = (guest: Guest) => {
+    setGuests((current) => {
+      const index = current.findIndex((item) => item.id === guest.id)
+      if (index === -1) return [...current, guest]
+      return current.map((item) => (item.id === guest.id ? guest : item))
+    })
+    setSelectedId(guest.id)
+    setIsCreating(false)
+    setAdminLabelDraft(guest.admin_label ?? '')
+    setDrawerOpen(true)
+  }
 
   const resolveConflictAsDifferentPeople = async () => {
     if (!pendingPayload) return
@@ -305,6 +341,7 @@ function AdminGuestsPage() {
           toast.error('Still conflicting. Check labels and try again.')
           return
         }
+        applySavedGuest(result.guest)
         toast.success('Guest added with distinguishing labels.')
       } else {
         const guestId = String(pendingPayload.guestId ?? '')
@@ -319,14 +356,11 @@ function AdminGuestsPage() {
           toast.error('Still conflicting. Check labels and try again.')
           return
         }
+        applySavedGuest(result.guest)
         toast.success('Guest updated with distinguishing labels.')
       }
       setConflictOpen(false)
       setPendingPayload(null)
-      setDrawerOpen(false)
-      setSelectedId(null)
-      setIsCreating(false)
-      await router.invalidate()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to save guest.',
@@ -340,8 +374,6 @@ function AdminGuestsPage() {
     setIsCreating(true)
     setSelectedId(null)
     setAdminLabelDraft('')
-    form.reset(emptyGuestForm)
-    rsvpForm.reset(emptyRsvpForm)
     setDrawerOpen(true)
   }
 
@@ -349,8 +381,6 @@ function AdminGuestsPage() {
     setIsCreating(false)
     setSelectedId(guest.id)
     setAdminLabelDraft(guest.admin_label ?? '')
-    form.reset(toGuestFormValues(guest))
-    rsvpForm.reset(toAdminRsvpFormValues(guest))
     setDrawerOpen(true)
   }
 
@@ -386,7 +416,6 @@ function AdminGuestsPage() {
         current.map((item) => (item.id === updated.id ? updated : item)),
       )
       toast.success('Guest can update their RSVP again.')
-      await router.invalidate()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to unlock RSVP.',
@@ -426,7 +455,13 @@ function AdminGuestsPage() {
           ? `Invite emailed to ${result.email} (includes photo link).`
           : `Invite emailed to ${result.email}.`,
       )
-      await router.invalidate()
+      setGuests((current) =>
+        current.map((item) =>
+          item.id === guest.id
+            ? { ...item, invite_emailed_at: new Date().toISOString() }
+            : item,
+        ),
+      )
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to send invite email.',
@@ -489,6 +524,32 @@ function AdminGuestsPage() {
       return
     }
     void emailGuestInvite(guest)
+  }
+
+  const emailInviteFromDrawer = async (
+    values: GuestFormValues,
+    submit: () => Promise<void>,
+    rsvpValues: AdminRsvpFormValues,
+  ) => {
+    const parsed = guestFormSchema.safeParse(values)
+    if (!parsed.success) {
+      await submit()
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const result = await saveGuestRecord(values, rsvpValues)
+      if (result.status === 'conflict') return
+      applySavedGuest(result.guest)
+      requestEmailGuestInvite(result.guest)
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to save guest.',
+      )
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const columns = useMemo<ColumnDef<Guest>[]>(
@@ -555,48 +616,40 @@ function AdminGuestsPage() {
         id: 'actions',
         enableSorting: false,
         header: '',
-        cell: ({ row }) => (
-          <div data-row-stop className="flex justify-end gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!row.original.email?.trim() || isEmailing}
-              onClick={() => requestEmailGuestInvite(row.original)}
-            >
-              <EnvelopeSimple />
-              Email
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!row.original.phone?.trim()}
-              onClick={() => shareWhatsApp(row.original)}
-            >
-              <WhatsappLogo />
-              WhatsApp
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void copyRsvpLink(row.original)}
-            >
-              <LinkSimple />
-              Link
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => openEdit(row.original)}
-            >
-              View
-            </Button>
-          </div>
-        ),
-        meta: { minWidth: 340, className: 'w-80' },
+        cell: ({ row }) => {
+          const guest = row.original
+          const items: DropdownMenuItem[] = [
+            {
+              id: 'view',
+              label: 'View',
+              onSelect: () => openEdit(guest),
+            },
+            {
+              id: 'email',
+              label: guest.invite_emailed_at ? 'Email again' : 'Email invite',
+              icon: <EnvelopeSimpleIcon />,
+              onSelect: () => requestEmailGuestInvite(guest),
+            },
+            {
+              id: 'whatsapp',
+              label: 'WhatsApp',
+              icon: <WhatsappLogoIcon />,
+              onSelect: () => shareWhatsApp(guest),
+            },
+            {
+              id: 'link',
+              label: 'Copy RSVP link',
+              icon: <LinkSimpleIcon />,
+              onSelect: () => void copyRsvpLink(guest),
+            },
+          ]
+          return (
+            <div className="flex justify-end">
+              <DropdownMenu label="Guest actions" items={items} />
+            </div>
+          )
+        },
+        meta: { minWidth: 64, className: 'w-16' },
       },
     ],
     [coupleLabel, isEmailing],
@@ -639,7 +692,9 @@ function AdminGuestsPage() {
       setDeleteOpen(false)
       setDrawerOpen(false)
       setSelectedId(null)
-      await router.invalidate()
+      setGuests((current) =>
+        current.filter((item) => item.id !== selectedGuest.id),
+      )
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to remove guest.',
@@ -666,42 +721,41 @@ function AdminGuestsPage() {
             private RSVP links.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" onClick={openCreate}>
+          <PlusIcon />
+          Add guest
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <OverviewCard label="Guests" value={guests.length} />
+        <OverviewCard label="Attending" value={attendingSummary} />
+        <OverviewCard label="Pending" value={pendingCount}>
           <Button
+            className="mt-3"
             type="button"
             size="sm"
             variant="outline"
             disabled={isBulkEmailing || pendingCount === 0}
+            isLoading={isBulkEmailing}
             onClick={() => setBulkConfirmOpen(true)}
           >
-            <EnvelopeSimple />
-            Email pending
+            <EnvelopeSimpleIcon />
+            Email invites
           </Button>
-          <Button type="button" size="sm" onClick={openCreate}>
-            Add guest
-          </Button>
-        </div>
+        </OverviewCard>
       </div>
 
       <div className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-            {guests.length} guest{guests.length === 1 ? '' : 's'}
-            {' · '}
-            {attendingSummary} attending
-            {' · '}
-            {pendingCount} pending
-          </p>
-          <Field className="w-full max-w-xs">
-            <Field.Label>Search</Field.Label>
-            <Field.Control>
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, email, RSVP…"
-              />
-            </Field.Control>
-          </Field>
+        <div className="flex justify-end">
+          <Input
+            size="sm"
+            className="w-full max-w-xs"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search name, email, RSVP"
+            aria-label="Search guests"
+          />
         </div>
 
         <TableView
@@ -721,6 +775,29 @@ function AdminGuestsPage() {
           }
         }}
       >
+        {drawerOpen ? (
+          <GuestDrawerForms
+            key={isCreating ? 'new' : selectedId ?? 'edit'}
+            guest={isCreating ? null : selectedGuest}
+            isCreating={isCreating}
+            onSubmit={async (value, rsvpValues) => {
+              setIsSaving(true)
+              try {
+                const result = await saveGuestRecord(value, rsvpValues)
+                if (result.status === 'conflict') return
+                applySavedGuest(result.guest)
+                toast.success(isCreating ? 'Guest added.' : 'Guest updated.')
+              } catch (err) {
+                toast.error(
+                  err instanceof Error ? err.message : 'Unable to save guest.',
+                )
+              } finally {
+                setIsSaving(false)
+              }
+            }}
+          >
+            {({ form, rsvpForm }) => (
+              <>
         <SideDrawer.Header
           title={
             isCreating
@@ -731,20 +808,22 @@ function AdminGuestsPage() {
           }
           drawerDescription="Guest details"
         />
-        <SideDrawer.Content>
           <form
             id="guest-form"
-            className="space-y-4"
+            className="flex min-h-0 flex-1 flex-col"
+            noValidate
             onSubmit={(event) => {
               event.preventDefault()
               event.stopPropagation()
               void form.handleSubmit()
             }}
           >
+        <SideDrawer.Content>
+          <div className="space-y-4">
             <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
               {(submitted) => (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid items-start gap-4 sm:grid-cols-2">
                     <form.Field name="firstName">
                       {(field) => {
                         const error = fieldErrorMessage(field.state.meta.errors)
@@ -763,7 +842,7 @@ function AdminGuestsPage() {
                                 }
                               />
                             </Field.Control>
-                            {invalid ? <Field.Error>{error}</Field.Error> : null}
+                            <Field.Error>{invalid ? error : null}</Field.Error>
                           </Field>
                         )
                       }}
@@ -786,7 +865,7 @@ function AdminGuestsPage() {
                                 }
                               />
                             </Field.Control>
-                            {invalid ? <Field.Error>{error}</Field.Error> : null}
+                            <Field.Error>{invalid ? error : null}</Field.Error>
                           </Field>
                         )
                       }}
@@ -800,7 +879,7 @@ function AdminGuestsPage() {
                         !!error && (field.state.meta.isTouched || submitted)
                       return (
                         <Field invalid={invalid}>
-                          <Field.Label>Email</Field.Label>
+                          <Field.Label required>Email</Field.Label>
                           <Field.Control>
                             <Input
                               type="email"
@@ -812,27 +891,34 @@ function AdminGuestsPage() {
                               }
                             />
                           </Field.Control>
-                          {invalid ? <Field.Error>{error}</Field.Error> : null}
+                          <Field.Error>{invalid ? error : null}</Field.Error>
                         </Field>
                       )
                     }}
                   </form.Field>
 
                   <form.Field name="phone">
-                    {(field) => (
-                      <Field>
-                        <Field.Label>Phone</Field.Label>
-                        <Field.Control>
-                          <Input
-                            value={field.state.value ?? ''}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                          />
-                        </Field.Control>
-                      </Field>
-                    )}
+                    {(field) => {
+                      const error = fieldErrorMessage(field.state.meta.errors)
+                      const invalid =
+                        !!error && (field.state.meta.isTouched || submitted)
+                      return (
+                        <Field invalid={invalid}>
+                          <Field.Label>Phone</Field.Label>
+                          <Field.Control>
+                            <Input
+                              value={field.state.value ?? ''}
+                              invalid={invalid}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                            />
+                          </Field.Control>
+                          <Field.Error>{invalid ? error : null}</Field.Error>
+                        </Field>
+                      )
+                    }}
                   </form.Field>
 
                   <form.Field name="partyName">
@@ -920,14 +1006,13 @@ function AdminGuestsPage() {
               )}
             </form.Subscribe>
 
-            {!isCreating && selectedGuest ? (
-              <div className="border-border space-y-4 border-t pt-4">
+            <div className="border-border space-y-4 border-t pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-                      RSVP
+                      Invite
                     </p>
-                    {selectedGuest.invite_emailed_at ? (
+                    {selectedGuest?.invite_emailed_at ? (
                       <p className="text-foreground-secondary mt-1 text-xs">
                         Last emailed{' '}
                         {new Date(
@@ -945,12 +1030,19 @@ function AdminGuestsPage() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      disabled={!selectedGuest.email?.trim() || isEmailing}
-                      isLoading={isEmailing}
-                      onClick={() => requestEmailGuestInvite(selectedGuest)}
+                      isLoading={isEmailing || isSaving}
+                      onClick={() =>
+                        void emailInviteFromDrawer(
+                          form.state.values,
+                          async () => {
+                            await form.handleSubmit()
+                          },
+                          rsvpForm.state.values,
+                        )
+                      }
                     >
-                      <EnvelopeSimple />
-                      {selectedGuest.invite_emailed_at
+                      <EnvelopeSimpleIcon />
+                      {selectedGuest?.invite_emailed_at
                         ? 'Email again'
                         : 'Email invite'}
                     </Button>
@@ -958,22 +1050,44 @@ function AdminGuestsPage() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      disabled={!selectedGuest.phone?.trim()}
-                      onClick={() => shareWhatsApp(selectedGuest)}
+                      onClick={() => {
+                        if (!selectedGuest) {
+                          toast.error(
+                            'Save the guest before sharing on WhatsApp.',
+                          )
+                          return
+                        }
+                        shareWhatsApp(selectedGuest)
+                      }}
                     >
-                      <WhatsappLogo />
+                      <WhatsappLogoIcon />
                       WhatsApp
                     </Button>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => void copyRsvpLink(selectedGuest)}
+                      onClick={() => {
+                        if (!selectedGuest) {
+                          toast.error('Save the guest before copying the RSVP link.')
+                          return
+                        }
+                        void copyRsvpLink(selectedGuest)
+                      }}
                     >
-                      <CopySimple />
+                      <CopySimpleIcon />
                       Copy link
                     </Button>
                   </div>
+                </div>
+            </div>
+
+            {!isCreating && selectedGuest ? (
+              <div className="border-border space-y-4 border-t pt-4">
+                <div className="min-w-0">
+                  <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                    RSVP
+                  </p>
                 </div>
 
                 {!selectedGuest.allow_rsvp_update &&
@@ -990,7 +1104,7 @@ function AdminGuestsPage() {
                       isLoading={isUnlocking}
                       onClick={() => void unlockGuestForUpdate(selectedGuest)}
                     >
-                      <LockOpen />
+                      <LockOpenIcon />
                       Unlock for update
                     </Button>
                   </div>
@@ -1095,7 +1209,7 @@ function AdminGuestsPage() {
                 </rsvpForm.Field>
               </div>
             ) : null}
-          </form>
+          </div>
         </SideDrawer.Content>
         <SideDrawer.Footer className="justify-between">
           {!isCreating && selectedGuest ? (
@@ -1109,10 +1223,15 @@ function AdminGuestsPage() {
           ) : (
             <span />
           )}
-          <Button type="submit" form="guest-form" size="md" isLoading={isSaving}>
+          <Button type="submit" size="md" isLoading={isSaving}>
             {isCreating ? 'Add guest' : 'Save changes'}
           </Button>
         </SideDrawer.Footer>
+          </form>
+              </>
+            )}
+          </GuestDrawerForms>
+        ) : null}
       </SideDrawer>
 
       <ConfirmDialog

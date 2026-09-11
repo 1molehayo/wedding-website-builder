@@ -2,20 +2,20 @@ import { createServerFn } from '@tanstack/react-start'
 import {
   parseRegistryAccountInput,
   parseRegistryItemInput,
-} from '#/lib/registry/schema'
+} from '@/lib/registry/schema'
 import type {
   PublicRegistryData,
   PublicRegistryItem,
   RegistryAdminData,
-} from '#/lib/registry/registry.server'
-import type { RegistryAccount, RegistryItem } from '#/lib/supabase/types'
+} from '@/lib/registry/registry.server'
+import type { RegistryAccount, RegistryItem } from '@/lib/supabase/types'
 
 export type {
   PublicRegistryAccount,
   PublicRegistryData,
   PublicRegistryItem,
   RegistryAdminData,
-} from '#/lib/registry/registry.server'
+} from '@/lib/registry/registry.server'
 
 export const listRegistryAdmin = createServerFn({ method: 'GET' }).handler(
   async (): Promise<RegistryAdminData> => {

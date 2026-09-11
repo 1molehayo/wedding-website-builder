@@ -6,7 +6,7 @@ import {
   guestPhotoShareEmailText,
   guestRsvpInviteEmailHtml,
   guestRsvpInviteEmailText,
-} from '#/lib/email/templates'
+} from '@/lib/email/templates'
 
 describe('guest email templates', () => {
   it('includes RSVP and optional photo links in text', () => {

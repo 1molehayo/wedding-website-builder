@@ -1,10 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { Wedding } from '#/lib/supabase/types'
-import { FALLBACK_PUBLIC_WEDDING } from '#/lib/wedding/public-settings'
-import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
-import { parsePublicSlug } from '#/lib/wedding/slug'
-import { parseUpdateWeddingInput } from '#/lib/wedding/validation'
-import type { UpdateWeddingInput } from '#/lib/wedding/validation'
+import type { Wedding } from '@/lib/supabase/types'
+import { FALLBACK_PUBLIC_WEDDING } from '@/lib/wedding/public-settings'
+import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
+import { parsePublicSlug } from '@/lib/wedding/slug'
+import { parseUpdateWeddingInput } from '@/lib/wedding/validation'
+import type { UpdateWeddingInput } from '@/lib/wedding/validation'
 
 export type { PublicWeddingSettings }
 export { FALLBACK_PUBLIC_WEDDING }

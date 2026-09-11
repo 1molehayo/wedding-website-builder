@@ -1,1 +1,1 @@
-export { NotFoundPage } from '#/components/app-error-page'
+export { NotFoundPage } from '@/components/app-error-page'

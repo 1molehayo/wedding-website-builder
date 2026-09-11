@@ -1,15 +1,15 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   getAdminSession,
   requestAdminOtp,
   verifyAdminOtp,
-} from '#/lib/auth/session'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Toaster, toast } from '#/components/ui/toaster'
+} from '@/lib/auth/session'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Toaster, toast } from '@/components/ui/toaster'
 
 /** Local Mailpit uses 6; hosted Supabase often issues 8. */
 const OTP_MIN_LENGTH = 6
@@ -36,6 +36,7 @@ export const Route = createFileRoute('/admin/login')({
 
 function AdminLoginPage() {
   const navigate = useNavigate()
+  const router = useRouter()
   const [step, setStep] = useState<'email' | 'otp'>('email')
   const [email, setEmail] = useState('')
   const [token, setToken] = useState('')
@@ -66,6 +67,7 @@ function AdminLoginPage() {
     setIsSubmitting(true)
     try {
       await verifyAdminOtp({ data: { email, token } })
+      await router.invalidate()
       await navigate({ to: '/admin' })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Unable to verify code.')

@@ -1,4 +1,4 @@
-import { Spinner } from '#/components/ui/spinner'
+import { Spinner } from '@/components/ui/spinner'
 
 /** Full-viewport pending state (FCP-style) while route beforeLoad/loaders run. */
 export function RoutePending() {

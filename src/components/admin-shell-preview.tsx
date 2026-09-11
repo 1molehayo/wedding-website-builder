@@ -1,12 +1,12 @@
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import {
   ADMIN_PREVIEW_NAV_LABELS,
   PRODUCT_SHORT_NAME,
   PRODUCT_TAGLINE,
-} from '#/lib/constants'
+} from '@/lib/constants'
 
 /** Static Ournuptials-inspired admin shell for the design showcase (not auth-gated). */
 export function AdminShellPreview() {

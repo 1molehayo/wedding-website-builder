@@ -1,21 +1,21 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { Select } from '#/components/ui/select'
-import { toast } from '#/components/ui/toaster'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
+import { toast } from '@/components/ui/toaster'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_STATUSES,
   feedbackCategoryLabel,
-} from '#/lib/feedback/categories'
-import type { FeedbackStatus } from '#/lib/feedback/categories'
+} from '@/lib/feedback/categories'
+import type { FeedbackStatus } from '@/lib/feedback/categories'
 import {
   listProductFeedback,
   updateProductFeedbackStatus,
-} from '#/lib/feedback/feedback'
-import type { ProductFeedbackRow } from '#/lib/feedback/feedback'
+} from '@/lib/feedback/feedback'
+import type { ProductFeedbackRow } from '@/lib/feedback/feedback'
 
 export const Route = createFileRoute('/admin/feedback')({
   beforeLoad: ({ context }) => {

@@ -24,9 +24,9 @@ import {
   useTransitionStatus,
 } from '@floating-ui/react'
 import { createContext, use, useCallback, useMemo, useRef, useState } from 'react'
-import { Slot } from '#/components/slot'
-import { useTopLayer } from '#/hooks/use-top-layer'
-import { cn } from '#/lib/utils'
+import { Slot } from '@/components/slot'
+import { useTopLayer } from '@/hooks/use-top-layer'
+import { cn } from '@/lib/utils'
 
 const DEFAULT_DELAY_IN = 600
 const DEFAULT_DELAY_OUT = 0

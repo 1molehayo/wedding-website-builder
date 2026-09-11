@@ -1,7 +1,7 @@
 import { useEffect, useId } from 'react'
-import { X } from '@phosphor-icons/react'
-import { Button } from '#/components/ui/button'
-import { cn } from '#/lib/utils'
+import { XIcon } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type ModalProps = {
   open: boolean
@@ -85,7 +85,7 @@ export function Modal({
             aria-label="Close"
             onClick={() => onOpenChange(false)}
           >
-            <X />
+            <XIcon />
           </Button>
         </div>
         <div className="mt-4">{children}</div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { guestNameKey, slugifyNamePart } from '#/lib/guests/name-key'
+import { guestNameKey, slugifyNamePart } from '@/lib/guests/name-key'
 
 describe('guestNameKey', () => {
   it('matches names ignoring case, spaces, and punctuation', () => {

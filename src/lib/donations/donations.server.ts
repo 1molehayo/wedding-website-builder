@@ -1,5 +1,5 @@
-import { requireAdminSession } from '#/lib/auth/session.server'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+import { requireAdminSession } from '@/lib/auth/session.server'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 function parseEmail(value: unknown): string {
   const email = String(value ?? '').trim().toLowerCase()

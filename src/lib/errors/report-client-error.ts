@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { ClientErrorReport } from '#/lib/errors/route-error'
+import type { ClientErrorReport } from '@/lib/errors/route-error'
 
 function isClientErrorReport(data: unknown): data is ClientErrorReport {
   if (!data || typeof data !== 'object') return false
@@ -47,7 +47,7 @@ export const reportClientError = createServerFn({ method: 'POST' })
     }
   })
   .handler(async ({ data }) => {
-    const { logAppError } = await import('#/lib/errors/logger')
+    const { logAppError } = await import('@/lib/errors/logger')
     logAppError({
       kind: 'RouteError',
       level: 'error',

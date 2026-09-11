@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
-import { Button } from '#/components/ui/button'
-import { PRODUCT_SHORT_NAME, PRODUCT_TAGLINE } from '#/lib/constants'
-import { reportClientError } from '#/lib/errors/report-client-error'
+import { Button } from '@/components/ui/button'
+import { PRODUCT_SHORT_NAME, PRODUCT_TAGLINE } from '@/lib/constants'
+import { reportClientError } from '@/lib/errors/report-client-error'
 import {
+  isAbortError,
   logRouteError,
   normalizeRouteError,
   toClientErrorReport,
-} from '#/lib/errors/route-error'
-import type { RouteError, RouteErrorCode } from '#/lib/errors/route-error'
+} from '@/lib/errors/route-error'
+import type { RouteError, RouteErrorCode } from '@/lib/errors/route-error'
 
 type ErrorAction = {
   to: '/' | '/admin' | '/admin/login'
@@ -139,6 +140,10 @@ export function NotFoundPage() {
 export function AppRouteError({ error, reset }: ErrorComponentProps) {
   const router = useRouter()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+
+  if (isAbortError(error)) {
+    return null
+  }
   const routeError = useMemo(() => normalizeRouteError(error), [error])
   const isAdminPath =
     pathname.startsWith('/admin') && pathname !== '/admin/login'

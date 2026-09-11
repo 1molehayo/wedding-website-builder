@@ -1,20 +1,20 @@
-import { requireWeddingSession } from '#/lib/auth/session.server'
-import { getAppUrl } from '#/lib/app-url'
-import { formatCoupleNames } from '#/lib/constants'
+import { requireWeddingSession } from '@/lib/auth/session.server'
+import { getAppUrl } from '@/lib/app-url'
+import { formatCoupleNames } from '@/lib/constants'
 import {
   sendGuestDateAnnouncedEmail,
-} from '#/lib/email/resend.server'
-import { resolveEmailThemeId } from '#/lib/email/theme'
-import type { Wedding } from '#/lib/supabase/types'
+} from '@/lib/email/resend.server'
+import { resolveEmailThemeId } from '@/lib/email/theme'
+import type { Wedding } from '@/lib/supabase/types'
 import {
   FALLBACK_PUBLIC_WEDDING,
   formatWeddingDate,
   toPublicSettings,
-} from '#/lib/wedding/public-settings'
-import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
-import { isPublicSlugAvailable } from '#/lib/wedding/slug.server'
-import type { UpdateWeddingInput } from '#/lib/wedding/validation'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+} from '@/lib/wedding/public-settings'
+import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
+import { isPublicSlugAvailable } from '@/lib/wedding/slug.server'
+import type { UpdateWeddingInput } from '@/lib/wedding/validation'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 export async function getPublicWeddingSettingsHandler(
   weddingSlug?: string,

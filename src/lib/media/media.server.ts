@@ -1,14 +1,14 @@
-import { requireWeddingSession } from '#/lib/auth/session.server'
+import { requireWeddingSession } from '@/lib/auth/session.server'
 import {
   ALLOWED_MEDIA_MIME_TYPES,
   MAX_MEDIA_UPLOAD_BYTES,
-} from '#/lib/media/constants'
+} from '@/lib/media/constants'
 import {
   createPhotoSignedUrl,
   isAllowedPhotoStoragePath,
-} from '#/lib/page-blocks/storage.server'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import type { MediaAsset } from '#/lib/supabase/types'
+} from '@/lib/page-blocks/storage.server'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import type { MediaAsset } from '@/lib/supabase/types'
 
 export type MediaAssetListItem = MediaAsset & {
   signedUrl: string | null

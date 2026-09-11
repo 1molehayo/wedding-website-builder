@@ -1,30 +1,31 @@
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
-import { PhoneField } from '#/components/phone-field'
-import { Button } from '#/components/ui/button'
-import { ConfirmDialog } from '#/components/ui/confirm-dialog'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
+import { PageActionBar } from '@/components/admin/page-action-bar'
+import { PhoneField } from '@/components/phone-field'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
   requestAccountDeletion,
   updateProfile,
-} from '#/lib/auth/profile'
+} from '@/lib/auth/profile'
 import {
   deletionReasonSchema,
   profileFormSchema,
   profileFormSchemaAdmin,
-} from '#/lib/auth/profile-schema'
-import { parseStoredPhone } from '#/lib/auth/phone'
+} from '@/lib/auth/profile-schema'
+import { parseStoredPhone } from '@/lib/auth/phone'
 import {
   adminFirstName,
   hasCompleteAdminName,
-} from '#/lib/auth/types'
-import { fieldErrorMessage } from '#/lib/forms/field-error'
-import { zodFormFieldErrors } from '#/lib/forms/zod-form-errors'
+} from '@/lib/auth/types'
+import { fieldErrorMessage } from '@/lib/forms/field-error'
+import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/profile')({
@@ -140,7 +141,7 @@ function AdminProfilePage() {
         >
           {(submitted) => (
             <>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid items-start gap-4 md:grid-cols-2">
                 <form.Field name="firstName">
                   {(field) => {
                     const error = fieldErrorMessage(field.state.meta.errors)
@@ -160,7 +161,7 @@ function AdminProfilePage() {
                             autoComplete="given-name"
                           />
                         </Field.Control>
-                        {invalid ? <Field.Error>{error}</Field.Error> : null}
+                        <Field.Error>{invalid ? error : null}</Field.Error>
                       </Field>
                     )
                   }}
@@ -184,7 +185,7 @@ function AdminProfilePage() {
                             autoComplete="family-name"
                           />
                         </Field.Control>
-                        {invalid ? <Field.Error>{error}</Field.Error> : null}
+                        <Field.Error>{invalid ? error : null}</Field.Error>
                       </Field>
                     )
                   }}
@@ -254,9 +255,11 @@ function AdminProfilePage() {
           )}
         </form.Subscribe>
 
-        <Button type="submit" size="md" isLoading={isSaving}>
-          Save profile
-        </Button>
+        <PageActionBar>
+          <Button type="submit" size="md" isLoading={isSaving}>
+            Save profile
+          </Button>
+        </PageActionBar>
       </form>
 
       {!isSuper ? (

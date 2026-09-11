@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { getSupabaseSecretKey, getSupabaseUrl } from '#/lib/supabase/env'
+import { getSupabaseSecretKey, getSupabaseUrl } from '@/lib/supabase/env'
 
 /** Server-only privileged client. Never import from browser code. */
 export function createAdminSupabaseClient() {

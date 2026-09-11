@@ -1,14 +1,14 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { Info, Plus, Trash } from '@phosphor-icons/react'
+import { InfoIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
-import { Button } from '#/components/ui/button'
-import { ConfirmDialog } from '#/components/ui/confirm-dialog'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
-import { SideDrawer } from '#/components/ui/side-drawer'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { SideDrawer } from '@/components/ui/side-drawer'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
 import {
   createRegistryAccount,
   createRegistryItem,
@@ -17,10 +17,10 @@ import {
   listRegistryAdmin,
   updateRegistryAccount,
   updateRegistryItem,
-} from '#/lib/registry/registry'
-import { REGISTRY_ITEM_STATUS_LABELS } from '#/lib/registry/schema'
-import type { RegistryAccount, RegistryItem } from '#/lib/supabase/types'
-import { cn } from '#/lib/utils'
+} from '@/lib/registry/registry'
+import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
+import type { RegistryAccount, RegistryItem } from '@/lib/supabase/types'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/admin/registry')({
   beforeLoad: ({ context }) => {
@@ -251,21 +251,21 @@ function AdminRegistryPage() {
         <div className="flex flex-wrap gap-2">
           {tab === 'gifts' ? (
             <Button type="button" size="sm" onClick={openCreateItem}>
-              <Plus />
+              <PlusIcon />
               Add gift
             </Button>
           ) : (
             <Button type="button" size="sm" onClick={openCreateAccount}>
-              <Plus />
+              <PlusIcon />
               Add account
             </Button>
           )}
         </div>
       </div>
 
-      <div className="bg-surface border-border flex flex-wrap items-start gap-3 rounded-xl border p-4 text-sm">
-        <Info className="text-foreground-secondary mt-0.5 size-4 shrink-0" />
-        <p className="text-foreground-secondary max-w-3xl leading-relaxed">
+      <div className="bg-surface border-border flex w-full max-w-2xl items-start gap-3 rounded-xl border p-4 text-sm">
+        <InfoIcon className="text-foreground-secondary mt-0.5 size-4 shrink-0" />
+        <p className="text-foreground-secondary leading-relaxed">
           Use a store&apos;s <strong className="text-foreground">buy as gift</strong>{' '}
           or <strong className="text-foreground">gift card</strong> link whenever
           possible so guests are not asked for your shipping address. After
@@ -343,7 +343,7 @@ function AdminRegistryPage() {
                     variant="outline"
                     onClick={() => setDeleteItemId(item.id)}
                   >
-                    <Trash />
+                    <TrashIcon />
                     Delete
                   </Button>
                 </div>
@@ -387,7 +387,7 @@ function AdminRegistryPage() {
                   variant="outline"
                   onClick={() => setDeleteAccountId(account.id)}
                 >
-                  <Trash />
+                  <TrashIcon />
                   Delete
                 </Button>
               </div>
@@ -448,7 +448,7 @@ function AdminRegistryPage() {
               Prefer buy-as-gift or gift-card URLs from the store.
             </Field.Description>
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid items-start gap-4 sm:grid-cols-2">
             <Field>
               <Field.Label>Price label</Field.Label>
               <Field.Control>
@@ -576,7 +576,7 @@ function AdminRegistryPage() {
               />
             </Field.Control>
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid items-start gap-4 sm:grid-cols-2">
             <Field>
               <Field.Label>Bank name</Field.Label>
               <Field.Control>

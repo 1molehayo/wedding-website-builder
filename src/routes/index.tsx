@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowUpRight } from '@phosphor-icons/react'
+import { ArrowUpRightIcon } from '@phosphor-icons/react'
 
-import { Button } from '#/components/ui/button'
-import { PRODUCT_NAME, PRODUCT_TAGLINE } from '#/lib/constants'
-import { getAdminSession } from '#/lib/auth/session'
+import { Button } from '@/components/ui/button'
+import { PRODUCT_NAME, PRODUCT_TAGLINE } from '@/lib/constants'
+import { getAdminSession } from '@/lib/auth/session'
 
 export const Route = createFileRoute('/')({
   loader: async () => {
@@ -42,7 +42,7 @@ function LandingPage() {
         >
           <Link to={signedIn ? '/admin' : '/admin/login'}>
             {signedIn ? 'Dashboard' : 'Get started'}
-            <ArrowUpRight data-icon="inline-end" className="size-4" />
+            <ArrowUpRightIcon data-icon="inline-end" className="size-4" />
           </Link>
         </Button>
       </header>

@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
-import { normalizeAdminEmail } from '#/lib/auth/roles'
-import type { AdminSession } from '#/lib/auth/types'
+import { normalizeAdminEmail } from '@/lib/auth/roles'
+import type { AdminSession } from '@/lib/auth/types'
 
 export type { AdminSession }
 

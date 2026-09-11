@@ -1,11 +1,11 @@
-import { requireAdminSession } from '#/lib/auth/session.server'
-import { createDefaultPageBlocks } from '#/lib/page-blocks/types'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import type { Wedding } from '#/lib/supabase/types'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
-import { parseOnboardingInput } from '#/lib/wedding/onboarding-validation'
-import type { OnboardingInput } from '#/lib/wedding/onboarding-validation'
-import { allocateUniquePublicSlug } from '#/lib/wedding/slug.server'
+import { requireAdminSession } from '@/lib/auth/session.server'
+import { createDefaultPageBlocks } from '@/lib/page-blocks/types'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import type { Wedding } from '@/lib/supabase/types'
+import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
+import { parseOnboardingInput } from '@/lib/wedding/onboarding-validation'
+import type { OnboardingInput } from '@/lib/wedding/onboarding-validation'
+import { allocateUniquePublicSlug } from '@/lib/wedding/slug.server'
 
 export async function completeOnboardingHandler(
   input: OnboardingInput,

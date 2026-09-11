@@ -1,7 +1,7 @@
-import { PUBLIC_THEMES } from '#/lib/site-settings'
-import type { PublicThemeId } from '#/lib/site-settings'
-import type { WeddingStatus } from '#/lib/supabase/types'
-import { parsePublicSlug } from '#/lib/wedding/slug'
+import { PUBLIC_THEMES } from '@/lib/site-settings'
+import type { PublicThemeId } from '@/lib/site-settings'
+import type { WeddingStatus } from '@/lib/supabase/types'
+import { parsePublicSlug } from '@/lib/wedding/slug'
 
 export const WEDDING_STATUSES = [
   'planning',

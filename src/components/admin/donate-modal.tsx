@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { Heart } from '@phosphor-icons/react'
-import { Modal } from '#/components/ui/modal'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import { DONATE_URL, PRODUCT_NAME } from '#/lib/constants'
-import { submitDonationThanks } from '#/lib/donations/donations'
+import { HeartIcon } from '@phosphor-icons/react'
+import { Modal } from '@/components/ui/modal'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import { DONATE_URL, PRODUCT_NAME } from '@/lib/constants'
+import { submitDonationThanks } from '@/lib/donations/donations'
 
 export function DonateModal({
   open,
@@ -63,7 +63,7 @@ export function DonateModal({
           </p>
           <Button asChild size="md">
             <a href={DONATE_URL} target="_blank" rel="noopener noreferrer">
-              <Heart weight="fill" />
+              <HeartIcon weight="fill" />
               Open PayPal
             </a>
           </Button>

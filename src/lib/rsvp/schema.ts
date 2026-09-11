@@ -3,7 +3,7 @@ import type {
   PublicThemeId,
   RsvpStatus,
   WeddingStatus,
-} from '#/lib/supabase/types'
+} from '@/lib/supabase/types'
 
 export type PublicRsvpPageData = {
   token: string

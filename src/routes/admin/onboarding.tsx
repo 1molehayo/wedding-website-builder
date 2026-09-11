@@ -1,16 +1,17 @@
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { AddressSearchField } from '#/components/address-search-field'
-import { ThemePicker } from '#/components/admin/theme-picker'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
-import type { PublicThemeId } from '#/lib/site-settings'
-import { completeOnboarding } from '#/lib/wedding/onboarding'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
+import { AddressSearchField } from '@/components/address-search-field'
+import { PageActionBar } from '@/components/admin/page-action-bar'
+import { ThemePicker } from '@/components/admin/theme-picker'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
+import type { PublicThemeId } from '@/lib/site-settings'
+import { completeOnboarding } from '@/lib/wedding/onboarding'
+import { formatWeddingDate } from '@/lib/wedding/public-settings'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/onboarding')({
@@ -82,7 +83,7 @@ function AdminOnboardingPage() {
           <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
             Required
           </p>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid items-start gap-4 md:grid-cols-2">
             <Field>
               <Field.Label>Groom</Field.Label>
               <Field.Control>
@@ -155,7 +156,7 @@ function AdminOnboardingPage() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <PageActionBar>
           <Button type="submit" size="md" isLoading={isSubmitting}>
             Create wedding
           </Button>
@@ -169,7 +170,7 @@ function AdminOnboardingPage() {
               Skip for now
             </Button>
           ) : null}
-        </div>
+        </PageActionBar>
       </form>
     </div>
   )

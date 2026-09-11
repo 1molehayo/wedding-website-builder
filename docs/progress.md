@@ -32,7 +32,10 @@ Logged after you reopened the project. Visual reference for the invitation card:
    **Open product question:** keep as a manual lifecycle, auto-derive from publish/invites, or remove the control so it is not confusing.
 
 4. **New page block: text content**  
-   Title + paragraph (reusable, not only “Our Story”). There is already a **Story** block (`title` + `body`) with a hardcoded nav label “Story”. Confirm whether this is a new generic `text` block (multiple times, nav from title) or a Story improvement.
+   Fields: **title** + **content** (not “description”). Reusable, not only “Our Story”. There is already a **Story** block (`title` + `body` textarea) with a hardcoded nav label “Story” — this is a new generic text block (multiple times; nav from title).  
+   **Editor:** rich text (not a textarea). FCP backoffice has a Lexical editor we can slim down.  
+   **Allowed:** headings 4–6, paragraphs, text align, bold, italic, underline, bullets, numbered lists, quote, indent / outdent.  
+   **Blocked (clash with site theme):** headings 1–3, media / images, text colour, highlight colour, font family/size. Sanitize on save so paste cannot sneak those in. Public render uses existing wedding typography/tokens only.
 
 5. **Image block nav (title is required)**  
    Use the **block title** as the in-page nav link. Today every image block is labelled **Photos** (`getPublicSectionNav`).  
@@ -48,11 +51,8 @@ Logged after you reopened the project. Visual reference for the invitation card:
 
 ### Bugs
 
-1. **Guest invitation not reliable**  
-   Guest content is not persistent. Send / Saved changes looks **disabled**. Adding an email did **not** send the invite. Investigate save vs send, form dirty/disabled state, and Resend.
-
-2. **Admin route loader covers the whole page**  
-   Navigating to another admin page shows a loader over **sidebar + content**. Loader should cover **content only**. Sidebar stays visible but **must not be clickable** while loading. (`AdminOutletPending` is outlet-sized in code — check if a parent `RoutePending` / full-shell pending is still wrapping the layout.)
+1. **Guest invitation not reliable** — **fixed (Sep 10).** Drawer now keeps the guest open after save; Email invite uses the form email, saves first, then sends. Save is no longer blocked by native `type="email"` validation (`noValidate` + Zod).
+2. **Admin route loader covers the whole page** — **fixed (Sep 11).** `/admin` is a real layout: `shouldReload: false` keeps the shell mounted across page changes. Only the outlet loads. Sidebar stays visible and is inert while the next page loads.
 
 ---
 
@@ -150,13 +150,12 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 ## Suggested next session
 
-1. **Fix Sep 10 bugs:** guest invite save/send + disabled button; admin loader overlay (content only, sidebar inert).
-2. Footer: remove “Built with Ìgbéyàwówa”; keep © line.
-3. Image block: required title (max ~24 chars) as nav + lightbox (`object-contain`, viewport max height).
-4. Text content block (title + paragraph).
-5. RSVP/email invitation card image (generated default + admin upload replace).
-6. Explain or simplify wedding **status**.
-7. Registry: test Amazon gift-registry flow.
-8. Then older smoke-test / UI bugs / announcement bar. Motion still last.
+1. Footer: remove “Built with Ìgbéyàwówa”; keep © line.
+2. Image block: required title (max ~24 chars) as nav + lightbox (`object-contain`, viewport max height).
+3. Text content block (title + rich-text **content**; H4–H6 only, no colours/fonts/images). **Editor: TipTap.**
+4. RSVP/email invitation card image (generated default + admin upload replace).
+5. Explain or simplify wedding **status**.
+6. Registry: test Amazon gift-registry flow.
+7. Then older smoke-test / UI bugs / announcement bar. Motion still last.
 
 Do not start Motion until you confirm the list above.

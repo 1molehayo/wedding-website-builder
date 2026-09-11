@@ -1,11 +1,11 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { AppRouteError, NotFoundPage } from '#/components/app-error-page'
-import { formatCoupleNames, PRODUCT_NAME } from '#/lib/constants'
-import { COLOR_MODE_INIT_SCRIPT } from '#/lib/color-mode'
-import { internalError, raiseRouteError } from '#/lib/errors/route-error'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
-import { getPublicWeddingSettings } from '#/lib/wedding/settings'
-import { isReservedPublicSlug } from '#/lib/wedding/slug'
+import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
+import { formatCoupleNames, PRODUCT_NAME } from '@/lib/constants'
+import { COLOR_MODE_INIT_SCRIPT } from '@/lib/color-mode'
+import { internalError, raiseRouteError } from '@/lib/errors/route-error'
+import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
+import { getPublicWeddingSettings } from '@/lib/wedding/settings'
+import { isReservedPublicSlug } from '@/lib/wedding/slug'
 
 import appCss from '../styles/app.css?url'
 

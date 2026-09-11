@@ -1,33 +1,33 @@
 import { useEffect, useId, useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
-  ArrowSquareOut,
-  Bell,
-  ChatTeardropText,
-  Heart,
-  List,
-  SignOut,
-  X,
+  ArrowSquareOutIcon,
+  BellIcon,
+  ChatTeardropTextIcon,
+  HeartIcon,
+  ListIcon,
+  SignOutIcon,
+  XIcon,
 } from '@phosphor-icons/react'
-import { DonateModal } from '#/components/admin/donate-modal'
-import { FeedbackModal } from '#/components/admin/feedback-modal'
-import { NavigationProgress } from '#/components/navigation-progress'
-import { Button } from '#/components/ui/button'
-import { Toaster, toast } from '#/components/ui/toaster'
-import { adminBreadcrumbs } from '#/lib/admin/breadcrumbs'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
-import type { AdminSession } from '#/lib/auth/types'
-import { adminFirstName } from '#/lib/auth/types'
+import { DonateModal } from '@/components/admin/donate-modal'
+import { FeedbackModal } from '@/components/admin/feedback-modal'
+import { NavigationProgress } from '@/components/navigation-progress'
+import { Button } from '@/components/ui/button'
+import { Toaster, toast } from '@/components/ui/toaster'
+import { adminBreadcrumbs } from '@/lib/admin/breadcrumbs'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
+import type { AdminSession } from '@/lib/auth/types'
+import { adminFirstName } from '@/lib/auth/types'
 import {
   PRODUCT_NAME,
   PRODUCT_SHORT_NAME,
   PRODUCT_TAGLINE,
   formatCoupleNames,
   getAdminNavItems,
-} from '#/lib/constants'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
-import { publicWeddingPath } from '#/lib/wedding/public-settings'
-import { cn } from '#/lib/utils'
+} from '@/lib/constants'
+import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
+import { publicWeddingPath } from '@/lib/wedding/public-settings'
+import { cn } from '@/lib/utils'
 
 function SidebarBrand() {
   return (
@@ -119,7 +119,7 @@ function SidebarFooter({
             className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
           >
             <a href={previewHref} target="_blank" rel="noreferrer">
-              <ArrowSquareOut />
+              <ArrowSquareOutIcon />
               Preview site
             </a>
           </Button>
@@ -141,7 +141,7 @@ function SidebarFooter({
         className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
         onClick={onDonate}
       >
-        <Heart />
+        <HeartIcon />
         Donate
       </Button>
     </div>
@@ -178,7 +178,7 @@ function AdminTopbar({
           aria-label={navOpen ? 'Close menu' : 'Open menu'}
           onClick={onOpenNav}
         >
-          {navOpen ? <X /> : <List />}
+          {navOpen ? <XIcon /> : <ListIcon />}
         </Button>
 
         <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
@@ -222,7 +222,7 @@ function AdminTopbar({
             variant="outline"
             onClick={onFeedback}
           >
-            <ChatTeardropText />
+            <ChatTeardropTextIcon />
             <span className="hidden sm:inline">Feedback</span>
           </Button>
           <Button
@@ -235,7 +235,7 @@ function AdminTopbar({
               toast.message('Notifications are coming soon.')
             }
           >
-            <Bell />
+            <BellIcon />
           </Button>
           <Button
             type="button"
@@ -244,7 +244,7 @@ function AdminTopbar({
             onClick={onLogout}
             isLoading={isLoggingOut}
           >
-            <SignOut />
+            <SignOutIcon />
             <span className="hidden sm:inline">Sign out</span>
           </Button>
         </div>
@@ -309,6 +309,13 @@ export function AdminShell({
   }, [mobileNavOpen])
 
   const closeMobileNav = () => setMobileNavOpen(false)
+  const isContentLoading = useRouterState({
+    select: (state) => state.isLoading,
+  })
+
+  useEffect(() => {
+    if (isContentLoading) setMobileNavOpen(false)
+  }, [isContentLoading])
 
   return (
     <div
@@ -335,7 +342,10 @@ export function AdminShell({
         className={cn(
           'bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex w-[min(18rem,88vw)] flex-col gap-6 p-4 transition-transform duration-200 md:hidden',
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
+          isContentLoading && 'pointer-events-none',
         )}
+        inert={isContentLoading || undefined}
+        aria-disabled={isContentLoading}
       >
         <span id={titleId} className="sr-only">
           Admin navigation
@@ -352,7 +362,14 @@ export function AdminShell({
       </aside>
 
       <div className="md:grid md:min-h-dvh md:grid-cols-[15rem_1fr]">
-        <aside className="bg-sidebar text-sidebar-foreground sticky top-0 hidden h-dvh flex-col gap-6 p-4 md:flex">
+        <aside
+          className={cn(
+            'bg-sidebar text-sidebar-foreground sticky top-0 hidden h-dvh flex-col gap-6 p-4 md:flex',
+            isContentLoading && 'pointer-events-none',
+          )}
+          inert={isContentLoading || undefined}
+          aria-disabled={isContentLoading}
+        >
           <SidebarBrand />
           <SidebarNav navItems={navItems} />
           <SidebarFooter
@@ -369,7 +386,15 @@ export function AdminShell({
             isLoggingOut={isLoggingOut}
             onFeedback={() => setFeedbackOpen(true)}
           />
-          <div className="min-w-0 flex-1 p-6 md:p-8">{children}</div>
+          <div
+            className={cn(
+              'min-w-0 flex-1 p-6 md:p-8',
+              isContentLoading && 'pointer-events-none',
+            )}
+            aria-busy={isContentLoading}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </div>

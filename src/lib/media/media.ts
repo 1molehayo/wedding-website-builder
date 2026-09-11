@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import type {
   CreateMediaUploadResult,
   MediaAssetListItem,
-} from '#/lib/media/media.server'
+} from '@/lib/media/media.server'
 
 export type { CreateMediaUploadResult, MediaAssetListItem }
 

@@ -79,3 +79,21 @@ export function parseStoredPhone(phone: string | null | undefined): {
     nationalNumber: parsed.nationalNumber,
   }
 }
+
+export function isValidOptionalPhone(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return true
+  const parsed =
+    parsePhoneNumberFromString(trimmed) ??
+    parsePhoneNumberFromString(trimmed, defaultPhoneCountry())
+  return Boolean(parsed?.isValid())
+}
+
+export function toStoredPhone(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const parsed =
+    parsePhoneNumberFromString(trimmed) ??
+    parsePhoneNumberFromString(trimmed, defaultPhoneCountry())
+  return parsed?.isValid() ? parsed.format('E.164') : null
+}

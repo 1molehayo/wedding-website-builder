@@ -1,7 +1,7 @@
 import type { VariantProps } from 'cva'
-import { Slot } from '#/components/slot'
-import { Spinner } from '#/components/ui/spinner'
-import { cn, cva } from '#/lib/utils'
+import { Slot } from '@/components/slot'
+import { Spinner } from '@/components/ui/spinner'
+import { cn, cva } from '@/lib/utils'
 
 const buttonStyle = cva({
   base: [
@@ -56,25 +56,33 @@ const Button = ({
   square,
   type = 'button',
   ref,
+  disabled,
   ...props
 }: ButtonProps) => {
   const classes = cn(
     buttonStyle({ className, variant, size, square }),
     isLoading && 'text-transparent transition-none',
   )
+  const isDisabled = Boolean(disabled || isLoading)
 
   // asChild must slot styles onto the child (e.g. Link) directly.
   // Wrapping with Slottable/Fragment drops classes and looks like plain text.
   if (asChild) {
     return (
-      <Slot className={classes} ref={ref} {...props}>
+      <Slot className={classes} ref={ref} disabled={isDisabled} {...props}>
         {children}
       </Slot>
     )
   }
 
   return (
-    <button className={classes} ref={ref} type={type} {...props}>
+    <button
+      className={classes}
+      ref={ref}
+      type={type}
+      disabled={isDisabled}
+      {...props}
+    >
       {children}
       {isLoading ? (
         <span

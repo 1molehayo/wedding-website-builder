@@ -1,9 +1,9 @@
 import type { VariantProps } from 'cva'
-import { cn, cva } from '#/lib/utils'
+import { cn, cva } from '@/lib/utils'
 
 const inputStyle = cva({
   base: [
-    'w-full font-medium placeholder:text-foreground-secondary',
+    'w-full font-medium placeholder:font-normal placeholder:text-foreground/40',
     'border outline-none transition',
     'focus-visible:ring-(length:--ring-width) ring-ring focus-visible:border-accent',
     'disabled:cursor-not-allowed disabled:opacity-50',

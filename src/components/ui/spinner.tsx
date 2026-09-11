@@ -1,4 +1,4 @@
-import { cva } from '#/lib/utils'
+import { cva } from '@/lib/utils'
 import type { VariantProps } from 'cva'
 
 type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg'

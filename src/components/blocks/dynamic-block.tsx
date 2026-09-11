@@ -1,5 +1,5 @@
-import type { PageBlock } from '#/lib/page-blocks/types'
-import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
+import type { PageBlock } from '@/lib/page-blocks/types'
+import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
 import { DetailsBlock } from './details-block'
 import { HeroBlock } from './hero-block'
 import { ImageBlock } from './image-block'

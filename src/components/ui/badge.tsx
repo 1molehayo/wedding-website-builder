@@ -1,6 +1,6 @@
 import type { VariantProps } from 'cva'
-import { Slot } from '#/components/slot'
-import { cn, cva } from '#/lib/utils'
+import { Slot } from '@/components/slot'
+import { cn, cva } from '@/lib/utils'
 
 const badgeStyle = cva({
   base: 'inline-flex items-center gap-1 rounded-full font-semibold leading-none ring-1 ring-inset',

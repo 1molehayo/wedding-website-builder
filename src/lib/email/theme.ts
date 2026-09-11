@@ -1,5 +1,5 @@
-import type { ColorMode, PublicThemeId } from '#/lib/site-settings'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
+import type { ColorMode, PublicThemeId } from '@/lib/site-settings'
+import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
 
 /** Inline hex palettes for email clients (no CSS variables). */
 export type EmailThemePalette = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveAdminStatus } from '#/lib/auth/types'
+import { deriveAdminStatus } from '@/lib/auth/types'
 
 describe('deriveAdminStatus', () => {
   it('marks cancelled invites', () => {

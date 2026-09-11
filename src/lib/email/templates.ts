@@ -1,11 +1,11 @@
-import { getAppUrl } from '#/lib/app-url'
-import { PRODUCT_NAME } from '#/lib/constants'
+import { getAppUrl } from '@/lib/app-url'
+import { PRODUCT_NAME } from '@/lib/constants'
 import {
   EMAIL_SEND_MODE,
   getEmailThemePalette,
-} from '#/lib/email/theme'
-import type { EmailThemePalette } from '#/lib/email/theme'
-import type { ColorMode, PublicThemeId } from '#/lib/site-settings'
+} from '@/lib/email/theme'
+import type { EmailThemePalette } from '@/lib/email/theme'
+import type { ColorMode, PublicThemeId } from '@/lib/site-settings'
 
 export { getAppUrl }
 

@@ -4,7 +4,7 @@ import {
   setCookie,
   setResponseHeader,
 } from '@tanstack/react-start/server'
-import { getSupabasePublishableKey, getSupabaseUrl } from '#/lib/supabase/env'
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/env'
 
 export function createServerSupabaseClient() {
   return createServerClient(getSupabaseUrl(), getSupabasePublishableKey(), {

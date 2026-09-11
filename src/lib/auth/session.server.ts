@@ -4,12 +4,12 @@ import {
   isSuperAdminEmail,
   isSuperAdminProfile,
   normalizeAdminEmail,
-} from '#/lib/auth/roles'
-import type { AdminSession } from '#/lib/auth/types'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import { isLocalSupabase } from '#/lib/supabase/env'
-import { createServerSupabaseClient } from '#/lib/supabase/server.server'
-import type { AdminProfile, AdminRole, Wedding } from '#/lib/supabase/types'
+} from '@/lib/auth/roles'
+import type { AdminSession } from '@/lib/auth/types'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import { isLocalSupabase } from '@/lib/supabase/env'
+import { createServerSupabaseClient } from '@/lib/supabase/server.server'
+import type { AdminProfile, AdminRole, Wedding } from '@/lib/supabase/types'
 
 export type { AdminSession }
 

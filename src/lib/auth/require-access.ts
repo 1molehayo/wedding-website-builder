@@ -1,10 +1,10 @@
-import { isSuperAdminProfile } from '#/lib/auth/roles'
-import type { AdminSession } from '#/lib/auth/types'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
+import type { AdminSession } from '@/lib/auth/types'
 import {
   forbidden,
   raiseRouteError,
   unauthorized,
-} from '#/lib/errors/route-error'
+} from '@/lib/errors/route-error'
 
 /**
  * Page-access gate for super-admin-only routes.

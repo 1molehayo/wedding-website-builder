@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { PublicShell } from '#/components/public-shell'
-import { getPhotoShareViewer } from '#/lib/photo-shares/photo-shares'
-import type { PhotoShareViewerData } from '#/lib/photo-shares/photo-shares'
+import { PublicShell } from '@/components/public-shell'
+import { getPhotoShareViewer } from '@/lib/photo-shares/photo-shares'
+import type { PhotoShareViewerData } from '@/lib/photo-shares/photo-shares'
 
 type ViewerResult =
   | { ok: true; data: PhotoShareViewerData }

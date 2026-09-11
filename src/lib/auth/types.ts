@@ -1,4 +1,4 @@
-import type { AdminProfile, Wedding } from '#/lib/supabase/types'
+import type { AdminProfile, Wedding } from '@/lib/supabase/types'
 
 export type AdminSession = {
   user: {

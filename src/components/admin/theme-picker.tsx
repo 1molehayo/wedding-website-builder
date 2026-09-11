@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { CheckIcon } from '@phosphor-icons/react'
-import { Button } from '#/components/ui/button'
-import { formatCoupleNames } from '#/lib/constants'
-import { guestRsvpInviteEmailHtml } from '#/lib/email/templates'
-import { PUBLIC_THEME_META, PUBLIC_THEMES } from '#/lib/site-settings'
-import type { ColorMode, PublicThemeId } from '#/lib/site-settings'
-import { cn } from '#/lib/utils'
+import { Button } from '@/components/ui/button'
+import { formatCoupleNames } from '@/lib/constants'
+import { guestRsvpInviteEmailHtml } from '@/lib/email/templates'
+import { PUBLIC_THEME_META, PUBLIC_THEMES } from '@/lib/site-settings'
+import type { ColorMode, PublicThemeId } from '@/lib/site-settings'
+import { cn } from '@/lib/utils'
 
 export function ThemePicker({
   value,

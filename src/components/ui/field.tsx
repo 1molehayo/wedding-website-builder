@@ -7,8 +7,8 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { Slot } from '#/components/slot'
-import { cn } from '#/lib/utils'
+import { Slot } from '@/components/slot'
+import { cn } from '@/lib/utils'
 
 interface FieldContextValue {
   controlId: string
@@ -54,7 +54,7 @@ const Field = ({ invalid, className, children, ...props }: FieldProps) => {
   return (
     <FieldContext value={ctx}>
       <div
-        className={cn('flex flex-col gap-1.5', className)}
+        className={cn('flex w-full flex-col gap-1.5 self-start', className)}
         data-invalid={invalid || undefined}
         {...props}
       >
@@ -149,13 +149,15 @@ const FieldError = ({
     return registerMessage(id)
   }, [id, hasContent, registerMessage])
 
-  if (!hasContent) return null
+  if (!hasContent) {
+    return <p className={cn('min-h-5 text-sm', className)} aria-hidden />
+  }
 
   return (
     <p
       id={id}
       role="alert"
-      className={cn('text-error text-sm', className)}
+      className={cn('text-error min-h-5 text-sm', className)}
       {...props}
     >
       {children}

@@ -3,7 +3,7 @@ import {
   buildWeddingPublicSlug,
   parsePublicSlug,
   withPublicSlugUuid,
-} from '#/lib/wedding/slug'
+} from '@/lib/wedding/slug'
 
 describe('wedding public slug', () => {
   it('builds bride-groom-year from wedding date', () => {

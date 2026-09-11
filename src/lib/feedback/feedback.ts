@@ -2,8 +2,8 @@ import { createServerFn } from '@tanstack/react-start'
 import type {
   FeedbackCategoryId,
   FeedbackStatus,
-} from '#/lib/feedback/categories'
-import type { ProductFeedbackRow } from '#/lib/feedback/feedback.server'
+} from '@/lib/feedback/categories'
+import type { ProductFeedbackRow } from '@/lib/feedback/feedback.server'
 
 export type { ProductFeedbackRow }
 

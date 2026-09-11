@@ -1,8 +1,20 @@
+import { isNotFound, isRedirect } from '@tanstack/react-router'
 import {
   logAppError,
   serializeUnknownCause,
-} from '#/lib/errors/logger'
-import type { AppLogSource } from '#/lib/errors/logger'
+} from '@/lib/errors/logger'
+import type { AppLogSource } from '@/lib/errors/logger'
+
+export function isAbortError(cause: unknown) {
+  if (!cause || typeof cause !== 'object') return false
+  const name = 'name' in cause ? String(cause.name) : ''
+  return name === 'AbortError'
+}
+
+/** Navigation cancels and auth redirects must not become the error page. */
+export function shouldRethrowRouteFailure(cause: unknown): boolean {
+  return isRedirect(cause) || isNotFound(cause) || isAbortError(cause)
+}
 
 export type RouteErrorStatus = 403 | 404 | 500
 

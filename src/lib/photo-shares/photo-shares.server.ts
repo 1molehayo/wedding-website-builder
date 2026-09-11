@@ -1,15 +1,15 @@
-import { requireWeddingSession } from '#/lib/auth/session.server'
-import { getAppUrl } from '#/lib/app-url'
-import { formatCoupleNames } from '#/lib/constants'
-import { sendGuestPhotoShareEmail } from '#/lib/email/resend.server'
-import { resolveEmailThemeId } from '#/lib/email/theme'
-import { createPhotoSignedUrl } from '#/lib/page-blocks/storage.server'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+import { requireWeddingSession } from '@/lib/auth/session.server'
+import { getAppUrl } from '@/lib/app-url'
+import { formatCoupleNames } from '@/lib/constants'
+import { sendGuestPhotoShareEmail } from '@/lib/email/resend.server'
+import { resolveEmailThemeId } from '@/lib/email/theme'
+import { createPhotoSignedUrl } from '@/lib/page-blocks/storage.server'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import {
   formatWeddingDate,
   resolvePublicWeddingDate,
-} from '#/lib/wedding/public-settings'
-import type { PublicThemeId } from '#/lib/site-settings'
+} from '@/lib/wedding/public-settings'
+import type { PublicThemeId } from '@/lib/site-settings'
 
 function newShareToken() {
   return (

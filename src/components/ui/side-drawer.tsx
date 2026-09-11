@@ -1,7 +1,7 @@
-import { X } from '@phosphor-icons/react'
+import { XIcon } from '@phosphor-icons/react'
 import { Drawer } from 'vaul'
-import { Button } from '#/components/ui/button'
-import { cn } from '#/lib/utils'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type SideDrawerProps = {
   open: boolean
@@ -50,7 +50,7 @@ function SideDrawerHeader({
             square
             aria-label="Close"
           >
-            <X />
+            <XIcon />
           </Button>
         </Drawer.Close>
       </div>

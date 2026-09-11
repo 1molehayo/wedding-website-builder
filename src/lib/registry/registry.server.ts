@@ -1,14 +1,14 @@
-import { requireWeddingSession } from '#/lib/auth/session.server'
+import { requireWeddingSession } from '@/lib/auth/session.server'
 import type {
   RegistryAccountFormValues,
   RegistryItemFormValues,
-} from '#/lib/registry/schema'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+} from '@/lib/registry/schema'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import type {
   RegistryAccount,
   RegistryItem,
   RegistryReservation,
-} from '#/lib/supabase/types'
+} from '@/lib/supabase/types'
 
 const ITEM_SELECT =
   'id, wedding_id, title, description, store_url, price_label, desired_qty, claimed_qty, status, sort_order, is_visible, created_at, updated_at'

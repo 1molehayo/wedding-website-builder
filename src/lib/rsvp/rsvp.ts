@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { PublicRsvpPageData } from '#/lib/rsvp/schema'
-import type { Guest } from '#/lib/supabase/types'
+import type { PublicRsvpPageData } from '@/lib/rsvp/schema'
+import type { Guest } from '@/lib/supabase/types'
 
 export type { PublicRsvpPageData }
 

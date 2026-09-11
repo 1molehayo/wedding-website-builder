@@ -1,14 +1,14 @@
 import { createServerFn } from '@tanstack/react-start'
-import { parseGuestInput } from '#/lib/guests/schema'
+import { parseGuestInput } from '@/lib/guests/schema'
 import type {
   CreateGuestResult,
   GuestConflictResolution,
   UpdateGuestResult,
-} from '#/lib/guests/guests.server'
-import type { Guest } from '#/lib/supabase/types'
+} from '@/lib/guests/guests.server'
+import type { Guest } from '@/lib/supabase/types'
 
 export type { CreateGuestResult, GuestConflictResolution, UpdateGuestResult }
-export type { GuestConflictMatch } from '#/lib/guests/guests.server'
+export type { GuestConflictMatch } from '@/lib/guests/guests.server'
 
 function parseConflictResolution(
   data: Record<string, unknown>,

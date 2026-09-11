@@ -2,9 +2,9 @@ import { createServerFn } from '@tanstack/react-start'
 import {
   deletionReasonSchema,
   parseUpdateProfileInput,
-} from '#/lib/auth/profile-schema'
-import type { AdminProfile } from '#/lib/supabase/types'
-import { SUPPORT_CATEGORIES } from '#/lib/support/categories'
+} from '@/lib/auth/profile-schema'
+import type { AdminProfile } from '@/lib/supabase/types'
+import { SUPPORT_CATEGORIES } from '@/lib/support/categories'
 
 export const updateProfile = createServerFn({ method: 'POST' })
   .validator((data: unknown) => parseUpdateProfileInput(data))

@@ -1,33 +1,28 @@
-import {
-  Outlet,
-  createFileRoute,
-  redirect,
-  useNavigate,
-  useRouterState,
-} from '@tanstack/react-router'
+import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
-import { AdminShell } from '#/components/admin-shell'
-import { AdminOutletPending } from '#/components/route-pending'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
-import { getAdminSession, logoutAdmin } from '#/lib/auth/session'
-import { hasCompleteAdminName } from '#/lib/auth/types'
-import type { AdminSession } from '#/lib/auth/types'
+import { AdminShell } from '@/components/admin-shell'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
+import { getAdminSession, logoutAdmin } from '@/lib/auth/session'
+import { hasCompleteAdminName } from '@/lib/auth/types'
+import type { AdminSession } from '@/lib/auth/types'
+
+function isPublicAdminPath(pathname: string) {
+  return pathname === '/admin/login' || pathname.startsWith('/admin/invite/')
+}
 
 export const Route = createFileRoute('/admin')({
+  // Child page changes keep this layout matched. Do not refetch the session
+  // or swap the shell for a pending state.
+  shouldReload: false,
   beforeLoad: async ({
     location,
   }): Promise<{ session: AdminSession | null }> => {
-    if (location.pathname === '/admin/login') {
-      return { session: null }
-    }
-
-    if (location.pathname.startsWith('/admin/invite/')) {
+    if (isPublicAdminPath(location.pathname)) {
       return { session: null }
     }
 
     const session = await getAdminSession()
     if (!session) {
-      // Auth misses use redirect (FCP-style), never notFound / RouteError.
       throw redirect({ to: '/admin/login' })
     }
 
@@ -39,7 +34,6 @@ export const Route = createFileRoute('/admin')({
     const hasName = hasCompleteAdminName(session.profile)
     const hasWedding = Boolean(session.wedding)
 
-    // Name completion beats wedding onboarding for regular admins.
     if (!isSuper && !hasName && !isProfile) {
       throw redirect({ to: '/admin/profile' })
     }
@@ -62,8 +56,6 @@ export const Route = createFileRoute('/admin')({
 
     return { session }
   },
-  // Keep the admin chrome mounted; only the outlet waits on loaders.
-  pendingComponent: AdminOutletPending,
   component: AdminLayout,
 })
 
@@ -73,11 +65,7 @@ function AdminLayout() {
   const { session } = Route.useRouteContext()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  if (
-    pathname === '/admin/login' ||
-    pathname.startsWith('/admin/invite/') ||
-    !session
-  ) {
+  if (isPublicAdminPath(pathname) || !session) {
     return <Outlet />
   }
 

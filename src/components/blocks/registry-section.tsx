@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
-import { toast } from '#/components/ui/toaster'
-import { reserveRegistryItem } from '#/lib/registry/registry'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { toast } from '@/components/ui/toaster'
+import { reserveRegistryItem } from '@/lib/registry/registry'
 import type {
   PublicRegistryAccount,
   PublicRegistryData,
   PublicRegistryItem,
-} from '#/lib/registry/registry'
-import { REGISTRY_ITEM_STATUS_LABELS } from '#/lib/registry/schema'
-import { cn } from '#/lib/utils'
+} from '@/lib/registry/registry'
+import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
+import { cn } from '@/lib/utils'
 
 function GiftItemCard({
   item,

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createProxiedPhotoSignedUrl } from '#/lib/page-blocks/storage.server'
+import { createProxiedPhotoSignedUrl } from '@/lib/page-blocks/storage.server'
 
 /**
  * Durable public photo URL for OG/social crawlers.

@@ -1,6 +1,6 @@
 import type { VariantProps } from 'cva'
-import { inputStyle } from '#/components/ui/input'
-import { cn } from '#/lib/utils'
+import { inputStyle } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 interface TextareaProps extends React.ComponentPropsWithRef<'textarea'> {
   invalid?: boolean

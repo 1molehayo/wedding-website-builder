@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ColorModeToggle } from '#/components/color-mode-toggle'
-import { PublicRevealObserver } from '#/components/public-reveal-observer'
+import { ColorModeToggle } from '@/components/color-mode-toggle'
+import { PublicRevealObserver } from '@/components/public-reveal-observer'
 import {
   PRODUCT_NAME,
   productBuiltWithCredit,
-} from '#/lib/constants'
-import { FALLBACK_PUBLIC_THEME } from '#/lib/site-settings'
-import type { PublicThemeId } from '#/lib/site-settings'
-import type { PublicSectionNavItem } from '#/lib/page-blocks/types'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
-import { cn } from '#/lib/utils'
+} from '@/lib/constants'
+import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
+import type { PublicThemeId } from '@/lib/site-settings'
+import type { PublicSectionNavItem } from '@/lib/page-blocks/types'
+import { formatWeddingDate } from '@/lib/wedding/public-settings'
+import { cn } from '@/lib/utils'
 
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches

@@ -1,45 +1,45 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
-  CopySimple,
-  EnvelopeSimple,
-  Info,
-  Plus,
-  Trash,
-  UploadSimple,
-  X,
+  CopySimpleIcon,
+  EnvelopeSimpleIcon,
+  InfoIcon,
+  PlusIcon,
+  TrashIcon,
+  XIcon,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '#/components/ui/button'
-import { ConfirmDialog } from '#/components/ui/confirm-dialog'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { SideDrawer } from '#/components/ui/side-drawer'
-import { toast } from '#/components/ui/toaster'
-import { Tooltip } from '#/components/ui/tooltip'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { PhotoDropzone } from '@/components/ui/photo-dropzone'
+import { SideDrawer } from '@/components/ui/side-drawer'
+import { toast } from '@/components/ui/toaster'
+import { Tooltip } from '@/components/ui/tooltip'
 import {
   createMediaUpload,
   deleteMediaAsset,
   finalizeMediaUpload,
   listMediaAssets,
-} from '#/lib/media/media'
+} from '@/lib/media/media'
 import {
   ALLOWED_MEDIA_MIME_TYPES,
   MAX_MEDIA_UPLOAD_BYTES,
-} from '#/lib/media/constants'
-import { uploadFileToSignedUrl } from '#/lib/media/upload-client'
+} from '@/lib/media/constants'
+import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
   createPhotoShareGroup,
   deletePhotoShareGroup,
   listPhotoShareGroups,
   sendPhotoShareEmails,
   updatePhotoShareGroup,
-} from '#/lib/photo-shares/photo-shares'
+} from '@/lib/photo-shares/photo-shares'
 import type {
   PhotoShareGroupListItem,
   PhotoShareGuestOption,
-} from '#/lib/photo-shares/photo-shares'
-import { cn } from '#/lib/utils'
-import { guestFullName } from '#/lib/guests/schema'
+} from '@/lib/photo-shares/photo-shares'
+import { cn } from '@/lib/utils'
+import { guestFullName } from '@/lib/guests/schema'
 
 export const Route = createFileRoute('/admin/media')({
   beforeLoad: ({ context }) => {
@@ -87,7 +87,6 @@ function AdminMediaPage() {
   const [groups, setGroups] = useState(initial.groups)
   const [guests, setGuests] = useState(initial.guests)
   const [uploads, setUploads] = useState<UploadJob[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadQueueRef = useRef<string[]>([])
   const activeUploadsRef = useRef(0)
   const uploadsRef = useRef<UploadJob[]>([])
@@ -361,35 +360,12 @@ function AdminMediaPage() {
             public wedding site.
           </p>
         </div>
-        {tab === 'library' ? (
-          <>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ALLOWED_MEDIA_MIME_TYPES.join(',')}
-              multiple
-              className="sr-only"
-              tabIndex={-1}
-              onChange={(event) => {
-                const files = event.target.files
-                if (files?.length) enqueueFiles(files)
-                event.target.value = ''
-              }}
-            />
-            <Button
-              type="button"
-              size="md"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <UploadSimple />
-              Upload photos
-            </Button>
-          </>
-        ) : (
+        {tab === 'shares' ? (
           <Button type="button" size="md" onClick={openCreateShare}>
+            <PlusIcon />
             New share
           </Button>
-        )}
+        ) : null}
       </div>
 
       <div className="border-border flex gap-2 border-b">
@@ -416,11 +392,13 @@ function AdminMediaPage() {
       </div>
 
       {tab === 'library' ? (
-        assets.length === 0 && uploads.length === 0 ? (
-          <p className="text-foreground-secondary text-sm">
-            No photos yet. Upload images to use in private guest shares.
-          </p>
-        ) : (
+        <div className="space-y-4">
+          <PhotoDropzone
+            multiple
+            hint="Private guest shares only — not on the public site."
+            onFiles={(files) => enqueueFiles(files)}
+          />
+          {assets.length === 0 && uploads.length === 0 ? null : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {uploads.map((job) => (
               <figure
@@ -525,7 +503,7 @@ function AdminMediaPage() {
                         void copyText(asset.storage_path, 'Storage path')
                       }
                     >
-                      <CopySimple />
+                      <CopySimpleIcon />
                       Path
                     </Button>
                     <Button
@@ -534,7 +512,7 @@ function AdminMediaPage() {
                       variant="outline"
                       onClick={() => setDeleteAssetId(asset.id)}
                     >
-                      <Trash />
+                      <TrashIcon />
                       Delete
                     </Button>
                   </div>
@@ -542,7 +520,8 @@ function AdminMediaPage() {
               </figure>
             ))}
           </div>
-        )
+          )}
+        </div>
       ) : groups.length === 0 ? (
         <p className="text-foreground-secondary text-sm">
           No private shares yet. Create a share, pick photos and guests, then
@@ -577,7 +556,7 @@ function AdminMediaPage() {
                   isLoading={emailingGroupId === group.id}
                   onClick={() => setEmailShareConfirmId(group.id)}
                 >
-                  <EnvelopeSimple />
+                  <EnvelopeSimpleIcon />
                   Email guests
                 </Button>
                 <Button
@@ -586,7 +565,7 @@ function AdminMediaPage() {
                   variant="outline"
                   onClick={() => void copyText(group.groupUrl, 'Share link')}
                 >
-                  <CopySimple />
+                  <CopySimpleIcon />
                   Copy link
                 </Button>
                 <Button
@@ -603,7 +582,7 @@ function AdminMediaPage() {
                   variant="outline"
                   onClick={() => setDeleteGroupId(group.id)}
                 >
-                  <Trash />
+                  <TrashIcon />
                   Delete
                 </Button>
               </div>
@@ -687,7 +666,7 @@ function AdminMediaPage() {
                       className="text-foreground-secondary hover:text-foreground inline-flex"
                       aria-label="Photos help"
                     >
-                      <Info className="size-4" />
+                      <InfoIcon className="size-4" />
                     </Tooltip.Trigger>
                     <Tooltip.Content>
                       Choose library photos for this private album, then save.
@@ -729,7 +708,7 @@ function AdminMediaPage() {
                       onClick={() => removeAssetFromShare(asset.id)}
                       className="absolute top-1 right-1 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white"
                     >
-                      <X className="size-3.5" weight="bold" />
+                      <XIcon className="size-3.5" weight="bold" />
                     </button>
                   </div>
                 ))}
@@ -750,7 +729,7 @@ function AdminMediaPage() {
                   }}
                   className="border-border text-foreground-secondary hover:border-accent hover:text-foreground flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-2 text-center text-xs transition"
                 >
-                  <Plus className="size-5" weight="bold" />
+                  <PlusIcon className="size-5" weight="bold" />
                   Add photos
                 </button>
               </div>
@@ -809,7 +788,7 @@ function AdminMediaPage() {
                     className="text-foreground-secondary hover:text-foreground inline-flex"
                     aria-label="Guests help"
                   >
-                    <Info className="size-4" />
+                    <InfoIcon className="size-4" />
                   </Tooltip.Trigger>
                   <Tooltip.Content>
                     Select guests for this album. Each guest can only be in one
@@ -870,7 +849,7 @@ function AdminMediaPage() {
                     isLoading={emailingGroupId === editing.id}
                     onClick={() => void emailShareGuests(editing.id)}
                   >
-                    <EnvelopeSimple />
+                    <EnvelopeSimpleIcon />
                     Invite guests
                   </Button>
                   <GuestLinks
@@ -896,7 +875,7 @@ function AdminMediaPage() {
                       void copyText(editing.groupUrl, 'Share link')
                     }
                   >
-                    <CopySimple />
+                    <CopySimpleIcon />
                     Copy link
                   </Button>
                 </div>
@@ -1043,7 +1022,7 @@ function GuestLinks({
               variant="outline"
               onClick={() => void onCopy(url, 'Guest link')}
             >
-              <CopySimple />
+              <CopySimpleIcon />
               Copy
             </Button>
           </div>

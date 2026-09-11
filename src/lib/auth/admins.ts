@@ -2,8 +2,8 @@ import { createServerFn } from '@tanstack/react-start'
 import {
   isReservedSuperAdminEmail,
   normalizeAdminEmail,
-} from '#/lib/auth/roles'
-import type { AdminListItem } from '#/lib/auth/types'
+} from '@/lib/auth/roles'
+import type { AdminListItem } from '@/lib/auth/types'
 
 export type { AdminListItem }
 

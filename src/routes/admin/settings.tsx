@@ -1,31 +1,32 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { AddressSearchField } from '#/components/address-search-field'
-import { ThemePicker } from '#/components/admin/theme-picker'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
-import type { PublicThemeId } from '#/lib/site-settings'
-import type { Wedding, WeddingStatus } from '#/lib/supabase/types'
-import { ConfirmDialog } from '#/components/ui/confirm-dialog'
+import { AddressSearchField } from '@/components/address-search-field'
+import { PageActionBar } from '@/components/admin/page-action-bar'
+import { ThemePicker } from '@/components/admin/theme-picker'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
+import type { PublicThemeId } from '@/lib/site-settings'
+import type { Wedding, WeddingStatus } from '@/lib/supabase/types'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   checkPublicSlugAvailable,
   publishWeddingDate,
   unpublishWeddingDate,
   updateWedding,
-} from '#/lib/wedding/settings'
-import type { PublicSlugAvailability } from '#/lib/wedding/settings'
+} from '@/lib/wedding/settings'
+import type { PublicSlugAvailability } from '@/lib/wedding/settings'
 import {
   formatWeddingDate,
   isWeddingDatePublished,
-} from '#/lib/wedding/public-settings'
+} from '@/lib/wedding/public-settings'
 import {
   WEDDING_STATUS_LABELS,
   WEDDING_STATUSES,
-} from '#/lib/wedding/validation'
+} from '@/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/settings')({
@@ -272,7 +273,7 @@ function AdminWeddingSettingsPage() {
           <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
             Couple
           </p>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid items-start gap-4 md:grid-cols-2">
             <Field>
               <Field.Label>Groom</Field.Label>
               <Field.Control>
@@ -463,14 +464,16 @@ function AdminWeddingSettingsPage() {
           />
         </div>
 
-        <Button
-          type="submit"
-          size="md"
-          isLoading={isSubmitting}
-          disabled={slugBlocksSave}
-        >
-          Save settings
-        </Button>
+        <PageActionBar>
+          <Button
+            type="submit"
+            size="md"
+            isLoading={isSubmitting}
+            disabled={slugBlocksSave}
+          >
+            Save settings
+          </Button>
+        </PageActionBar>
       </form>
 
       <ConfirmDialog

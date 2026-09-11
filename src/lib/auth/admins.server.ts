@@ -2,26 +2,26 @@ import {
   isReservedSuperAdminEmail,
   isSuperAdminProfile,
   normalizeAdminEmail,
-} from '#/lib/auth/roles'
+} from '@/lib/auth/roles'
 import {
   requireAdminSession,
   requireSuperAdminSession,
-} from '#/lib/auth/session.server'
-import { adminFullName, deriveAdminStatus } from '#/lib/auth/types'
-import type { AdminListItem } from '#/lib/auth/types'
-import { formatCoupleNames } from '#/lib/constants'
+} from '@/lib/auth/session.server'
+import { adminFullName, deriveAdminStatus } from '@/lib/auth/types'
+import type { AdminListItem } from '@/lib/auth/types'
+import { formatCoupleNames } from '@/lib/constants'
 import {
   sendAdminInviteEmail,
   sendAdminRemovedConfirmationEmail,
   sendAdminRemovedEmail,
   sendInviteAcceptedEmail,
-} from '#/lib/email/resend.server'
+} from '@/lib/email/resend.server'
 import {
   adminInviteAcceptUrl,
   newInviteToken,
-} from '#/lib/email/templates'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import { createServerSupabaseClient } from '#/lib/supabase/server.server'
+} from '@/lib/email/templates'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import { createServerSupabaseClient } from '@/lib/supabase/server.server'
 
 const ADMIN_LIST_SELECT =
   'id, email, first_name, last_name, display_name, role, wedding_id, deletion_requested_at, deletion_reason, invite_token, invited_at, invite_accepted_at, cancelled_at, created_at'

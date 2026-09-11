@@ -1,22 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
-import { PublicShell } from '#/components/public-shell'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
-import { Textarea } from '#/components/ui/textarea'
-import { Toaster, toast } from '#/components/ui/toaster'
-import { fieldErrorMessage } from '#/lib/forms/field-error'
-import { zodFormFieldErrors } from '#/lib/forms/zod-form-errors'
-import { getRsvpByToken, submitRsvp } from '#/lib/rsvp/rsvp'
+import { PublicShell } from '@/components/public-shell'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Toaster, toast } from '@/components/ui/toaster'
+import { fieldErrorMessage } from '@/lib/forms/field-error'
+import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
+import { getRsvpByToken, submitRsvp } from '@/lib/rsvp/rsvp'
 import {
   RSVP_STATUS_LABELS,
   publicRsvpFormSchema,
   toPublicRsvpFormValues,
-} from '#/lib/rsvp/schema'
-import type { PublicRsvpFormValues, PublicRsvpPageData } from '#/lib/rsvp/schema'
+} from '@/lib/rsvp/schema'
+import type { PublicRsvpFormValues, PublicRsvpPageData } from '@/lib/rsvp/schema'
 
 type RsvpLoaderResult =
   | { ok: true; data: PublicRsvpPageData }

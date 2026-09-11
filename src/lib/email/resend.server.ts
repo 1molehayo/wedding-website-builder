@@ -2,9 +2,9 @@ import { Resend } from 'resend'
 import {
   getSuperAdminEmail,
   PRODUCTION_SUPER_ADMIN_EMAIL,
-} from '#/lib/auth/roles'
-import { isLocalSupabase } from '#/lib/supabase/env'
-import { PRODUCT_NAME } from '#/lib/constants'
+} from '@/lib/auth/roles'
+import { isLocalSupabase } from '@/lib/supabase/env'
+import { PRODUCT_NAME } from '@/lib/constants'
 import {
   guestDateAnnouncedEmailHtml,
   guestDateAnnouncedEmailText,
@@ -14,12 +14,12 @@ import {
   guestRsvpInviteEmailText,
   inviteEmailHtml,
   inviteEmailText,
-} from '#/lib/email/templates'
+} from '@/lib/email/templates'
 import type {
   GuestDateAnnouncedEmailInput,
   GuestPhotoShareEmailInput,
   GuestRsvpInviteEmailInput,
-} from '#/lib/email/templates'
+} from '@/lib/email/templates'
 
 function getResendApiKey(): string | null {
   return process.env.RESEND_API_KEY?.trim() || null

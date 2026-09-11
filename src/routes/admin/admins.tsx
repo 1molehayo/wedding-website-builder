@@ -1,7 +1,5 @@
 import {
   createFileRoute,
-  isNotFound,
-  isRedirect,
   redirect,
   useRouter,
 } from '@tanstack/react-router'
@@ -13,16 +11,18 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { useEffect, useMemo, useState } from 'react'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { ConfirmDialog } from '#/components/ui/confirm-dialog'
-import { DropdownMenu } from '#/components/ui/dropdown-menu'
-import type { DropdownMenuItem } from '#/components/ui/dropdown-menu'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { SideDrawer } from '#/components/ui/side-drawer'
-import { TableView } from '#/components/ui/table-view'
-import { toast } from '#/components/ui/toaster'
+import { UserPlusIcon } from '@phosphor-icons/react'
+import { OverviewCard } from '@/components/admin/overview-card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DropdownMenu } from '@/components/ui/dropdown-menu'
+import type { DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { SideDrawer } from '@/components/ui/side-drawer'
+import { TableView } from '@/components/ui/table-view'
+import { toast } from '@/components/ui/toaster'
 import {
   cancelAdminInvite,
   inviteAdmin,
@@ -31,22 +31,16 @@ import {
   removeAdmin,
   resendAdminInvite,
   updateAdminNames,
-} from '#/lib/auth/admins'
-import type { AdminListItem } from '#/lib/auth/admins'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
+} from '@/lib/auth/admins'
+import type { AdminListItem } from '@/lib/auth/admins'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
   ADMIN_STATUS_LABELS,
   DEFAULT_VISIBLE_ADMIN_STATUSES,
   adminFullName,
-} from '#/lib/auth/types'
-import type { AdminAccountStatus } from '#/lib/auth/types'
-import { internalError, raiseRouteError } from '#/lib/errors/route-error'
-
-function isAbortError(cause: unknown) {
-  if (!cause || typeof cause !== 'object') return false
-  const name = 'name' in cause ? String(cause.name) : ''
-  return name === 'AbortError'
-}
+} from '@/lib/auth/types'
+import type { AdminAccountStatus } from '@/lib/auth/types'
+import { internalError, raiseRouteError, shouldRethrowRouteFailure } from '@/lib/errors/route-error'
 
 export const Route = createFileRoute('/admin/admins')({
   beforeLoad: ({ context }) => {
@@ -60,7 +54,7 @@ export const Route = createFileRoute('/admin/admins')({
     try {
       return await listAdmins()
     } catch (cause) {
-      if (isRedirect(cause) || isNotFound(cause) || isAbortError(cause)) {
+      if (shouldRethrowRouteFailure(cause)) {
         throw cause
       }
       throw raiseRouteError(
@@ -110,6 +104,7 @@ function AdminAdminsPage() {
   ])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
   const [removeOpen, setRemoveOpen] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
   const [editFirstName, setEditFirstName] = useState('')
@@ -126,12 +121,6 @@ function AdminAdminsPage() {
     [admins, selectedId],
   )
 
-  useEffect(() => {
-    if (!selectedAdmin) return
-    setEditFirstName(selectedAdmin.first_name ?? '')
-    setEditLastName(selectedAdmin.last_name ?? '')
-  }, [selectedAdmin])
-
   const visibleAdmins = useMemo(() => {
     if (showAllStatuses) return admins
     return admins.filter((admin) =>
@@ -139,8 +128,20 @@ function AdminAdminsPage() {
     )
   }, [admins, showAllStatuses])
 
+  const openInvite = () => {
+    setIsCreating(true)
+    setSelectedId(null)
+    setEmail('')
+    setFirstName('')
+    setLastName('')
+    setDrawerOpen(true)
+  }
+
   const openDrawer = (admin: AdminListItem) => {
+    setIsCreating(false)
     setSelectedId(admin.id)
+    setEditFirstName(admin.first_name ?? '')
+    setEditLastName(admin.last_name ?? '')
     setDrawerOpen(true)
   }
 
@@ -338,6 +339,8 @@ function AdminAdminsPage() {
       setEmail('')
       setFirstName('')
       setLastName('')
+      setDrawerOpen(false)
+      setIsCreating(false)
       toast.success('Invite sent. They’ll get an email with an accept link.')
       await router.invalidate()
     } catch (err) {
@@ -381,6 +384,7 @@ function AdminAdminsPage() {
       setRemoveOpen(false)
       setDrawerOpen(false)
       setSelectedId(null)
+      setIsCreating(false)
       await router.invalidate()
     } catch (err) {
       toast.error(
@@ -398,89 +402,55 @@ function AdminAdminsPage() {
       selectedAdmin.status === 'deletion_requested' ||
       selectedAdmin.status === 'pending')
 
+  const activeCount = admins.filter((admin) => admin.status === 'active').length
+  const pendingCount = admins.filter((admin) => admin.status === 'pending').length
+  const deletionCount = admins.filter(
+    (admin) => admin.status === 'deletion_requested',
+  ).length
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="admin-page-title">Admins</h1>
-        <p className="text-foreground-secondary mt-2 text-sm">
-          Invite admins, resend or cancel pending invites, and review deletion
-          requests. Deleted admins are archived so the email can be invited
-          again.
-        </p>
-      </div>
-
-      <form
-        className="bg-surface border-border space-y-4 rounded-xl border p-5"
-        onSubmit={onInvite}
-      >
-        <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-          Invite admin
-        </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field>
-            <Field.Label required>First name</Field.Label>
-            <Field.Control>
-              <Input
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
-                required
-              />
-            </Field.Control>
-          </Field>
-          <Field>
-            <Field.Label required>Last name</Field.Label>
-            <Field.Control>
-              <Input
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
-                required
-              />
-            </Field.Control>
-          </Field>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="admin-page-title">Admins</h1>
+          <p className="text-foreground-secondary mt-2 text-sm">
+            Invite admins, resend or cancel pending invites, and review deletion
+            requests. Deleted admins are archived so the email can be invited
+            again.
+          </p>
         </div>
-        <Field>
-          <Field.Label required>Email</Field.Label>
-          <Field.Control>
-            <Input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </Field.Control>
-        </Field>
-        <Button type="submit" size="md" isLoading={isInviting}>
+        <Button type="button" size="sm" onClick={openInvite}>
+          <UserPlusIcon />
           Invite admin
         </Button>
-      </form>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <OverviewCard label="Admins" value={admins.length} />
+        <OverviewCard label="Active" value={activeCount} />
+        <OverviewCard label="Pending" value={pendingCount} />
+        <OverviewCard label="Deletion requested" value={deletionCount} />
+      </div>
 
       <div className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="space-y-2">
-            <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-              Current admins
-            </p>
-            <label className="text-foreground-secondary flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showAllStatuses}
-                onChange={(event) => setShowAllStatuses(event.target.checked)}
-                className="accent-accent size-4"
-              />
-              Show all statuses (including cancelled)
-            </label>
-          </div>
-          <Field className="w-full max-w-xs">
-            <Field.Label>Search</Field.Label>
-            <Field.Control>
-              <Input
-                size="sm"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, email, status…"
-              />
-            </Field.Control>
-          </Field>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="text-foreground-secondary flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showAllStatuses}
+              onChange={(event) => setShowAllStatuses(event.target.checked)}
+              className="accent-accent size-4"
+            />
+            Show cancelled
+          </label>
+          <Input
+            size="sm"
+            className="w-full max-w-xs"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search name, email, status"
+            aria-label="Search admins"
+          />
         </div>
 
         <TableView
@@ -491,13 +461,66 @@ function AdminAdminsPage() {
       </div>
 
       <SideDrawer
-        open={drawerOpen && !!selectedAdmin}
+        open={drawerOpen}
         onOpenChange={(open) => {
           setDrawerOpen(open)
-          if (!open) setSelectedId(null)
+          if (!open) {
+            setSelectedId(null)
+            setIsCreating(false)
+          }
         }}
       >
-        {selectedAdmin ? (
+        {isCreating ? (
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={onInvite}
+          >
+            <SideDrawer.Header
+              title="Invite admin"
+              drawerDescription="Send an invite email"
+            />
+            <SideDrawer.Content className="space-y-4">
+              <div className="grid items-start gap-4 sm:grid-cols-2">
+                <Field>
+                  <Field.Label required>First name</Field.Label>
+                  <Field.Control>
+                    <Input
+                      value={firstName}
+                      onChange={(event) => setFirstName(event.target.value)}
+                      required
+                    />
+                  </Field.Control>
+                </Field>
+                <Field>
+                  <Field.Label required>Last name</Field.Label>
+                  <Field.Control>
+                    <Input
+                      value={lastName}
+                      onChange={(event) => setLastName(event.target.value)}
+                      required
+                    />
+                  </Field.Control>
+                </Field>
+              </div>
+              <Field>
+                <Field.Label required>Email</Field.Label>
+                <Field.Control>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </Field.Control>
+              </Field>
+            </SideDrawer.Content>
+            <SideDrawer.Footer>
+              <Button type="submit" size="md" isLoading={isInviting}>
+                Send invite
+              </Button>
+            </SideDrawer.Footer>
+          </form>
+        ) : selectedAdmin ? (
           <>
             <SideDrawer.Header
               title={adminFullName(selectedAdmin)}
@@ -520,7 +543,7 @@ function AdminAdminsPage() {
                   <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
                     Edit details
                   </p>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid items-start gap-3 sm:grid-cols-2">
                     <Field>
                       <Field.Label required>First name</Field.Label>
                       <Field.Control>

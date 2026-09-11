@@ -1,8 +1,8 @@
-import type { StoryPageBlock } from '#/lib/page-blocks/types'
+import type { StoryPageBlock } from '@/lib/page-blocks/types'
 import {
   isPlaceholderStoryBody,
   publicSectionId,
-} from '#/lib/page-blocks/types'
+} from '@/lib/page-blocks/types'
 
 export function StoryBlock({ block }: { block: StoryPageBlock }) {
   const title = block.fields.title.trim()

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   createDefaultPageBlocks,
   isPlaceholderStoryBody,
-} from '#/lib/page-blocks/types'
+} from '@/lib/page-blocks/types'
 import {
   parsePageBlocks,
   parsePageBlocksStrict,
   validatePageBlocksClient,
-} from '#/lib/page-blocks/validation'
+} from '@/lib/page-blocks/validation'
 
 describe('page blocks validation', () => {
   it('detects default story placeholder copy', () => {

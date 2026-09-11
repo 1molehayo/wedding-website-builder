@@ -1,5 +1,5 @@
-import { COLOR_MODE_STORAGE_KEY } from '#/lib/site-settings'
-import type { ColorMode } from '#/lib/site-settings'
+import { COLOR_MODE_STORAGE_KEY } from '@/lib/site-settings'
+import type { ColorMode } from '@/lib/site-settings'
 
 export function getStoredColorMode(): ColorMode | null {
   if (typeof window === 'undefined') return null

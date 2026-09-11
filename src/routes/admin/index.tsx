@@ -1,17 +1,17 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { ArrowSquareOut } from '@phosphor-icons/react'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { isSuperAdminProfile } from '#/lib/auth/roles'
+import { ArrowSquareOutIcon } from '@phosphor-icons/react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
   adminFirstName,
   hasCompleteAdminName,
-} from '#/lib/auth/types'
-import { formatCoupleNames } from '#/lib/constants'
-import { PUBLIC_THEME_META } from '#/lib/site-settings'
-import type { WeddingStatus } from '#/lib/supabase/types'
-import { publicWeddingPath } from '#/lib/wedding/public-settings'
-import { WEDDING_STATUS_LABELS } from '#/lib/wedding/validation'
+} from '@/lib/auth/types'
+import { formatCoupleNames } from '@/lib/constants'
+import { PUBLIC_THEME_META } from '@/lib/site-settings'
+import type { WeddingStatus } from '@/lib/supabase/types'
+import { publicWeddingPath } from '@/lib/wedding/public-settings'
+import { WEDDING_STATUS_LABELS } from '@/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
 
 function weddingStatusBadgeVariant(
@@ -110,7 +110,7 @@ function AdminOverviewPage() {
         {previewHref ? (
           <Button asChild size="sm">
             <a href={previewHref} target="_blank" rel="noreferrer">
-              <ArrowSquareOut />
+              <ArrowSquareOutIcon />
               Preview site
             </a>
           </Button>

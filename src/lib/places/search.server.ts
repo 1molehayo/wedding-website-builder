@@ -1,8 +1,8 @@
 import {
   createTtlCache,
   normalizeAddressQuery,
-} from '#/lib/places/cache'
-import type { AddressSuggestion } from '#/lib/places/cache'
+} from '@/lib/places/cache'
+import type { AddressSuggestion } from '@/lib/places/cache'
 
 type SearchResult = {
   provider: 'google' | 'photon'

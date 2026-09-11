@@ -1,7 +1,7 @@
-import { CaretDown, CaretUp } from '@phosphor-icons/react'
+import { CaretDownIcon, CaretUpIcon } from '@phosphor-icons/react'
 import { flexRender } from '@tanstack/react-table'
 import type { Table } from '@tanstack/react-table'
-import { cn } from '#/lib/utils'
+import { cn } from '@/lib/utils'
 
 type ColumnMeta = {
   minWidth?: number
@@ -64,7 +64,7 @@ export function TableView<TData>({
                           )}
                       {header.column.getCanSort() ? (
                         <span className="ml-1 flex flex-col">
-                          <CaretUp
+                          <CaretUpIcon
                             size={10}
                             weight="bold"
                             className={
@@ -73,7 +73,7 @@ export function TableView<TData>({
                                 : 'opacity-30'
                             }
                           />
-                          <CaretDown
+                          <CaretDownIcon
                             size={10}
                             weight="bold"
                             className={

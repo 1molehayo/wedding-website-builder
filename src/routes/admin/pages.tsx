@@ -1,34 +1,36 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
-  CaretDown,
-  CaretDoubleDown,
-  CaretDoubleUp,
-  CaretUp,
-  Trash,
-  UploadSimple,
+  CaretDownIcon,
+  CaretUpIcon,
+  CopySimpleIcon,
+  DotsSixVerticalIcon,
+  PlusIcon,
+  TrashIcon,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { Field } from '#/components/ui/field'
-import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
-import { Textarea } from '#/components/ui/textarea'
-import { toast } from '#/components/ui/toaster'
+import { PageActionBar } from '@/components/admin/page-action-bar'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu } from '@/components/ui/dropdown-menu'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { PhotoDropzone } from '@/components/ui/photo-dropzone'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/toaster'
 import {
   getPageBlocks,
   getSignedPhotoUrl,
   updatePageBlocks,
   uploadPageBlockImage,
-} from '#/lib/page-blocks/settings'
+} from '@/lib/page-blocks/settings'
 import {
   PAGE_BLOCK_TYPES,
   PAGE_BLOCK_TYPE_LABELS,
   createDefaultBlock,
-} from '#/lib/page-blocks/types'
-import type { PageBlock, PageBlockType } from '#/lib/page-blocks/types'
-import type { PageBlockFieldErrors } from '#/lib/page-blocks/validation'
-import { validatePageBlocksClient } from '#/lib/page-blocks/validation'
+} from '@/lib/page-blocks/types'
+import type { PageBlock, PageBlockType } from '@/lib/page-blocks/types'
+import type { PageBlockFieldErrors } from '@/lib/page-blocks/validation'
+import { validatePageBlocksClient } from '@/lib/page-blocks/validation'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/admin/pages')({
   beforeLoad: ({ context }) => {
@@ -58,6 +60,14 @@ function moveBlock(blocks: PageBlock[], from: number, to: number) {
   return next
 }
 
+function duplicateBlock(block: PageBlock): PageBlock {
+  return {
+    ...block,
+    id: crypto.randomUUID(),
+    fields: structuredClone(block.fields),
+  } as PageBlock
+}
+
 function BlockEditor({
   block,
   onChange,
@@ -69,7 +79,7 @@ function BlockEditor({
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -98,6 +108,36 @@ function BlockEditor({
       cancelled = true
     }
   }, [block])
+
+  const uploadSelectedFile = async (file: File, successMessage: string) => {
+    setUploadError(null)
+    setIsUploading(true)
+    try {
+      const dataBase64 = await fileToBase64(file)
+      const uploaded = await uploadPageBlockImage({
+        data: {
+          name: file.name,
+          type: file.type,
+          dataBase64,
+        },
+      })
+      onChange({
+        ...block,
+        fields: {
+          ...block.fields,
+          imagePath: uploaded.path,
+        },
+      })
+      setPreviewUrl(uploaded.signedUrl)
+      toast.success(successMessage)
+    } catch (err) {
+      setUploadError(
+        err instanceof Error ? err.message : 'Unable to upload image.',
+      )
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   if (block.type === 'hero') {
     return (
@@ -137,65 +177,20 @@ function BlockEditor({
             />
           </Field.Control>
         </Field>
-        <Field>
+        <Field invalid={!!uploadError}>
           <Field.Label>Background photo</Field.Label>
-          <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              tabIndex={-1}
-              disabled={isUploading}
-              onChange={async (event) => {
-                const file = event.target.files?.[0]
-                if (!file) return
-                setIsUploading(true)
-                try {
-                  const dataBase64 = await fileToBase64(file)
-                  const uploaded = await uploadPageBlockImage({
-                    data: {
-                      name: file.name,
-                      type: file.type,
-                      dataBase64,
-                    },
-                  })
-                  onChange({
-                    ...block,
-                    fields: {
-                      ...block.fields,
-                      imagePath: uploaded.path,
-                    },
-                  })
-                  setPreviewUrl(uploaded.signedUrl)
-                  toast.success('Hero background uploaded.')
-                } catch (err) {
-                  toast.error(
-                    err instanceof Error
-                      ? err.message
-                      : 'Unable to upload image.',
-                  )
-                } finally {
-                  setIsUploading(false)
-                  event.target.value = ''
-                }
-              }}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              isLoading={isUploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <UploadSimple />
-              {block.fields.imagePath ? 'Replace photo' : 'Upload photo'}
-            </Button>
-          </div>
-          <Field.Description>
-            Optional full-bleed hero photo. Leave empty for the theme atmosphere
-            only. Remember to save the page after uploading.
-          </Field.Description>
+          <PhotoDropzone
+            hint="Optional. Skip to keep the theme background."
+            error={uploadError ?? undefined}
+            isUploading={isUploading}
+            replaceLabel={
+              block.fields.imagePath ? 'Drop a photo to replace' : undefined
+            }
+            onFiles={(files) => {
+              const file = files[0]
+              if (file) void uploadSelectedFile(file, 'Hero background uploaded.')
+            }}
+          />
         </Field>
         {previewUrl ? (
           <img
@@ -218,7 +213,7 @@ function BlockEditor({
               setPreviewUrl(null)
             }}
           >
-            <Trash />
+            <TrashIcon />
             Remove background photo
           </Button>
         ) : null}
@@ -272,74 +267,20 @@ function BlockEditor({
     const imageInvalid = !!fieldErrors?.imagePath
     return (
       <div className="space-y-4">
-        <Field invalid={imageInvalid}>
+        <Field invalid={imageInvalid || !!uploadError}>
           <Field.Label required>Image</Field.Label>
-          <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              tabIndex={-1}
-              disabled={isUploading}
-              onChange={async (event) => {
-                const file = event.target.files?.[0]
-                if (!file) return
-                setIsUploading(true)
-                try {
-                  const dataBase64 = await fileToBase64(file)
-                  const uploaded = await uploadPageBlockImage({
-                    data: {
-                      name: file.name,
-                      type: file.type,
-                      dataBase64,
-                    },
-                  })
-                  onChange({
-                    ...block,
-                    fields: {
-                      ...block.fields,
-                      imagePath: uploaded.path,
-                    },
-                  })
-                  setPreviewUrl(uploaded.signedUrl)
-                  toast.success('Image uploaded.')
-                } catch (err) {
-                  toast.error(
-                    err instanceof Error
-                      ? err.message
-                      : 'Unable to upload image.',
-                  )
-                } finally {
-                  setIsUploading(false)
-                  event.target.value = ''
-                }
-              }}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              isLoading={isUploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <UploadSimple />
-              {block.fields.imagePath ? 'Replace image' : 'Upload image'}
-            </Button>
-          </div>
-          {imageInvalid ? (
-            <Field.Error>{fieldErrors.imagePath}</Field.Error>
-          ) : (
-            <Field.Description>
-              Stored in the private photos bucket. Preview uses a signed URL.
-            </Field.Description>
-          )}
+          <PhotoDropzone
+            error={uploadError ?? fieldErrors?.imagePath}
+            isUploading={isUploading}
+            replaceLabel={
+              block.fields.imagePath ? 'Drop a photo to replace' : undefined
+            }
+            onFiles={(files) => {
+              const file = files[0]
+              if (file) void uploadSelectedFile(file, 'Image uploaded.')
+            }}
+          />
         </Field>
-        {block.fields.imagePath ? (
-          <p className="text-foreground-secondary text-xs break-all">
-            Path: {block.fields.imagePath}
-          </p>
-        ) : null}
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -428,16 +369,15 @@ function AdminPagesPage() {
   const initialBlocks = Route.useLoaderData()
   const router = useRouter()
   const [blocks, setBlocks] = useState<PageBlock[]>(initialBlocks)
-  const [openIds, setOpenIds] = useState<Set<string>>(
-    () => new Set(initialBlocks.map((block) => block.id)),
-  )
-  const [addType, setAddType] = useState<PageBlockType>('story')
+  const [openIds, setOpenIds] = useState<Set<string>>(() => new Set())
   const [isSaving, setIsSaving] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<PageBlockFieldErrors>({})
+  const dragIdRef = useRef<string | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragEnabled, setDragEnabled] = useState(false)
 
   useEffect(() => {
     setBlocks(initialBlocks)
-    setOpenIds(new Set(initialBlocks.map((block) => block.id)))
     setFieldErrors({})
   }, [initialBlocks])
 
@@ -487,7 +427,7 @@ function AdminPagesPage() {
       })
       setBlocks(wedding.page_blocks)
       setFieldErrors({})
-      toast.success('Page content saved.')
+      toast.success('Page content published.')
       await router.invalidate()
     } catch (err) {
       toast.error(
@@ -498,11 +438,23 @@ function AdminPagesPage() {
     }
   }
 
-  const onAdd = () => {
-    const block = createDefaultBlock(addType)
+  const onAdd = (type: PageBlockType) => {
+    const block = createDefaultBlock(type)
     setBlocks((current) => [...current, block])
     setOpenIds((current) => new Set(current).add(block.id))
-    toast.success(`${PAGE_BLOCK_TYPE_LABELS[addType]} block added.`)
+  }
+
+  const onDuplicate = (id: string) => {
+    const block = blocks.find((item) => item.id === id)
+    if (!block) return
+    const copy = duplicateBlock(block)
+    setBlocks((current) => {
+      const index = current.findIndex((item) => item.id === id)
+      const next = [...current]
+      next.splice(index + 1, 0, copy)
+      return next
+    })
+    setOpenIds((current) => new Set(current).add(copy.id))
   }
 
   const onRemove = (id: string) => {
@@ -518,8 +470,10 @@ function AdminPagesPage() {
       delete next[id]
       return next
     })
-    toast.success('Block removed. Save to publish.')
+    toast.success('Block removed.')
   }
+
+  const allOpen = blocks.length > 0 && blocks.every((block) => openIds.has(block.id))
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -527,78 +481,112 @@ function AdminPagesPage() {
         <div>
           <h1 className="admin-page-title">Page content</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
-            Ordered blocks for the public home page. Reorder with up/down, then
-            save.
+            Sections on the public home page. Drag to reorder, then publish.
           </p>
         </div>
-        <Button type="button" size="md" onClick={onSave} isLoading={isSaving}>
-          Save page
-        </Button>
+        {blocks.length > 0 ? (
+          <button
+            type="button"
+            className="text-foreground-secondary hover:text-foreground text-sm"
+            onClick={() => {
+              if (allOpen) setOpenIds(new Set())
+              else setOpenIds(new Set(blocks.map((block) => block.id)))
+            }}
+          >
+            {allOpen ? 'Collapse all' : 'Expand all'}
+          </button>
+        ) : null}
       </div>
 
-      <div className="space-y-3">
-        {blocks.map((block, index) => {
+      <div className="space-y-2">
+        {blocks.map((block) => {
           const open = openIds.has(block.id)
+          const hasError = Boolean(fieldErrors[block.id])
           return (
             <div
               key={block.id}
-              className="bg-surface border-border overflow-hidden rounded-xl border"
+              draggable={dragEnabled}
+              onDragStart={(event) => {
+                dragIdRef.current = block.id
+                setDraggingId(block.id)
+                event.dataTransfer.effectAllowed = 'move'
+                event.dataTransfer.setData('text/plain', block.id)
+              }}
+              onDragEnd={() => {
+                dragIdRef.current = null
+                setDraggingId(null)
+                setDragEnabled(false)
+              }}
+              onDragOver={(event) => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'move'
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                const fromId = dragIdRef.current
+                if (!fromId || fromId === block.id) return
+                setBlocks((current) => {
+                  const from = current.findIndex((item) => item.id === fromId)
+                  const to = current.findIndex((item) => item.id === block.id)
+                  return moveBlock(current, from, to)
+                })
+              }}
+              className={cn(
+                'bg-surface border-border rounded-xl border',
+                draggingId === block.id && 'opacity-50',
+                hasError && 'border-error',
+              )}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <div className="flex items-center gap-1 px-2 py-2">
                 <button
                   type="button"
-                  className="flex min-w-0 items-center gap-2 text-left"
+                  className="text-foreground-secondary hover:text-foreground inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg active:cursor-grabbing"
+                  aria-label="Drag to reorder"
+                  onMouseDown={() => setDragEnabled(true)}
+                  onTouchStart={() => setDragEnabled(true)}
+                >
+                  <DotsSixVerticalIcon className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-2 px-1 py-1 text-left"
                   onClick={() => toggleOpen(block.id)}
                   aria-expanded={open}
                 >
-                  {open ? <CaretUp /> : <CaretDown />}
-                  <span className="font-medium">
+                  <span className="truncate font-medium">
                     {PAGE_BLOCK_TYPE_LABELS[block.type]}
                   </span>
-                  <Badge variant="neutral">{block.type}</Badge>
                 </button>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    square
-                    aria-label="Move up"
-                    disabled={index === 0}
-                    onClick={() =>
-                      setBlocks((current) =>
-                        moveBlock(current, index, index - 1),
-                      )
-                    }
-                  >
-                    <CaretDoubleUp />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    square
-                    aria-label="Move down"
-                    disabled={index === blocks.length - 1}
-                    onClick={() =>
-                      setBlocks((current) =>
-                        moveBlock(current, index, index + 1),
-                      )
-                    }
-                  >
-                    <CaretDoubleDown />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    square
-                    aria-label="Remove block"
-                    onClick={() => onRemove(block.id)}
-                  >
-                    <Trash />
-                  </Button>
-                </div>
+                <DropdownMenu
+                  label="Block actions"
+                  items={[
+                    {
+                      id: 'duplicate',
+                      label: 'Duplicate',
+                      icon: <CopySimpleIcon />,
+                      onSelect: () => onDuplicate(block.id),
+                    },
+                    {
+                      id: 'remove',
+                      label: 'Remove',
+                      icon: <TrashIcon />,
+                      tone: 'destructive',
+                      onSelect: () => onRemove(block.id),
+                    },
+                  ]}
+                />
+                <button
+                  type="button"
+                  className="text-foreground-secondary hover:text-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-lg"
+                  aria-label={open ? 'Collapse block' : 'Expand block'}
+                  onClick={() => toggleOpen(block.id)}
+                >
+                  {open ? (
+                    <CaretUpIcon className="size-4" />
+                  ) : (
+                    <CaretDownIcon className="size-4" />
+                  )}
+                </button>
               </div>
               {open ? (
                 <div className="border-border border-t px-4 py-4">
@@ -619,7 +607,10 @@ function AdminPagesPage() {
                           clearBlockFieldError(next.id, 'body')
                         }
                       }
-                      if (next.type === 'image' && next.fields.imagePath.trim()) {
+                      if (
+                        next.type === 'image' &&
+                        next.fields.imagePath.trim()
+                      ) {
                         clearBlockFieldError(next.id, 'imagePath')
                       }
                     }}
@@ -630,38 +621,33 @@ function AdminPagesPage() {
           )
         })}
 
-        {blocks.length === 0 ? (
-          <div className="bg-surface border-border rounded-xl border border-dashed p-8 text-center">
-            <p className="text-foreground-secondary text-sm">
-              No blocks yet. Use the form below to add sections to the home
-              page.
-            </p>
-          </div>
-        ) : null}
-
-        <div className="bg-surface border-border flex flex-wrap items-end gap-3 rounded-xl border p-4">
-          <Field className="min-w-40 flex-1">
-            <Field.Label>Add block</Field.Label>
-            <Field.Control>
-              <Select
-                value={addType}
-                onChange={(event) =>
-                  setAddType(event.target.value as PageBlockType)
-                }
-              >
-                {PAGE_BLOCK_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {PAGE_BLOCK_TYPE_LABELS[type]}
-                  </option>
-                ))}
-              </Select>
-            </Field.Control>
-          </Field>
-          <Button type="button" variant="outline" onClick={onAdd}>
-            Add block
-          </Button>
-        </div>
+        <DropdownMenu
+          label="Add item"
+          align="start"
+          className="w-full"
+          trigger={
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-dashed"
+            >
+              <PlusIcon />
+              Add item
+            </Button>
+          }
+          items={PAGE_BLOCK_TYPES.map((type) => ({
+            id: type,
+            label: PAGE_BLOCK_TYPE_LABELS[type],
+            onSelect: () => onAdd(type),
+          }))}
+        />
       </div>
+
+      <PageActionBar>
+        <Button type="button" size="md" onClick={onSave} isLoading={isSaving}>
+          Publish
+        </Button>
+      </PageActionBar>
     </div>
   )
 }

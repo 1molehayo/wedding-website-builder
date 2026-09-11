@@ -1,16 +1,16 @@
-import { isSuperAdminProfile, normalizeAdminEmail } from '#/lib/auth/roles'
-import { requireAdminSession } from '#/lib/auth/session.server'
-import type { AdminProfile } from '#/lib/supabase/types'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import { formatCoupleNames } from '#/lib/constants'
+import { isSuperAdminProfile, normalizeAdminEmail } from '@/lib/auth/roles'
+import { requireAdminSession } from '@/lib/auth/session.server'
+import type { AdminProfile } from '@/lib/supabase/types'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import { formatCoupleNames } from '@/lib/constants'
 import {
   sendDeletionRequestEmail,
   sendSupportEmail,
-} from '#/lib/email/resend.server'
+} from '@/lib/email/resend.server'
 import {
   assertSupportImage,
   supportCategoryLabel,
-} from '#/lib/support/categories'
+} from '@/lib/support/categories'
 
 function requiredName(value: string, label: string): string {
   const trimmed = value.trim()

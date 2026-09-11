@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
-import type { PageBlock } from '#/lib/page-blocks/types'
-import { parseUpdatePageBlocksInput } from '#/lib/page-blocks/validation'
-import type { Wedding } from '#/lib/supabase/types'
+import type { PageBlock } from '@/lib/page-blocks/types'
+import { parseUpdatePageBlocksInput } from '@/lib/page-blocks/validation'
+import type { Wedding } from '@/lib/supabase/types'
 
 export const getPageBlocks = createServerFn({ method: 'GET' }).handler(
   async (): Promise<PageBlock[]> => {

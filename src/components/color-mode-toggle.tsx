@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Moon, Sun } from '@phosphor-icons/react'
-import { IconButton } from '#/components/ui/button'
+import { MoonIcon, SunIcon } from '@phosphor-icons/react'
+import { IconButton } from '@/components/ui/button'
 import {
   applyColorMode,
   persistColorMode,
   resolveInitialColorMode,
-} from '#/lib/color-mode'
-import type { ColorMode } from '#/lib/site-settings'
+} from '@/lib/color-mode'
+import type { ColorMode } from '@/lib/site-settings'
 
 export function ColorModeToggle({ className }: { className?: string }) {
   const [mode, setMode] = useState<ColorMode>('light')
@@ -34,7 +34,7 @@ export function ColorModeToggle({ className }: { className?: string }) {
       }
       onClick={toggle}
     >
-      {mode === 'light' ? <Moon weight="regular" /> : <Sun weight="regular" />}
+      {mode === 'light' ? <MoonIcon weight="regular" /> : <SunIcon weight="regular" />}
     </IconButton>
   )
 }

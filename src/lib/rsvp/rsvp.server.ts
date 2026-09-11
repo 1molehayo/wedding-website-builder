@@ -1,21 +1,21 @@
-import { requireWeddingSession } from '#/lib/auth/session.server'
-import { formatCoupleNames } from '#/lib/constants'
+import { requireWeddingSession } from '@/lib/auth/session.server'
+import { formatCoupleNames } from '@/lib/constants'
 import type {
   AdminRsvpInput,
   PublicRsvpInput,
   PublicRsvpPageData,
-} from '#/lib/rsvp/schema'
+} from '@/lib/rsvp/schema'
 import {
   maxAttendingForPlusOnes,
   parseAdminRsvpInput,
   parsePublicRsvpInput,
-} from '#/lib/rsvp/schema'
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
-import type { Guest, WeddingStatus } from '#/lib/supabase/types'
+} from '@/lib/rsvp/schema'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import type { Guest, WeddingStatus } from '@/lib/supabase/types'
 import {
   formatWeddingDate,
   resolvePublicWeddingDate,
-} from '#/lib/wedding/public-settings'
+} from '@/lib/wedding/public-settings'
 
 const GUEST_RSVP_SELECT =
   'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'

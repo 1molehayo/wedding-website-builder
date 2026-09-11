@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import type { HeroPageBlock } from '#/lib/page-blocks/types'
-import { publicSectionId } from '#/lib/page-blocks/types'
-import { formatWeddingDate } from '#/lib/wedding/public-settings'
-import type { PublicWeddingSettings } from '#/lib/wedding/public-settings'
+import type { HeroPageBlock } from '@/lib/page-blocks/types'
+import { publicSectionId } from '@/lib/page-blocks/types'
+import { formatWeddingDate } from '@/lib/wedding/public-settings'
+import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
 
 export function HeroBlock({
   block,

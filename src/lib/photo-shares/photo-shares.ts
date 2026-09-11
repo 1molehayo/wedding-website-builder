@@ -3,7 +3,7 @@ import type {
   PhotoShareGroupListItem,
   PhotoShareGuestOption,
   PhotoShareViewerData,
-} from '#/lib/photo-shares/photo-shares.server'
+} from '@/lib/photo-shares/photo-shares.server'
 
 export type {
   PhotoShareGroupListItem,

@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from '#/lib/supabase/admin.server'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 const PHOTOS_BUCKET = 'photos'
 /** In-page render TTL — pages re-sign on each load. */

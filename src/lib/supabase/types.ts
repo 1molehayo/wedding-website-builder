@@ -1,4 +1,4 @@
-import type { PageBlock } from '#/lib/page-blocks/types'
+import type { PageBlock } from '@/lib/page-blocks/types'
 
 export type WeddingStatus =
   | 'planning'

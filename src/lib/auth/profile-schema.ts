@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { toE164Phone } from '#/lib/auth/phone'
-import type { CountryCode } from '#/lib/auth/phone'
-import { normalizeAdminEmail } from '#/lib/auth/roles'
+import { toE164Phone } from '@/lib/auth/phone'
+import type { CountryCode } from '@/lib/auth/phone'
+import { normalizeAdminEmail } from '@/lib/auth/roles'
 
 const requiredName = (label: string) =>
   z
