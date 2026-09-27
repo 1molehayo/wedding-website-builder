@@ -35,11 +35,13 @@ import {
 import {
   PAGE_BLOCK_TYPES,
   PAGE_BLOCK_TYPE_LABELS,
+  NAV_LABEL_MAX_LENGTH,
   createDefaultBlock,
   isPageContentLive,
   pageBlocksEqual,
 } from '@/lib/page-blocks/types'
 import type {
+  BlockNavFields,
   PageBlock,
   PageBlockType,
   PageContentEditorData,
@@ -84,6 +86,74 @@ function duplicateBlock(block: PageBlock): PageBlock {
     id: crypto.randomUUID(),
     fields: structuredClone(block.fields),
   } as PageBlock
+}
+
+function withNavPatch(
+  block: Exclude<PageBlock, { type: 'hero' }>,
+  patch: Partial<BlockNavFields>,
+): PageBlock {
+  switch (block.type) {
+    case 'story':
+      return { ...block, fields: { ...block.fields, ...patch } }
+    case 'image':
+      return { ...block, fields: { ...block.fields, ...patch } }
+    case 'details':
+      return { ...block, fields: { ...block.fields, ...patch } }
+  }
+}
+
+function NavLabelFields({
+  block,
+  onChange,
+}: {
+  block: Exclude<PageBlock, { type: 'hero' }>
+  onChange: (block: PageBlock) => void
+}) {
+  const useTitle = block.fields.useTitleInNav
+
+  return (
+    <div className="space-y-3">
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={useTitle}
+          onChange={(event) =>
+            onChange(
+              withNavPatch(block, { useTitleInNav: event.target.checked }),
+            )
+          }
+        />
+        Use title in nav
+      </label>
+      {useTitle ? (
+        <p className="text-foreground-secondary text-sm">
+          The menu shows this title, and shortens it after {NAV_LABEL_MAX_LENGTH}{' '}
+          characters.
+        </p>
+      ) : (
+        <Field>
+          <Field.Label>Nav label</Field.Label>
+          <Field.Control>
+            <Input
+              value={block.fields.navLabel ?? ''}
+              onChange={(event) =>
+                onChange(
+                  withNavPatch(block, {
+                    navLabel: event.target.value || null,
+                  }),
+                )
+              }
+              placeholder="Short name for the menu"
+            />
+          </Field.Control>
+          <Field.Description>
+            Shown in the menu instead of the title. Shortened after{' '}
+            {NAV_LABEL_MAX_LENGTH} characters.
+          </Field.Description>
+        </Field>
+      )}
+    </div>
+  )
 }
 
 function BlockEditor({
@@ -280,6 +350,7 @@ function BlockEditor({
           </Field.Control>
           {bodyInvalid ? <Field.Error>{fieldErrors.body}</Field.Error> : null}
         </Field>
+        <NavLabelFields block={block} onChange={onChange} />
       </div>
     )
   }
@@ -343,12 +414,33 @@ function BlockEditor({
             />
           </Field.Control>
         </Field>
+        <NavLabelFields block={block} onChange={onChange} />
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
+      <Field>
+        <Field.Label>Title</Field.Label>
+        <Field.Control>
+          <Input
+            value={block.fields.title}
+            onChange={(event) =>
+              onChange({
+                ...block,
+                fields: { ...block.fields, title: event.target.value },
+              })
+            }
+            placeholder="Celebrate with us"
+          />
+        </Field.Control>
+        <Field.Description>
+          Shown as the section heading. The nav uses it unless you set a
+          shorter label below.
+        </Field.Description>
+      </Field>
+      <NavLabelFields block={block} onChange={onChange} />
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"

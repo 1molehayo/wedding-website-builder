@@ -19,6 +19,11 @@ function blockIdSchema() {
   return z.string().trim().min(1, 'Block id is required.')
 }
 
+const navFieldsSchema = {
+  useTitleInNav: z.boolean().default(true),
+  navLabel: nullableTrimmedString.default(null),
+}
+
 function makePageBlocksSchema(mode: 'loose' | 'strict') {
   const storyFieldsSchema = z.object({
     title:
@@ -27,6 +32,7 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
         : trimmedString,
     body:
       mode === 'strict' ? requiredTrimmedString('Story body') : trimmedString,
+    ...navFieldsSchema,
   })
 
   const imageFieldsSchema = z.object({
@@ -34,6 +40,7 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
       mode === 'strict' ? requiredTrimmedString('Image') : trimmedString,
     title: nullableTrimmedString,
     description: nullableTrimmedString,
+    ...navFieldsSchema,
   })
 
   const pageBlockSchema = z.discriminatedUnion('type', [
@@ -61,8 +68,10 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
       id: blockIdSchema(),
       type: z.literal('details'),
       fields: z.object({
+        title: trimmedString.default('Celebrate with us'),
         showVenue: z.boolean({ error: 'showVenue must be a boolean.' }),
         showDressCode: z.boolean({ error: 'showDressCode must be a boolean.' }),
+        ...navFieldsSchema,
       }),
     }),
   ])
@@ -188,7 +197,7 @@ export function parseSavePageDraftInput(data: unknown): {
   }
 }
 
-export function validatePageBlocksClient(blocks: PageBlock[]):
+export function validatePageBlocksClient(blocks: unknown):
   | { ok: true; blocks: PageBlock[] }
   | {
       ok: false
@@ -199,9 +208,22 @@ export function validatePageBlocksClient(blocks: PageBlock[]):
   if (parsed.success) {
     return { ok: true, blocks: parsed.data }
   }
+  const indexed = Array.isArray(blocks)
+    ? blocks.map((block) => {
+        if (
+          typeof block === 'object' &&
+          block !== null &&
+          'id' in block &&
+          typeof block.id === 'string'
+        ) {
+          return { id: block.id }
+        }
+        return { id: '' }
+      })
+    : []
   return {
     ok: false,
-    fieldErrors: mapPageBlockFieldErrors(parsed.error, blocks),
+    fieldErrors: mapPageBlockFieldErrors(parsed.error, indexed),
     message: firstPageBlocksErrorMessage(parsed.error),
   }
 }

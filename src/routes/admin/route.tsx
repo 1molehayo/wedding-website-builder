@@ -1,8 +1,14 @@
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
 import { AdminShell } from '@/components/admin-shell'
+import { AdminOutletPending, RoutePending } from '@/components/route-pending'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
-import { getAdminSession, logoutAdmin } from '@/lib/auth/session'
+import {
+  clearClientAdminSession,
+  getClientAdminSession,
+  logoutAdmin,
+  readAdminSession,
+} from '@/lib/auth/session'
 import { hasCompleteAdminName } from '@/lib/auth/types'
 import type { AdminSession } from '@/lib/auth/types'
 
@@ -14,6 +20,7 @@ export const Route = createFileRoute('/admin')({
   // Child page changes keep this layout matched. Do not refetch the session
   // or swap the shell for a pending state.
   shouldReload: false,
+  pendingComponent: AdminPending,
   beforeLoad: async ({
     location,
   }): Promise<{ session: AdminSession | null }> => {
@@ -21,7 +28,7 @@ export const Route = createFileRoute('/admin')({
       return { session: null }
     }
 
-    const session = await getAdminSession()
+    const session = await readAdminSession()
     if (!session) {
       throw redirect({ to: '/admin/login' })
     }
@@ -59,19 +66,20 @@ export const Route = createFileRoute('/admin')({
   component: AdminLayout,
 })
 
-function AdminLayout() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
+function AdminChrome({
+  session,
+  children,
+}: {
+  session: AdminSession
+  children: React.ReactNode
+}) {
   const navigate = useNavigate()
-  const { session } = Route.useRouteContext()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-
-  if (isPublicAdminPath(pathname) || !session) {
-    return <Outlet />
-  }
 
   const onLogout = async () => {
     setIsLoggingOut(true)
     try {
+      clearClientAdminSession()
       await logoutAdmin()
       await navigate({ to: '/admin/login' })
     } finally {
@@ -85,7 +93,34 @@ function AdminLayout() {
       onLogout={onLogout}
       isLoggingOut={isLoggingOut}
     >
-      <Outlet />
+      {children}
     </AdminShell>
+  )
+}
+
+function AdminLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const { session } = Route.useRouteContext()
+
+  if (isPublicAdminPath(pathname) || !session) {
+    return <Outlet />
+  }
+
+  return (
+    <AdminChrome session={session}>
+      <Outlet />
+    </AdminChrome>
+  )
+}
+
+/** Shown if this layout itself is pending. The sidebar stays up. */
+function AdminPending() {
+  const session = getClientAdminSession()
+  if (!session) return <RoutePending />
+
+  return (
+    <AdminChrome session={session}>
+      <AdminOutletPending />
+    </AdminChrome>
   )
 }

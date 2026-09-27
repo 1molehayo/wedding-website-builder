@@ -6,9 +6,65 @@ v1 is **one wedding per deploy**. Product: Marvelous & Lillian. Domain direction
 
 ---
 
+## Sep 27, 2026 — current backlog (source of truth)
+
+Recap confirmed with you. Older Sep 10 notes below still apply where they are not restated here.
+
+### Pending tasks
+
+1. **Registry: cash stays; store gifts must be a real retailer registry**  
+   Cash gifts are done: show the account and let guests send money.  
+   Gift listing / purchase is not. A normal Amazon product link does **not** ship to the couple or accept a partial payment in their name.  
+   **Wanted:** guest opens an item from our registry, the store already knows it is for this couple, it ships to the couple’s address, and the guest can pay **part or all** of the price. Anyone can also still send cash.  
+   **Do not build** our own card checkout that then buys on Amazon. The store has to own payment, address, and contributions.  
+   **Approach to confirm:** keep our list as links. Each physical gift points at a **registry item URL** (Amazon Wedding Registry, or Zola / The Knot / MyRegistry if Amazon group gifting is unavailable). Admin setup guide for creating that registry and pasting item links. Verify the US “contribute / group gift” path before locking a store.
+
+2. **E-invitation: boilerplate designs that follow the wedding theme**  
+   Generate a digital invitation in the spirit of a physical card, reusable for any wedding (not a one-off Marvelous & Lillian layout).  
+   Admin picks a **design option**, the same way they pick a theme. Every design uses the **selected theme’s colours**. Changing the theme recolours the designs. Preview updates as they choose.  
+   Card fills in typical invitation facts we already store: couple names, date, venue, and the other lines a physical invite carries.  
+   The guest invite **email embeds the generated image** for the chosen design.  
+   **Rendering:** one shared design (SVG or React-to-SVG), live preview in admin, server raster to PNG for email (sharp, or satori then sharp). Browser canvas is only a preview if we use it at all — email clients cannot run canvas. Admin upload of a finished card can still replace the generated image (Sep 10 note).
+
+3. **Nocturne dark hero overlay is too heavy** — **in code (Sep 27), needs a look in the browser.**  
+   Only **Nocturne + dark mode**. Other themes stay as they are.  
+   Middle of the photo is lighter. The bottom of the overlay is still solid theme background so the hero fades into the next section.
+
+4. **In-page nav uses each block’s title, not the block type** — **in code (Sep 27).**  
+   Colour Palette was **Photos** because it is an image block.  
+   **Except the hero** (stays “Home”).  
+   - Anchor is the block id (stable if the title changes). Each details block has its own id (`details-{id}`).  
+   - Checkbox, **on by default:** “Use title in nav”. When off, a shorter nav label.  
+   - Visible label truncates at **20 characters** with an ellipsis. Full title is the tooltip.  
+   - Details has a title field (existing blocks default to “Celebrate with us”). An image with an empty title is left out of the nav.
+
+5. **Admin navigation must not full-page load** — **in code (Sep 27), needs a click-through.**  
+   Sidebar stays. Only the content area spins. Root route no longer reloads on every admin click (that was replacing the whole page). Session is reused in the browser so the layout does not wait on a new round-trip.
+
+### Next, after the three above are checked
+
+6. **E-invitation designs, then the email image**  
+   The invite email is text only. It needs the card image.  
+   Four boilerplate designs, like the theme picker, each in light and dark, using the selected theme’s colours. Real physical-invitation layouts, not a one-off Marvelous & Lillian file. Preview in admin as the design is chosen. Email embeds the generated image.  
+   Designs still to pick (you could not find a file). Do this **after** items 3–5, **before** Amazon.
+
+7. **Amazon wedding registry setup** — **last, step by step, with you.**  
+   Not an in-app checkout. After the invitation work, walk through creating the Amazon registry so guests can pay part or all and Amazon ships to you. Cash gifts stay as they are.
+
+### Still open from Sep 10 (unchanged)
+
+- Public footer: drop “Built with Ìgbéyàwówa”; keep the © line. Landing page line: confirm.
+- Wedding settings `status`: what it should do (see Sep 10).
+- New text-content block (title + rich text content; TipTap; H4–H6 only).
+- Image block lightbox (`object-contain`, viewport max height).
+
+---
+
 ## Sep 10, 2026 — new backlog (do not forget)
 
 Logged after you reopened the project. Visual reference for the invitation card: the Marvelous & Lillian “Important communication” artwork (cream / navy / gold, florals, M | L).
+
+Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation designs, nav titles for every non-hero block, retailer registry). Do not implement the old versions.
 
 ### Pending tasks
 
@@ -52,7 +108,7 @@ Logged after you reopened the project. Visual reference for the invitation card:
 ### Bugs
 
 1. **Guest invitation not reliable** — **fixed (Sep 10).** Drawer now keeps the guest open after save; Email invite uses the form email, saves first, then sends. Save is no longer blocked by native `type="email"` validation (`noValidate` + Zod).
-2. **Admin route loader covers the whole page** — **fixed (Sep 11).** `/admin` is a real layout: `shouldReload: false` keeps the shell mounted across page changes. Only the outlet loads. Sidebar stays visible and is inert while the next page loads.
+2. **Admin route loader covers the whole page** — **reopened (Sep 27).** Sep 11 change (`shouldReload: false`, outlet spinner) is still showing a full-viewport loader with no sidebar. Sidebar must stay; only the content region loads.
 
 ---
 
@@ -150,12 +206,10 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 ## Suggested next session
 
-1. Footer: remove “Built with Ìgbéyàwówa”; keep © line.
-2. Image block: required title (max ~24 chars) as nav + lightbox (`object-contain`, viewport max height).
-3. Text content block (title + rich-text **content**; H4–H6 only, no colours/fonts/images). **Editor: TipTap.**
-4. RSVP/email invitation card image (generated default + admin upload replace).
-5. Explain or simplify wedding **status**.
-6. Registry: test Amazon gift-registry flow.
-7. Then older smoke-test / UI bugs / announcement bar. Motion still last.
+1. You check Nocturne dark, nav titles, and admin sidebar loading.
+2. Then e-invitation: four theme-coloured designs (light and dark), preview, and put that image in the invite email.
+3. Then Amazon registry setup, step by step.
+4. Then footer, text block, lightbox, wedding status.
+5. Older smoke-test / UI bugs / announcement bar. Motion still last.
 
 Do not start Motion until you confirm the list above.

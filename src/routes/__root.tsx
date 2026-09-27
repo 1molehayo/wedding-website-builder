@@ -1,4 +1,5 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { HeadContent, Scripts, createRootRoute, useRouterState } from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
 import { formatCoupleNames, PRODUCT_NAME } from '@/lib/constants'
 import { COLOR_MODE_INIT_SCRIPT } from '@/lib/color-mode'
@@ -26,8 +27,29 @@ function isPlatformPath(pathname: string): boolean {
   return false
 }
 
+/** Last theme scope loaded in this browser tab. Admin page changes share one key. */
+let clientThemeKey: string | null = null
+
+function themeKeyForPath(pathname: string): string {
+  if (isPlatformPath(pathname)) return 'platform'
+  const slug = pathname.replace(/^\//, '').split('/')[0] ?? ''
+  if (!slug || isReservedPublicSlug(slug)) return 'platform'
+  return `wedding:${slug}`
+}
+
 export const Route = createRootRoute({
+  // Reloading this route marks it pending and replaces the whole document,
+  // including the admin sidebar. Only reload when the public theme scope changes.
+  pendingMs: Number.POSITIVE_INFINITY,
+  shouldReload: ({ location }) => {
+    if (typeof window === 'undefined') return true
+    if (clientThemeKey === null) return true
+    return themeKeyForPath(location.pathname) !== clientThemeKey
+  },
   loader: async ({ location }) => {
+    if (typeof window !== 'undefined') {
+      clientThemeKey = themeKeyForPath(location.pathname)
+    }
     try {
       if (isPlatformPath(location.pathname)) {
         return {
@@ -92,6 +114,11 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { publicTheme } = Route.useLoaderData()
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+
+  useEffect(() => {
+    clientThemeKey = themeKeyForPath(pathname)
+  }, [pathname])
 
   return (
     <html lang="en" data-theme={publicTheme} suppressHydrationWarning>

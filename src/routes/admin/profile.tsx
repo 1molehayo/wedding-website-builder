@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
+import { clearClientAdminSession, readAdminSession } from '@/lib/auth/session'
 import {
   requestAccountDeletion,
   updateProfile,
@@ -79,6 +80,8 @@ function AdminProfilePage() {
           },
         })
         toast.success('Profile updated.')
+        clearClientAdminSession()
+        await readAdminSession()
         await router.invalidate()
       } catch (err) {
         toast.error(

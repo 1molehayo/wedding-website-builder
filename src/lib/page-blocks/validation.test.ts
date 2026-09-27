@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  createDefaultBlock,
   createDefaultPageBlocks,
+  getPublicSectionNav,
   isPageContentLive,
   isPlaceholderStoryBody,
 } from '@/lib/page-blocks/types'
@@ -93,6 +95,83 @@ describe('page blocks validation', () => {
       type: 'hero',
       fields: { imagePath: null },
     })
+  })
+
+  it('loads older blocks and uses each title in the nav', () => {
+    const blocks = parsePageBlocks([
+      {
+        id: 'story-1',
+        type: 'story',
+        fields: { title: 'Our story', body: 'We met in Lagos.' },
+      },
+      {
+        id: 'image-1',
+        type: 'image',
+        fields: {
+          imagePath: 'palette.jpg',
+          title: 'Colour Palette',
+          description: null,
+        },
+      },
+      {
+        id: 'details-1',
+        type: 'details',
+        fields: { showVenue: true, showDressCode: true },
+      },
+    ])
+
+    expect(getPublicSectionNav(blocks).map((item) => item.fullLabel)).toEqual([
+      'Our story',
+      'Colour Palette',
+      'Celebrate with us',
+    ])
+    expect(getPublicSectionNav(blocks).map((item) => item.id)).toEqual([
+      'story-story-1',
+      'photo-image-1',
+      'details-details-1',
+    ])
+  })
+
+  it('keeps a second block of the same type and shortens long nav labels', () => {
+    const blocks = parsePageBlocks([
+      createDefaultBlock('hero'),
+      {
+        id: 'image-1',
+        type: 'image',
+        fields: {
+          imagePath: 'a.jpg',
+          title: 'Colour Palette for the whole weekend party',
+          description: null,
+        },
+      },
+      {
+        id: 'image-2',
+        type: 'image',
+        fields: {
+          imagePath: 'b.jpg',
+          title: 'Travel',
+          description: null,
+          useTitleInNav: false,
+          navLabel: 'Getting there together',
+        },
+      },
+      createDefaultBlock('hero'),
+    ])
+    const nav = getPublicSectionNav(blocks)
+
+    expect(nav.map((item) => item.fullLabel)).toEqual([
+      'Home',
+      'Colour Palette for the whole weekend party',
+      'Getting there together',
+    ])
+    expect(nav[1]?.label).toBe('Colour Palette for t…')
+    expect(nav[1]?.id).toBe('photo-image-1')
+    expect(nav[2]?.label).toBe('Getting there togeth…')
+    expect(nav.filter((item) => item.label === 'Home')).toHaveLength(1)
+  })
+
+  it('leaves an image with no title out of the nav', () => {
+    expect(getPublicSectionNav([createDefaultBlock('image')])).toEqual([])
   })
 
   it('treats matching draft and live as published only when published_at is set', () => {

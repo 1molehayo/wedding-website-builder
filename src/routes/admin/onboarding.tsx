@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
+import { clearClientAdminSession, readAdminSession } from '@/lib/auth/session'
 import type { PublicThemeId } from '@/lib/site-settings'
 import { completeOnboarding } from '@/lib/wedding/onboarding'
 import { formatWeddingDate } from '@/lib/wedding/public-settings'
@@ -56,6 +57,8 @@ function AdminOnboardingPage() {
       toast.success(
         'Wedding created. You can refine details anytime in settings.',
       )
+      clearClientAdminSession()
+      await readAdminSession()
       await router.invalidate()
       await navigate({ to: '/admin' })
     } catch (err) {

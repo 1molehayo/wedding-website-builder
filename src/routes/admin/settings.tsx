@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
+import { clearClientAdminSession, readAdminSession } from '@/lib/auth/session'
 import type { PublicThemeId } from '@/lib/site-settings'
 import type { Wedding, WeddingStatus } from '@/lib/supabase/types'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -252,6 +253,8 @@ function AdminWeddingSettingsPage() {
       setForm(weddingToForm(updated))
       setUpdatedAt(updated.updated_at)
       toast.success('Wedding settings saved.')
+      clearClientAdminSession()
+      await readAdminSession()
       await router.invalidate()
     } catch (err) {
       toast.error(

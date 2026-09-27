@@ -130,7 +130,7 @@ function WeddingPublicPage() {
   const sectionNav = [
     ...getPublicSectionNav(home.page_blocks),
     ...(home.registry.hasContent
-      ? [{ id: 'registry', label: 'Registry' }]
+      ? [{ id: 'registry', label: 'Registry', fullLabel: 'Registry' }]
       : []),
   ]
 

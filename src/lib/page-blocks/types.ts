@@ -9,18 +9,28 @@ export type HeroBlockFields = {
   imagePath: string | null
 }
 
-export type StoryBlockFields = {
+/** Shown in the nav instead of the block title when the checkbox is off. */
+export type BlockNavFields = {
+  /** When true, the nav label is the block title. Default for new and stored blocks. */
+  useTitleInNav: boolean
+  /** Used only when useTitleInNav is false. */
+  navLabel: string | null
+}
+
+export type StoryBlockFields = BlockNavFields & {
   title: string
   body: string
 }
 
-export type ImageBlockFields = {
+export type ImageBlockFields = BlockNavFields & {
   imagePath: string
   title: string | null
   description: string | null
 }
 
-export type DetailsBlockFields = {
+export type DetailsBlockFields = BlockNavFields & {
+  /** Section heading. Also the nav label when useTitleInNav is on. */
+  title: string
   showVenue: boolean
   showDressCode: boolean
 }
@@ -80,6 +90,8 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         fields: {
           title: 'Our story',
           body: 'Share how you met.',
+          useTitleInNav: true,
+          navLabel: null,
         },
       }
     case 'image':
@@ -90,6 +102,8 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
           imagePath: '',
           title: null,
           description: null,
+          useTitleInNav: true,
+          navLabel: null,
         },
       }
     case 'details':
@@ -97,8 +111,11 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         id,
         type: 'details',
         fields: {
+          title: 'Celebrate with us',
           showVenue: true,
           showDressCode: true,
+          useTitleInNav: true,
+          navLabel: null,
         },
       }
   }
@@ -139,7 +156,23 @@ export function createDefaultPageBlocks(): PageBlock[] {
 
 export type PublicSectionNavItem = {
   id: string
+  /** Visible label, shortened when it would crowd the bar. */
   label: string
+  /** Full label for the tooltip and accessible name. */
+  fullLabel: string
+}
+
+/** Visible nav labels longer than this end with an ellipsis. */
+export const NAV_LABEL_MAX_LENGTH = 20
+
+export function truncateNavLabel(
+  label: string,
+  max = NAV_LABEL_MAX_LENGTH,
+): string {
+  const trimmed = label.trim()
+  const chars = Array.from(trimmed)
+  if (chars.length <= max) return trimmed
+  return `${chars.slice(0, max).join('').trimEnd()}…`
 }
 
 /** Default CMS placeholder — never show to public guests. */
@@ -152,7 +185,11 @@ export function isPlaceholderStoryBody(body: string): boolean {
   return PLACEHOLDER_STORY_BODIES.has(body.trim().toLowerCase())
 }
 
-/** Stable section ids for public anchors / in-page nav. */
+/**
+ * Stable section ids. The block id is the slug: renaming the title does not
+ * change the anchor. Hero stays `hero` (one Home link). Details used to share
+ * a single `details` id; each details block now has its own.
+ */
 export function publicSectionId(block: PageBlock): string {
   switch (block.type) {
     case 'hero':
@@ -162,34 +199,51 @@ export function publicSectionId(block: PageBlock): string {
     case 'image':
       return `photo-${block.id}`
     case 'details':
-      return 'details'
+      return `details-${block.id}`
   }
 }
 
-/** One nav entry per section type (first occurrence). */
+function sectionNavFullLabel(block: PageBlock): string | null {
+  if (block.type === 'hero') return 'Home'
+
+  if (!block.fields.useTitleInNav) {
+    const custom = block.fields.navLabel?.trim() ?? ''
+    return custom || null
+  }
+
+  const title = block.fields.title?.trim() ?? ''
+  return title || null
+}
+
+function toNavItem(id: string, fullLabel: string): PublicSectionNavItem {
+  return {
+    id,
+    fullLabel,
+    label: truncateNavLabel(fullLabel),
+  }
+}
+
+/**
+ * One nav entry per block, except hero (first hero only, labelled Home).
+ * Blocks with no title and no custom nav label are left out.
+ */
 export function getPublicSectionNav(
   blocks: PageBlock[],
 ): PublicSectionNavItem[] {
   const items: PublicSectionNavItem[] = []
-  const seen = new Set<PageBlockType>()
+  let heroAdded = false
 
   for (const block of blocks) {
-    if (seen.has(block.type)) continue
-    seen.add(block.type)
-    switch (block.type) {
-      case 'hero':
-        items.push({ id: publicSectionId(block), label: 'Home' })
-        break
-      case 'story':
-        items.push({ id: publicSectionId(block), label: 'Story' })
-        break
-      case 'image':
-        items.push({ id: publicSectionId(block), label: 'Photos' })
-        break
-      case 'details':
-        items.push({ id: publicSectionId(block), label: 'Details' })
-        break
+    if (block.type === 'hero') {
+      if (heroAdded) continue
+      heroAdded = true
+      items.push(toNavItem(publicSectionId(block), 'Home'))
+      continue
     }
+
+    const fullLabel = sectionNavFullLabel(block)
+    if (!fullLabel) continue
+    items.push(toNavItem(publicSectionId(block), fullLabel))
   }
 
   return items

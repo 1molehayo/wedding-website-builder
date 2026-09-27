@@ -57,6 +57,8 @@ function SectionNav({
           href={`#${item.id}`}
           data-active={activeId === item.id ? 'true' : 'false'}
           onClick={(event) => onSectionNavClick(event, item.id, setActiveId)}
+          title={item.fullLabel}
+          aria-label={item.fullLabel}
           className="public-section-nav-link text-foreground-secondary hover:text-foreground shrink-0 text-xs tracking-[0.16em] uppercase transition"
         >
           {item.label}

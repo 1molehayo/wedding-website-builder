@@ -423,6 +423,22 @@ html[data-mode='dark'] .public-hero-photo-overlay {
     color-mix(in oklab, var(--color-background) 70%, transparent);
 }
 
+/*
+  Nocturne dark only: the shared dark scrim hides the photo.
+  Keep a light wash through the middle, and a solid theme colour at the
+  bottom so the hero still fades into the next section.
+*/
+html[data-theme='nocturne'][data-mode='dark'] .public-hero-photo-overlay {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-background) 62%, transparent) 0%,
+    color-mix(in oklab, var(--color-background) 34%, transparent) 16%,
+    color-mix(in oklab, var(--color-background) 22%, transparent) 46%,
+    color-mix(in oklab, var(--color-background) 58%, transparent) 78%,
+    var(--color-background) 100%
+  );
+}
+
 @keyframes public-reveal {
   from {
     opacity: 0;

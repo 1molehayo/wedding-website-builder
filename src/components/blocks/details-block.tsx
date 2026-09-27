@@ -19,6 +19,7 @@ export function DetailsBlock({
   const dressCode =
     block.fields.showDressCode && wedding.dress_code ? wedding.dress_code : null
   const sectionId = publicSectionId(block)
+  const heading = block.fields.title.trim() || 'Celebrate with us'
   const mapsQuery = [venueName, venueLocation].filter(Boolean).join(', ')
   const hasVenue = Boolean(venueName || venueLocation)
   const hasDressCode = Boolean(dressCode)
@@ -32,7 +33,7 @@ export function DetailsBlock({
       >
         <div className="public-reveal mx-auto max-w-3xl text-center">
           <p className="public-kicker mb-4">Details</p>
-          <h2 className="public-section-title">Celebrate with us</h2>
+          <h2 className="public-section-title">{heading}</h2>
           <p className="text-foreground-secondary mt-5 text-base leading-relaxed">
             Venue and dress code will be shared here when they&apos;re ready.
           </p>
@@ -49,7 +50,7 @@ export function DetailsBlock({
       <div className="public-reveal mx-auto max-w-4xl">
         <div className="mb-10 text-center md:mb-14">
           <p className="public-kicker mb-4">Details</p>
-          <h2 className="public-section-title">Celebrate with us</h2>
+          <h2 className="public-section-title">{heading}</h2>
         </div>
         <div className="flex justify-center">
           <div

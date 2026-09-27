@@ -11,6 +11,34 @@ export const getAdminSession = createServerFn({ method: 'GET' }).handler(
   },
 )
 
+/**
+ * Client-only copy of the last admin session. Child page changes must not
+ * wait on a fresh session round-trip or the admin layout is replaced by the
+ * full-page spinner. Never read this on the server (it would leak across
+ * requests). Cleared on logout and after profile / wedding changes.
+ */
+let clientAdminSession: AdminSession | null = null
+
+export function getClientAdminSession(): AdminSession | null {
+  if (typeof window === 'undefined') return null
+  return clientAdminSession
+}
+
+export function clearClientAdminSession() {
+  clientAdminSession = null
+}
+
+export async function readAdminSession(): Promise<AdminSession | null> {
+  if (typeof window !== 'undefined' && clientAdminSession) {
+    return clientAdminSession
+  }
+  const session = await getAdminSession()
+  if (typeof window !== 'undefined' && session) {
+    clientAdminSession = session
+  }
+  return session
+}
+
 export const requestAdminOtp = createServerFn({ method: 'POST' })
   .validator((data: { email: string }) => {
     const email = normalizeAdminEmail(data.email)
