@@ -91,6 +91,9 @@ export function PublicShell({
 }) {
   const showSectionNav = sectionNav.length > 1
   const headerRef = useRef<HTMLElement>(null)
+  const urlSyncReady = useRef(false)
+  const didApplyHash = useRef(false)
+  const sectionIds = sectionNav.map((item) => item.id).join('|')
   const [activeId, setActiveId] = useState<string | null>(
     sectionNav[0]?.id ?? null,
   )
@@ -126,15 +129,34 @@ export function PublicShell({
   }, [showSectionNav])
 
   useEffect(() => {
+    if (didApplyHash.current) {
+      urlSyncReady.current = true
+      return
+    }
+
     const hash = window.location.hash.replace(/^#/, '')
-    if (!hash) return
+    const known = Boolean(hash) && sectionIds.split('|').includes(hash)
+    if (!known) {
+      didApplyHash.current = true
+      urlSyncReady.current = true
+      return
+    }
 
     const frame = window.requestAnimationFrame(() => {
       scrollToSection(hash, 'auto')
       setActiveId(hash)
+      didApplyHash.current = true
+      urlSyncReady.current = true
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [])
+  }, [sectionIds])
+
+  useEffect(() => {
+    if (!urlSyncReady.current || !activeId) return
+    const nextHash = `#${activeId}`
+    if (window.location.hash === nextHash) return
+    window.history.replaceState(null, '', nextHash)
+  }, [activeId])
 
   useEffect(() => {
     if (!showSectionNav) return
