@@ -41,8 +41,9 @@ function DesignShowcasePage() {
           <p className="public-kicker">Phase 2</p>
           <h1 className="public-section-title">Design foundation</h1>
           <p className="text-foreground-secondary max-w-2xl text-base leading-relaxed">
-            Public themes are chosen in admin Wedding settings. Visitors only
-            toggle light/dark. Preview below does not persist theme selection.
+            Public themes are chosen in admin Wedding settings. Visitors choose
+            light, dark, or the device appearance. Preview below does not
+            persist theme selection.
           </p>
         </header>
 

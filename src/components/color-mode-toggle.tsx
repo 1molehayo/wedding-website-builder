@@ -1,40 +1,69 @@
 import { useEffect, useState } from 'react'
-import { MoonIcon, SunIcon } from '@phosphor-icons/react'
-import { IconButton } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
+  appliedColorMode,
   applyColorMode,
-  persistColorMode,
-  resolveInitialColorMode,
+  getStoredColorModePreference,
+  persistColorModePreference,
+  systemColorMode,
 } from '@/lib/color-mode'
-import type { ColorMode } from '@/lib/site-settings'
+import type { ColorModePreference } from '@/lib/color-mode'
+import { cn } from '@/lib/utils'
+
+const OPTIONS: { id: ColorModePreference; label: string }[] = [
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+  { id: 'system', label: 'System' },
+]
 
 export function ColorModeToggle({ className }: { className?: string }) {
-  const [mode, setMode] = useState<ColorMode>('light')
+  const [preference, setPreference] = useState<ColorModePreference>('system')
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    const initial = resolveInitialColorMode()
-    setMode(initial)
-    applyColorMode(initial)
+    const initial = getStoredColorModePreference()
+    setPreference(initial)
+    setReady(true)
+    applyColorMode(appliedColorMode(initial))
   }, [])
 
-  const toggle = () => {
-    const next: ColorMode = mode === 'light' ? 'dark' : 'light'
-    setMode(next)
-    persistColorMode(next)
-  }
+  useEffect(() => {
+    if (!ready || preference !== 'system') return
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const apply = () => applyColorMode(systemColorMode())
+    apply()
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [preference, ready])
 
   return (
-    <IconButton
-      type="button"
-      variant="outline"
-      size="sm"
-      className={className}
-      aria-label={
-        mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
-      }
-      onClick={toggle}
+    <div
+      role="group"
+      aria-label="Colour mode"
+      className={cn(
+        'border-border bg-background/80 flex rounded-lg border p-0.5 backdrop-blur-sm',
+        className,
+      )}
     >
-      {mode === 'light' ? <MoonIcon weight="regular" /> : <SunIcon weight="regular" />}
-    </IconButton>
+      {OPTIONS.map((option) => {
+        const selected = ready && preference === option.id
+        return (
+          <Button
+            key={option.id}
+            type="button"
+            size="xs"
+            variant={selected ? 'primary' : 'ghost'}
+            aria-pressed={selected}
+            className="px-2 shadow-none"
+            onClick={() => {
+              setPreference(option.id)
+              persistColorModePreference(option.id)
+            }}
+          >
+            {option.label}
+          </Button>
+        )
+      })}
+    </div>
   )
 }

@@ -1,21 +1,37 @@
 import { COLOR_MODE_STORAGE_KEY } from '@/lib/site-settings'
 import type { ColorMode } from '@/lib/site-settings'
 
-export function getStoredColorMode(): ColorMode | null {
-  if (typeof window === 'undefined') return null
-  const value = window.localStorage.getItem(COLOR_MODE_STORAGE_KEY)
-  return value === 'light' || value === 'dark' ? value : null
+/** Light and dark are fixed. System follows the device appearance. */
+export type ColorModePreference = ColorMode | 'system'
+
+export function parseColorModePreference(
+  value: string | null,
+): ColorModePreference {
+  if (value === 'light' || value === 'dark' || value === 'system') return value
+  return 'system'
+}
+
+export function getStoredColorModePreference(): ColorModePreference {
+  if (typeof window === 'undefined') return 'system'
+  return parseColorModePreference(
+    window.localStorage.getItem(COLOR_MODE_STORAGE_KEY),
+  )
+}
+
+export function systemColorMode(): ColorMode {
+  if (typeof window === 'undefined') return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
+export function appliedColorMode(preference: ColorModePreference): ColorMode {
+  if (preference === 'system') return systemColorMode()
+  return preference
 }
 
 export function resolveInitialColorMode(): ColorMode {
-  const stored = getStoredColorMode()
-  if (stored) return stored
-  if (typeof window !== 'undefined') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light'
-  }
-  return 'light'
+  return appliedColorMode(getStoredColorModePreference())
 }
 
 export function syncThemeColorMeta() {
@@ -34,8 +50,12 @@ export function applyColorMode(mode: ColorMode) {
 }
 
 export function persistColorMode(mode: ColorMode) {
-  window.localStorage.setItem(COLOR_MODE_STORAGE_KEY, mode)
-  applyColorMode(mode)
+  persistColorModePreference(mode)
+}
+
+export function persistColorModePreference(preference: ColorModePreference) {
+  window.localStorage.setItem(COLOR_MODE_STORAGE_KEY, preference)
+  applyColorMode(appliedColorMode(preference))
 }
 
 /**
