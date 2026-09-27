@@ -48,6 +48,22 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 7. **Amazon wedding registry setup** — **last, step by step, with you.**  
    Not an in-app checkout. After the invitation work, walk through creating the Amazon registry so guests can pay part or all and Amazon ships to you. Cash gifts stay as they are.
 
+### After touch-ups and the registry feature
+
+Do not start these until the current UI touch-ups and the registry work are finished. Production is [igbeyawowa.app](https://www.igbeyawowa.app/). Do not fill it with test data.
+
+1. **Staging on Vercel**  
+   A staging environment for tests, separate from production. Import and export must work the same on staging, production, and any later environment.
+
+2. **Super-admin import and export**  
+   Page content, wedding settings, media, and registry. Only a super admin can import or export. The point is to move a wedding between environments without retyping it.
+
+3. **In-app notifications**  
+   Guest RSVP emails already send. The app should also notify admins when something changes: guest RSVP, profile updates, registry add or remove, page content updates, library shares, and similar. Super-admin notifications are only for feedback submitted from the feedback form.
+
+4. **Activity logs**  
+   A record of what everyone does, including admins, so actions on the app can be traced.
+
 ### Still open from Sep 10 (unchanged)
 
 - Public footer: drop “Built with Ìgbéyàwówa”; keep the © line. Landing page line: confirm.
@@ -140,7 +156,7 @@ You asked to ship these while you slept. They exist in the repo. They were **not
 | Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist). |
 | v2 | Typography picker. |
 | v2 | Freemium / subscriptions (Donate / PayPal.Me stays for v1). |
-| v2 | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, activity logs, admin suspend, payment/seat limits. |
+| v2 | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, admin suspend, payment/seat limits. Activity logs are in the Sep 27 list, after registry. |
 
 ---
 

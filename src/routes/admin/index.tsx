@@ -47,7 +47,7 @@ function AdminOverviewPage() {
 
   if (!wedding) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         <div>
           <h1 className="admin-page-title">Welcome, {firstName}</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
@@ -88,7 +88,7 @@ function AdminOverviewPage() {
   const previewHref = publicWeddingPath(wedding.public_slug)
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="admin-page-title">Welcome, {firstName}</h1>

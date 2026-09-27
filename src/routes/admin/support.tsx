@@ -75,7 +75,7 @@ function AdminSupportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="admin-page-title">Support</h1>
         <p className="text-foreground-secondary mt-2 text-sm">

@@ -410,8 +410,8 @@ function AdminAdminsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="admin-page-title">Admins</h1>
           <p className="text-foreground-secondary mt-2 text-sm">
             Invite admins, resend or cancel pending invites, and review deletion
@@ -419,7 +419,12 @@ function AdminAdminsPage() {
             again.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={openInvite}>
+        <Button
+          type="button"
+          size="sm"
+          className="shrink-0"
+          onClick={openInvite}
+        >
           <UserPlusIcon />
           Invite admin
         </Button>

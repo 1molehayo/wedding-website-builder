@@ -68,7 +68,7 @@ function AdminFeedbackBacklogPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="admin-page-title">Backlog</h1>
         <p className="text-foreground-secondary mt-2 text-sm">

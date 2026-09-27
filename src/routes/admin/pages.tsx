@@ -742,7 +742,7 @@ function AdminPagesPage() {
   const allOpen = blocks.length > 0 && blocks.every((block) => openIds.has(block.id))
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">

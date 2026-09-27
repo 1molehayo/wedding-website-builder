@@ -425,21 +425,42 @@ html[data-mode='dark'] .public-hero-photo-overlay {
 
 /*
   Nocturne dark only: the shared dark scrim hides the photo.
-  Keep a light wash through the middle, and a solid theme colour at the
-  bottom so the hero still fades into the next section.
+  Fade with the background colour's own alpha. Mixing with `transparent`
+  pulls the ramp toward black and leaves a line above the next section.
+  The photo itself dissolves over the same stretch.
 */
+html[data-theme='nocturne'][data-mode='dark'] .public-hero > img {
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 46%,
+    rgb(0 0 0 / 0.72) 62%,
+    rgb(0 0 0 / 0.4) 76%,
+    rgb(0 0 0 / 0.12) 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 46%,
+    rgb(0 0 0 / 0.72) 62%,
+    rgb(0 0 0 / 0.4) 76%,
+    rgb(0 0 0 / 0.12) 90%,
+    transparent 100%
+  );
+}
+
 html[data-theme='nocturne'][data-mode='dark'] .public-hero-photo-overlay {
   background: linear-gradient(
     180deg,
-    color-mix(in oklab, var(--color-background) 55%, transparent) 0%,
-    color-mix(in oklab, var(--color-background) 30%, transparent) 12%,
-    color-mix(in oklab, var(--color-background) 16%, transparent) 34%,
-    color-mix(in oklab, var(--color-background) 22%, transparent) 48%,
-    color-mix(in oklab, var(--color-background) 40%, transparent) 60%,
-    color-mix(in oklab, var(--color-background) 62%, transparent) 72%,
-    color-mix(in oklab, var(--color-background) 82%, transparent) 82%,
-    color-mix(in oklab, var(--color-background) 94%, transparent) 90%,
-    var(--color-background) 96%,
+    rgb(from var(--color-background) r g b / 0.5) 0%,
+    rgb(from var(--color-background) r g b / 0.2) 16%,
+    rgb(from var(--color-background) r g b / 0.08) 36%,
+    rgb(from var(--color-background) r g b / 0.12) 50%,
+    rgb(from var(--color-background) r g b / 0.28) 62%,
+    rgb(from var(--color-background) r g b / 0.48) 73%,
+    rgb(from var(--color-background) r g b / 0.7) 83%,
+    rgb(from var(--color-background) r g b / 0.88) 92%,
     var(--color-background) 100%
   );
 }

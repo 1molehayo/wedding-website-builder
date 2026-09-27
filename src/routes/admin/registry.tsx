@@ -238,7 +238,7 @@ function AdminRegistryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl italic">Registry</h1>
@@ -263,7 +263,7 @@ function AdminRegistryPage() {
         </div>
       </div>
 
-      <div className="bg-surface border-border flex w-full max-w-2xl items-start gap-3 rounded-xl border p-4 text-sm">
+      <div className="bg-surface border-border flex w-full items-start gap-3 rounded-xl border p-4 text-sm">
         <InfoIcon className="text-foreground-secondary mt-0.5 size-4 shrink-0" />
         <p className="text-foreground-secondary leading-relaxed">
           Use a store&apos;s <strong className="text-foreground">buy as gift</strong>{' '}
