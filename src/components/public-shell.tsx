@@ -24,16 +24,47 @@ function scrollToSection(sectionId: string, behavior?: ScrollBehavior) {
   return true
 }
 
+function writeHash(hash: string, mode: 'push' | 'replace') {
+  const nextHash = hash.startsWith('#') ? hash : `#${hash}`
+  if (mode === 'replace' && window.location.hash === nextHash) return
+
+  const id = decodeURIComponent(nextHash.slice(1))
+  const target = document.getElementById(id)
+  // Drop the id while the URL fragment changes so the browser does not
+  // smooth-scroll to that section. `scroll-behavior: smooth` on <html>
+  // turns a hash update into a scroll animation.
+  if (target) target.removeAttribute('id')
+
+  const url = `${window.location.pathname}${window.location.search}${nextHash}`
+  if (mode === 'push') window.history.pushState(null, '', url)
+  else window.history.replaceState(null, '', url)
+
+  if (target) target.id = id
+}
+
+function replaceHashWhileScrolling(hash: string) {
+  const root = document.documentElement
+  const previousBehavior = root.style.scrollBehavior
+  const x = window.scrollX
+  const y = window.scrollY
+  root.style.scrollBehavior = 'auto'
+  writeHash(hash, 'replace')
+  window.scrollTo(x, y)
+  window.requestAnimationFrame(() => {
+    const jumped =
+      Math.abs(window.scrollY - y) > 48 || Math.abs(window.scrollX - x) > 48
+    if (jumped) window.scrollTo(x, y)
+    root.style.scrollBehavior = previousBehavior
+  })
+}
+
 function onSectionNavClick(
   event: React.MouseEvent<HTMLAnchorElement>,
   sectionId: string,
-  setActiveId: (id: string) => void,
+  onSelect: (id: string) => void,
 ) {
   event.preventDefault()
-  if (scrollToSection(sectionId)) {
-    setActiveId(sectionId)
-    window.history.pushState(null, '', `#${sectionId}`)
-  }
+  if (scrollToSection(sectionId)) onSelect(sectionId)
 }
 
 function SectionNav({
@@ -41,13 +72,13 @@ function SectionNav({
   className,
   ariaLabel,
   activeId,
-  setActiveId,
+  onSelect,
 }: {
   items: PublicSectionNavItem[]
   className?: string
   ariaLabel: string
   activeId: string | null
-  setActiveId: (id: string) => void
+  onSelect: (id: string) => void
 }) {
   return (
     <nav aria-label={ariaLabel} className={className}>
@@ -56,7 +87,7 @@ function SectionNav({
           key={item.id}
           href={`#${item.id}`}
           data-active={activeId === item.id ? 'true' : 'false'}
-          onClick={(event) => onSectionNavClick(event, item.id, setActiveId)}
+          onClick={(event) => onSectionNavClick(event, item.id, onSelect)}
           title={item.fullLabel}
           aria-label={item.fullLabel}
           className="public-section-nav-link text-foreground-secondary hover:text-foreground shrink-0 text-xs tracking-[0.16em] uppercase transition"
@@ -93,10 +124,19 @@ export function PublicShell({
   const headerRef = useRef<HTMLElement>(null)
   const urlSyncReady = useRef(false)
   const didApplyHash = useRef(false)
+  const pendingScrollId = useRef<string | null>(null)
   const sectionIds = sectionNav.map((item) => item.id).join('|')
   const [activeId, setActiveId] = useState<string | null>(
     sectionNav[0]?.id ?? null,
   )
+  const selectSection = (sectionId: string) => {
+    pendingScrollId.current = sectionId
+    setActiveId(sectionId)
+    writeHash(sectionId, 'push')
+    window.setTimeout(() => {
+      if (pendingScrollId.current === sectionId) pendingScrollId.current = null
+    }, 1200)
+  }
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -155,7 +195,7 @@ export function PublicShell({
     if (!urlSyncReady.current || !activeId) return
     const nextHash = `#${activeId}`
     if (window.location.hash === nextHash) return
-    window.history.replaceState(null, '', nextHash)
+    replaceHashWhileScrolling(nextHash)
   }, [activeId])
 
   useEffect(() => {
@@ -173,7 +213,12 @@ export function PublicShell({
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
         const entry = visible.at(0)
-        if (entry) setActiveId(entry.target.id)
+        if (!entry) return
+        if (pendingScrollId.current) {
+          if (entry.target.id !== pendingScrollId.current) return
+          pendingScrollId.current = null
+        }
+        setActiveId(entry.target.id)
       },
       { rootMargin: '-30% 0px -55% 0px', threshold: [0.1, 0.35, 0.6] },
     )
@@ -214,7 +259,7 @@ export function PublicShell({
                 ariaLabel="Page sections"
                 className="hidden items-center gap-4 sm:flex"
                 activeId={activeId}
-                setActiveId={setActiveId}
+                onSelect={selectSection}
               />
             ) : null}
             <ColorModeToggle />
@@ -234,7 +279,7 @@ export function PublicShell({
               ariaLabel="Page sections"
               className="public-section-nav-scroll mx-auto flex max-w-5xl items-center gap-4"
               activeId={activeId}
-              setActiveId={setActiveId}
+              onSelect={selectSection}
             />
           </div>
         ) : null}
