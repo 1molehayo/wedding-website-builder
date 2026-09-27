@@ -393,16 +393,17 @@ body {
 
 /*
   Theme-colored wash over hero photos so themed text stays readable.
-  Light mode keeps the photo visible; dark mode uses a stronger scrim.
-  Top/bottom stay closer to --color-background so nav + next section blend.
+  The bottom of the ramp stays solid so the next section still blends.
+  The upper wash is lighter so the couple's photo stays visible.
+  Nocturne dark replaces this below.
 */
 .public-hero-photo-overlay {
   background:
     linear-gradient(
       180deg,
-      var(--color-background) 0%,
-      color-mix(in oklab, var(--color-background) 82%, transparent) 12%,
-      color-mix(in oklab, var(--color-background) 58%, transparent) 44%,
+      color-mix(in oklab, var(--color-background) 90%, transparent) 0%,
+      color-mix(in oklab, var(--color-background) 70%, transparent) 12%,
+      color-mix(in oklab, var(--color-background) 48%, transparent) 44%,
       color-mix(in oklab, var(--color-background) 70%, transparent) 76%,
       var(--color-background) 100%
     ),
@@ -414,13 +415,13 @@ html[data-mode='dark'] .public-hero-photo-overlay {
   background:
     linear-gradient(
       180deg,
-      var(--color-background) 0%,
-      color-mix(in oklab, var(--color-background) 94%, transparent) 14%,
-      color-mix(in oklab, var(--color-background) 78%, transparent) 42%,
+      color-mix(in oklab, var(--color-background) 90%, transparent) 0%,
+      color-mix(in oklab, var(--color-background) 64%, transparent) 14%,
+      color-mix(in oklab, var(--color-background) 36%, transparent) 42%,
       color-mix(in oklab, var(--color-background) 86%, transparent) 72%,
       var(--color-background) 100%
     ),
-    color-mix(in oklab, var(--color-background) 70%, transparent);
+    color-mix(in oklab, var(--color-background) 40%, transparent);
 }
 
 /*
