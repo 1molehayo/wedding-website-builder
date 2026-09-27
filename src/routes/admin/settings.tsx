@@ -2,6 +2,7 @@ import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { AddressSearchField } from '@/components/address-search-field'
 import { PageActionBar } from '@/components/admin/page-action-bar'
+import { InvitationDesignPicker } from '@/components/admin/invitation-design-picker'
 import { ThemePicker } from '@/components/admin/theme-picker'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -468,6 +469,17 @@ function AdminWeddingSettingsPage() {
             groomName={form.groom_name || 'Groom'}
             brideName={form.bride_name || 'Bride'}
             weddingDateLabel={formatWeddingDate(form.wedding_date || null)}
+          />
+        </div>
+
+        <div className="bg-surface border-border rounded-xl border p-5">
+          <InvitationDesignPicker
+            theme={form.active_public_theme}
+            groomName={form.groom_name}
+            brideName={form.bride_name}
+            weddingDate={form.wedding_date || null}
+            venueName={form.venue_name}
+            venueLocation={form.venue_location}
           />
         </div>
 

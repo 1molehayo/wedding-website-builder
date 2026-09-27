@@ -19,12 +19,9 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
    **Do not build** our own card checkout that then buys on Amazon. The store has to own payment, address, and contributions.  
    **Approach to confirm:** keep our list as links. Each physical gift points at a **registry item URL** (Amazon Wedding Registry, or Zola / The Knot / MyRegistry if Amazon group gifting is unavailable). Admin setup guide for creating that registry and pasting item links. Verify the US “contribute / group gift” path before locking a store.
 
-2. **E-invitation: boilerplate designs that follow the wedding theme**  
-   Generate a digital invitation in the spirit of a physical card, reusable for any wedding (not a one-off Marvelous & Lillian layout).  
-   Admin picks a **design option**, the same way they pick a theme. Every design uses the **selected theme’s colours**. Changing the theme recolours the designs. Preview updates as they choose.  
-   Card fills in typical invitation facts we already store: couple names, date, venue, and the other lines a physical invite carries.  
-   The guest invite **email embeds the generated image** for the chosen design.  
-   **Rendering:** one shared design (SVG or React-to-SVG), live preview in admin, server raster to PNG for email (sharp, or satori then sharp). Browser canvas is only a preview if we use it at all — email clients cannot run canvas. Admin upload of a finished card can still replace the generated image (Sep 10 note).
+2. **E-invitation: boilerplate designs that follow the wedding theme** — **preview in admin (Sep 27). Email image still open.**  
+   Four layouts on Wedding settings, under the colour theme: Classic, Monogram, Frame, Editorial. They use the theme selected above, with a Light / Dark toggle. Names, date, and venue come from the form.  
+   The pick is for review only. It is not saved, and the guest email is still text without the card. Next: save the choice, then render that card to an image in the invite email.
 
 3. **Nocturne dark hero overlay is too heavy** — **in code (Sep 27), needs a look in the browser.**  
    Only **Nocturne + dark mode**. Other themes stay as they are.  
