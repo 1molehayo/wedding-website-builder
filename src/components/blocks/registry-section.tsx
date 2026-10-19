@@ -10,11 +10,6 @@ import type {
 } from '@/lib/registry/registry'
 import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
 import { cn } from '@/lib/utils'
-import { GiftFundingProgress } from '@/components/gift-funding-progress'
-import {
-  SAMPLE_GIFT_FUNDING_SCENARIOS,
-  SAMPLE_GIFT,
-} from '@/lib/registry/funding'
 
 function GiftItemCard({
   item,
@@ -26,7 +21,8 @@ function GiftItemCard({
   const [guestName, setGuestName] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [isReserving, setIsReserving] = useState(false)
-  const canReserve = item.status !== 'purchased' && item.remaining_qty > 0
+  const canReserve =
+    item.status !== 'purchased' && item.remaining_qty > 0
 
   const onReserve = async () => {
     setIsReserving(true)
@@ -59,9 +55,7 @@ function GiftItemCard({
     <article className="border-border space-y-4 border-b py-8 last:border-b-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 max-w-xl">
-          <h3 className="font-serif text-2xl italic md:text-3xl">
-            {item.title}
-          </h3>
+          <h3 className="font-serif text-2xl italic md:text-3xl">{item.title}</h3>
           {item.description ? (
             <p className="text-foreground-secondary mt-3 text-sm leading-relaxed md:text-base">
               {item.description}
@@ -146,9 +140,7 @@ function AccountCard({ account }: { account: PublicRegistryAccount }) {
       <p className="text-foreground-secondary text-sm">
         {account.currency} · {account.account_name}
       </p>
-      <p className="font-mono text-sm tracking-wide">
-        {account.account_number}
-      </p>
+      <p className="font-mono text-sm tracking-wide">{account.account_number}</p>
       {account.routing_number ? (
         <p className="text-foreground-secondary text-sm">
           Routing / sort code: {account.routing_number}
@@ -163,7 +155,11 @@ function AccountCard({ account }: { account: PublicRegistryAccount }) {
   )
 }
 
-export function RegistrySection({ initial }: { initial: PublicRegistryData }) {
+export function RegistrySection({
+  initial,
+}: {
+  initial: PublicRegistryData
+}) {
   const [items, setItems] = useState(initial.items)
   const accounts = initial.accounts
 
@@ -184,20 +180,6 @@ export function RegistrySection({ initial }: { initial: PublicRegistryData }) {
             Store links should be buy-as-gift or gift-card links whenever
             possible.
           </p>
-        </div>
-
-        <div>
-          <h5 className="public-kicker mb-2">Sample Gift Funding</h5>
-
-          {SAMPLE_GIFT_FUNDING_SCENARIOS.map((item) => (
-            <GiftFundingProgress
-              key={item.id}
-              title={SAMPLE_GIFT.title}
-              label={item.label}
-              targetPrice={SAMPLE_GIFT.targetPrice}
-              contributions={item.contributions}
-            />
-          ))}
         </div>
 
         {items.length > 0 ? (
