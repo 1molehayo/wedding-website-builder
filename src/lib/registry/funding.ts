@@ -57,6 +57,11 @@ export const SAMPLE_GIFT_FUNDING_SCENARIOS = [
     contributions: [] as readonly number[],
   },
   {
+    id: 'quarter',
+    label: 'Quarter funded',
+    contributions: [125_000],
+  },
+  {
     id: 'half',
     label: 'Half funded',
     contributions: [250_000],

@@ -12,7 +12,8 @@ export function GiftFundingProgress({
   targetPrice: number
   contributions: readonly number[]
 }) {
-  // TODO: calculate funding from confirmed contributions
+  const funding = getGiftFunding(targetPrice, contributions)
+  const amount = formatNaira(funding.totalContributed)
 
   return (
     <article className="border-border space-y-4 border-b py-6 last:border-b-0">
@@ -26,10 +27,11 @@ export function GiftFundingProgress({
           )}
         </div>
 
-        {/* TODO: Show badge only when fully funded */}
-        <Badge variant="success" size="sm">
-          Fully Funded
-        </Badge>
+        {funding.fullyFunded && (
+          <Badge variant="success" size="sm">
+            Fully Funded
+          </Badge>
+        )}
       </div>
 
       <dl className="space-y-2 text-sm">
@@ -37,19 +39,19 @@ export function GiftFundingProgress({
           <dt className="text-foreground-secondary text-xs tracking-[0.12em] uppercase">
             Target price
           </dt>
-          <dd></dd>
+          <dd>{formatNaira(funding.targetPrice)}</dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">
           <dt className="text-foreground-secondary text-xs tracking-[0.12em] uppercase">
             Confirmed contributions
           </dt>
-          <dd></dd>
+          <dd>{formatNaira(funding.totalContributed)}</dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">
           <dt className="text-foreground-secondary text-xs tracking-[0.12em] uppercase">
             Remaining balance
           </dt>
-          <dd></dd>
+          <dd>{formatNaira(funding.remaining)}</dd>
         </div>
       </dl>
 
@@ -57,7 +59,7 @@ export function GiftFundingProgress({
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3 text-xs tracking-[0.12em] uppercase">
           <span>Funding</span>
-          <span></span>
+          <span>{funding.percentage}%</span>
         </div>
 
         <div
@@ -65,11 +67,14 @@ export function GiftFundingProgress({
           role="progressbar"
           aria-valuemax={100}
           aria-valuemin={0}
-          aria-valuenow={0}
-          aria-valuetext=''
+          aria-valuenow={funding.percentage}
+          aria-valuetext={funding.fullyFunded ? 'Fully Funded': `${funding.percentage}%`}
           aria-label="Funding progress"
         >
-          <div className='bg-accent h-full rounded-full' style={{width: ''}}></div>
+          <div
+            className="bg-accent h-full rounded-full"
+            style={{ width: `${funding.percentage}%` }}
+          ></div>
         </div>
       </div>
     </article>
