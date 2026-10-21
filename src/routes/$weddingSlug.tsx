@@ -129,7 +129,9 @@ function WeddingPublicPage() {
   const { weddingSlug } = Route.useParams()
   const sectionNav = [
     ...getPublicSectionNav(home.page_blocks),
-    { id: 'registry', label: 'Registry', fullLabel: 'Registry' },
+    ...(home.registry.hasContent
+      ? [{ id: 'registry', label: 'Registry', fullLabel: 'Registry' }]
+      : []),
   ]
 
   return (
