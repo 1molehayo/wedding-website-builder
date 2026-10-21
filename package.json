@@ -1,6 +1,7 @@
 {
   "name": "wedding-website-builder",
   "private": true,
+  "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",

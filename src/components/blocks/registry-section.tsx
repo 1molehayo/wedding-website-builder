@@ -1,7 +1,12 @@
 import { useState } from 'react'
+import { GiftFundingProgress } from '@/components/blocks/gift-funding-progress'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toaster'
+import {
+  SAMPLE_GIFT,
+  SAMPLE_GIFT_FUNDING_SCENARIOS,
+} from '@/lib/registry/funding'
 import { reserveRegistryItem } from '@/lib/registry/registry'
 import type {
   PublicRegistryAccount,
@@ -163,8 +168,6 @@ export function RegistrySection({
   const [items, setItems] = useState(initial.items)
   const accounts = initial.accounts
 
-  if (!initial.hasContent) return null
-
   return (
     <section
       id="registry"
@@ -180,6 +183,27 @@ export function RegistrySection({
             Store links should be buy-as-gift or gift-card links whenever
             possible.
           </p>
+        </div>
+
+        <div
+          className={cn(
+            (items.length > 0 || accounts.length > 0) && 'mb-12',
+          )}
+        >
+          <p className="public-kicker mb-2">Sample gift funding</p>
+          <p className="text-foreground-secondary mb-2 max-w-xl text-sm leading-relaxed">
+            Fictional amounts for one gift priced at ₦500,000. These are not
+            live contributions.
+          </p>
+          {SAMPLE_GIFT_FUNDING_SCENARIOS.map((scenario) => (
+            <GiftFundingProgress
+              key={scenario.id}
+              title={SAMPLE_GIFT.title}
+              scenarioLabel={scenario.label}
+              targetPrice={SAMPLE_GIFT.targetPrice}
+              contributions={scenario.contributions}
+            />
+          ))}
         </div>
 
         {items.length > 0 ? (

@@ -331,3 +331,9 @@ Do not start the next phase until the previous phase is merged and confirmed.
 |  **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. Also: activity logs, support tickets inbox, **admin suspend**, payment/seat limits. |
 
 Track v2 explicitly so we do not bolt multi-site onto v1 accidentally. Until then, treat each production wedding as its own Supabase + Vercel surface and use the [launch checklist](#whitelabel-launch-checklist-for-a-new-wedding-v1).
+
+## License
+
+This project is licensed under the **GNU General Public License version 3 only** (`GPL-3.0-only`). See [`LICENSE`](./LICENSE) for the full license text.
+
+Admin UI primitives and related helpers include code **adapted from [Significa Foundations](https://github.com/significa/foundations)** ([foundations.significa.co](https://foundations.significa.co)), which Significa documents as GPL-3.0. See [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) for attribution and known file locations. We do not claim authorship of the Significa Foundations components.
