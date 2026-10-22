@@ -2,7 +2,7 @@
 
 Snapshot from the recovered chat ([Co creation discussion](a83c655c-b3ac-447b-b0bd-017ee56c5999)). Last agent work: **lint clean** (Aug 13, ~8:12 AM). You were going to test the overnight slice after a nap; that confirmation never happened.
 
-v1 is **one wedding per deploy**. Product: Marvelous & Lillian. Domain direction: `igbeyawowa.app`.
+v1 is **one wedding per deploy**. Local/demo couple samples use fictional **Theo & Ada**. Domain direction: `igbeyawowa.app`.
 
 ---
 
@@ -29,10 +29,10 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 
 4. **In-page nav uses each block’s title, not the block type** — **in code (Sep 27).**  
    Colour Palette was **Photos** because it is an image block.  
-   **Except the hero** (stays “Home”).  
-   - Anchor is the block id (stable if the title changes). Each details block has its own id (`details-{id}`).  
-   - Checkbox, **on by default:** “Use title in nav”. When off, a shorter nav label.  
-   - Visible label truncates at **20 characters** with an ellipsis. Full title is the tooltip.  
+   **Except the hero** (stays “Home”).
+   - Anchor is the block id (stable if the title changes). Each details block has its own id (`details-{id}`).
+   - Checkbox, **on by default:** “Use title in nav”. When off, a shorter nav label.
+   - Visible label truncates at **20 characters** with an ellipsis. Full title is the tooltip.
    - Details has a title field (existing blocks default to “Celebrate with us”). An image with an empty title is left out of the nav.
 
 5. **Admin navigation must not full-page load** — **in code (Sep 27), needs a click-through.**  
@@ -42,7 +42,7 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 
 6. **E-invitation designs, then the email image**  
    The invite email is text only. It needs the card image.  
-   Four boilerplate designs, like the theme picker, each in light and dark, using the selected theme’s colours. Real physical-invitation layouts, not a one-off Marvelous & Lillian file. Preview in admin as the design is chosen. Email embeds the generated image.  
+   Four boilerplate designs, like the theme picker, each in light and dark, using the selected theme’s colours. Real physical-invitation layouts, not a one-off couple-specific file. Preview in admin as the design is chosen. Email embeds the generated image.  
    Designs still to pick (you could not find a file). Do this **after** items 3–5, **before** Amazon.
 
 7. **Amazon wedding registry setup** — **last, step by step, with you.**  
@@ -75,7 +75,7 @@ Do not start these until the current UI touch-ups and the registry work are fini
 
 ## Sep 10, 2026 — new backlog (do not forget)
 
-Logged after you reopened the project. Visual reference for the invitation card: the Marvelous & Lillian “Important communication” artwork (cream / navy / gold, florals, M | L).
+Logged after you reopened the project. Visual reference for the invitation card: sample “Important communication” artwork (cream / navy / gold, florals, monogram).
 
 Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation designs, nav titles for every non-hero block, retailer registry). Do not implement the old versions.
 
@@ -85,11 +85,11 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
    Keep `© Ìgbéyàwówa 2026`. Remove the extra “Built with …” line on the wedding site footer (`PublicShell`). Landing page has a similar line — confirm whether that stays.
 
 2. **RSVP + invite email: invitation image (soft copy of the card)**  
-   Feel like a physical invite: less body copy, prominent card image.  
-   - Default: generate a card with canvas (bride + groom names), save as an image, include it in the RSVP page and guest email.  
-   - Admin can upload a real invitation image; that **replaces** the generated default.  
+   Feel like a physical invite: less body copy, prominent card image.
+   - Default: generate a card with canvas (bride + groom names), save as an image, include it in the RSVP page and guest email.
+   - Admin can upload a real invitation image; that **replaces** the generated default.
    - Needs a dedicated image section on RSVP (and matching email layout).  
-   Use the supplied invitation artwork as the design reference.
+     Use the supplied invitation artwork as the design reference.
 
 3. **Clarify wedding settings `status`**  
    Values today: **Planning**, **Date confirmed**, **Invitations sent**, **Completed**.  
@@ -98,7 +98,7 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
    - **Publish date** can bump `planning` → `date_confirmed`.
    - **RSVP closes** when status is `completed` (`isRsvpOpen`).
    - It does **not** send invites, publish the date, or drive most public UI. Date visibility is `date_published_at`; emails are separate.  
-   **Open product question:** keep as a manual lifecycle, auto-derive from publish/invites, or remove the control so it is not confusing.
+     **Open product question:** keep as a manual lifecycle, auto-derive from publish/invites, or remove the control so it is not confusing.
 
 4. **New page block: text content**  
    Fields: **title** + **content** (not “description”). Reusable, not only “Our Story”. There is already a **Story** block (`title` + `body` textarea) with a hardcoded nav label “Story” — this is a new generic text block (multiple times; nav from title).  
@@ -107,9 +107,9 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
    **Blocked (clash with site theme):** headings 1–3, media / images, text colour, highlight colour, font family/size. Sanitize on save so paste cannot sneak those in. Public render uses existing wedding typography/tokens only.
 
 5. **Image block nav (title is required)**  
-   Use the **block title** as the in-page nav link. Today every image block is labelled **Photos** (`getPublicSectionNav`).  
-   - Title is **compulsory** (cannot save an image block without one).  
-   - That title is what appears in the public nav.  
+   Use the **block title** as the in-page nav link. Today every image block is labelled **Photos** (`getPublicSectionNav`).
+   - Title is **compulsory** (cannot save an image block without one).
+   - That title is what appears in the public nav.
    - **Max length** so it fits the nav (working default: **24 characters**; lock the number when implementing). Validate in admin and schema.
 
 6. **Image block lightbox**  
@@ -131,15 +131,15 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
 
 You asked to ship these while you slept. They exist in the repo. They were **not** re-checked with you after you woke.
 
-| Item | What you should verify |
-| ---- | ---------------------- |
-| **Themed guest emails** | Real Resend HTML uses the wedding theme (light palette on send). Theme picker preview should match. |
-| **Guest invite polish** | Single + bulk email, `invite_emailed_at`, Reply-To, photo-share confirm, clearer errors. |
-| **Registry** | Gift links + bank accounts + soft reserve. |
-| **Date publish** | Saving a date does **not** email guests. Explicit publish + notify. |
-| **Admin chrome** | Own palette (not public themes), sticky top bar, breadcrumbs, logout in header, Donate **center modal**, Feedback modal, super-admin **Backlog**. |
-| **Public slug** | `{bride}-{groom}-{year}` at create; UUID suffix if taken; Preview uses stored slug. Local DB must have migrations applied (`pnpm db:reset` or `npx supabase migration up`) or Preview stays missing/`undefined`. |
-| **RSVP lock** | After submit, guest cannot edit until admin unlocks. Duplicate names flagged; `admin_label` if you confirm they are different people. |
+| Item                    | What you should verify                                                                                                                                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Themed guest emails** | Real Resend HTML uses the wedding theme (light palette on send). Theme picker preview should match.                                                                                                              |
+| **Guest invite polish** | Single + bulk email, `invite_emailed_at`, Reply-To, photo-share confirm, clearer errors.                                                                                                                         |
+| **Registry**            | Gift links + bank accounts + soft reserve.                                                                                                                                                                       |
+| **Date publish**        | Saving a date does **not** email guests. Explicit publish + notify.                                                                                                                                              |
+| **Admin chrome**        | Own palette (not public themes), sticky top bar, breadcrumbs, logout in header, Donate **center modal**, Feedback modal, super-admin **Backlog**.                                                                |
+| **Public slug**         | `{bride}-{groom}-{year}` at create; UUID suffix if taken; Preview uses stored slug. Local DB must have migrations applied (`pnpm db:reset` or `npx supabase migration up`) or Preview stays missing/`undefined`. |
+| **RSVP lock**           | After submit, guest cannot edit until admin unlocks. Duplicate names flagged; `admin_label` if you confirm they are different people.                                                                            |
 
 ### 2. Discussed, not built (still open)
 
@@ -151,12 +151,12 @@ You asked to ship these while you slept. They exist in the repo. They were **not
 
 ### 3. Explicitly deferred
 
-| When | Item |
-| ---- | ---- |
-| Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist). |
-| v2 | Typography picker. |
-| v2 | Freemium / subscriptions (Donate / PayPal.Me stays for v1). |
-| v2 | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, admin suspend, payment/seat limits. Activity logs are in the Sep 27 list, after registry. |
+| When          | Item                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist).                                                                                     |
+| v2            | Typography picker.                                                                                                                                                             |
+| v2            | Freemium / subscriptions (Donate / PayPal.Me stays for v1).                                                                                                                    |
+| v2            | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, admin suspend, payment/seat limits. Activity logs are in the Sep 27 list, after registry. |
 
 ---
 

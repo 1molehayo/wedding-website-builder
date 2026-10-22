@@ -66,7 +66,9 @@ function SideDrawerContent({
   className?: string
 }) {
   return (
-    <div className={cn('flex-1 overflow-y-auto p-5', className)}>{children}</div>
+    <div className={cn('flex-1 overflow-y-auto p-5', className)}>
+      {children}
+    </div>
   )
 }
 

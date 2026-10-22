@@ -16,10 +16,7 @@ import {
   sendAdminRemovedEmail,
   sendInviteAcceptedEmail,
 } from '@/lib/email/resend.server'
-import {
-  adminInviteAcceptUrl,
-  newInviteToken,
-} from '@/lib/email/templates'
+import { adminInviteAcceptUrl, newInviteToken } from '@/lib/email/templates'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import { createServerSupabaseClient } from '@/lib/supabase/server.server'
 
@@ -258,7 +255,9 @@ export async function cancelAdminInviteHandler(
     throw new Error('Cannot cancel the super admin.')
   }
   if (existing.data.invite_accepted_at) {
-    throw new Error('Accepted invites cannot be cancelled. Delete the admin instead.')
+    throw new Error(
+      'Accepted invites cannot be cancelled. Delete the admin instead.',
+    )
   }
   if (existing.data.cancelled_at) {
     return (await withAuthSignInTimes([existing.data]))[0]

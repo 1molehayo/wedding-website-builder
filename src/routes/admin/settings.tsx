@@ -341,8 +341,8 @@ function AdminWeddingSettingsPage() {
                 <span className="text-foreground font-medium">
                   /{form.public_slug.trim() || savedSlug || '…'}
                 </span>
-                . Created as bride-groom-year. Clear the field to keep the
-                saved slug. Changing it breaks shared links.
+                . Created as bride-groom-year. Clear the field to keep the saved
+                slug. Changing it breaks shared links.
               </Field.Description>
             )}
           </Field>
@@ -388,9 +388,7 @@ function AdminWeddingSettingsPage() {
               <Button
                 type="button"
                 size="sm"
-                disabled={
-                  !hasDraftDate || dateIsPublished || dateUnsaved
-                }
+                disabled={!hasDraftDate || dateIsPublished || dateUnsaved}
                 onClick={() => setPublishConfirmOpen(true)}
               >
                 Publish date

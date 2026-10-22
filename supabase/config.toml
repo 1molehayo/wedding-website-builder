@@ -64,11 +64,12 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# Sample wedding data is opt-in. `db reset` applies migrations only.
+# Load fictional Theo & Ada data explicitly with: `pnpm db:seed`
+enabled = false
+# Kept for documentation; unused while enabled = false.
+# sql_paths = ["./seed.sql"]
+
 
 [db.network_restrictions]
 # Enable management of network restrictions.
@@ -237,7 +238,8 @@ otp_length = 6
 otp_expiry = 3600
 
 [auth.email.template.magic_link]
-subject = "Marvelous & Lillian Wedding"
+# Fallback only — admin OTP is sent by the app (dynamic couple / product subject).
+subject = "Ìgbéyàwówa"
 content_path = "./supabase/templates/magic_link.html"
 
 # Use a production-ready SMTP server

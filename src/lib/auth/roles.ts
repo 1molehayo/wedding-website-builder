@@ -1,7 +1,28 @@
 import type { AdminProfile, AdminRole } from '@/lib/supabase/types'
 
-/** Production super admin — hardcoded by product decision. */
-export const PRODUCTION_SUPER_ADMIN_EMAIL = 'omilabuolusegun@gmail.com'
+/**
+ * Server-only production super-admin email (`PRODUCTION_SUPER_ADMIN_EMAIL`).
+ * Never use a `VITE_` prefix — must not ship to the browser bundle.
+ */
+function readProductionSuperAdminEmail(): string | undefined {
+  if (typeof process === 'undefined') return undefined
+  const value = process.env.PRODUCTION_SUPER_ADMIN_EMAIL?.trim()
+  return value ? normalizeAdminEmail(value) : undefined
+}
+
+/**
+ * Production super admin from server env. Throws if unset (fail closed).
+ * Local Mailpit auth uses {@link LOCAL_SUPER_ADMIN_EMAIL} instead.
+ */
+export function getProductionSuperAdminEmail(): string {
+  const email = readProductionSuperAdminEmail()
+  if (!email) {
+    throw new Error(
+      'Missing PRODUCTION_SUPER_ADMIN_EMAIL (server-only). Set it in .env / Vercel Environment Variables.',
+    )
+  }
+  return email
+}
 
 /** Local-only Mailpit test accounts (never used in production Auth rules). */
 export const LOCAL_SUPER_ADMIN_EMAIL = 'superadmin@supabase.com'
@@ -12,15 +33,12 @@ export const LOCAL_ALLOWED_EMAILS = [
   LOCAL_ADMIN_EMAIL,
 ] as const
 
-/** @deprecated Prefer PRODUCTION_SUPER_ADMIN_EMAIL or getSuperAdminEmail(). */
-export const SUPER_ADMIN_EMAIL = PRODUCTION_SUPER_ADMIN_EMAIL
-
 export function normalizeAdminEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
 export function getSuperAdminEmail(isLocal: boolean): string {
-  return isLocal ? LOCAL_SUPER_ADMIN_EMAIL : PRODUCTION_SUPER_ADMIN_EMAIL
+  return isLocal ? LOCAL_SUPER_ADMIN_EMAIL : getProductionSuperAdminEmail()
 }
 
 export function isSuperAdminEmail(
@@ -35,10 +53,9 @@ export function isSuperAdminEmail(
 export function isReservedSuperAdminEmail(email?: string | null): boolean {
   if (!email) return false
   const normalized = normalizeAdminEmail(email)
-  return (
-    normalized === PRODUCTION_SUPER_ADMIN_EMAIL ||
-    normalized === LOCAL_SUPER_ADMIN_EMAIL
-  )
+  if (normalized === LOCAL_SUPER_ADMIN_EMAIL) return true
+  const production = readProductionSuperAdminEmail()
+  return production !== undefined && normalized === production
 }
 
 export function isLocalAllowedEmail(email: string): boolean {

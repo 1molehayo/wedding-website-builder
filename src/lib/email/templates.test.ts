@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  adminOtpEmailHtml,
+  adminOtpEmailText,
   guestDateAnnouncedEmailHtml,
   guestDateAnnouncedEmailText,
   guestPhotoShareEmailHtml,
@@ -8,29 +10,40 @@ import {
   guestRsvpInviteEmailText,
 } from '@/lib/email/templates'
 
+describe('admin OTP email templates', () => {
+  it('includes the token in text and html without inventing a couple', () => {
+    const text = adminOtpEmailText({ token: '123456' })
+    const html = adminOtpEmailHtml({ token: '123456' })
+    expect(text).toContain('123456')
+    expect(html).toContain('123456')
+    expect(text).not.toContain('Theo')
+    expect(html).not.toContain('Ada')
+  })
+})
+
 describe('guest email templates', () => {
   it('includes RSVP and optional photo links in text', () => {
     const text = guestRsvpInviteEmailText({
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       weddingDateLabel: 'August 15, 2026',
-      websiteUrl: 'https://example.com/lillian-marvelous-2026',
+      websiteUrl: 'https://example.com/ada-theo-2026',
       rsvpUrl: 'https://example.com/rsvp/token123',
       photosUrl: 'https://example.com/photos/share?g=token123',
       theme: 'celeste',
     })
 
     expect(text).toContain('Hi Ada,')
-    expect(text).toContain('Marvelous & Lillian')
+    expect(text).toContain('Theo & Ada')
     expect(text).toContain('https://example.com/rsvp/token123')
     expect(text).toContain('https://example.com/photos/share?g=token123')
-    expect(text).toContain('https://example.com/lillian-marvelous-2026')
+    expect(text).toContain('https://example.com/ada-theo-2026')
   })
 
   it('omits photo and website lines when null', () => {
     const text = guestRsvpInviteEmailText({
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       weddingDateLabel: 'Date to be announced',
       websiteUrl: null,
       rsvpUrl: 'https://example.com/rsvp/token123',
@@ -46,7 +59,7 @@ describe('guest email templates', () => {
   it('builds themed RSVP HTML with theme accent colors', () => {
     const html = guestRsvpInviteEmailHtml({
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       weddingDateLabel: 'Date to be announced',
       websiteUrl: null,
       rsvpUrl: 'https://example.com/rsvp/token123',
@@ -57,13 +70,13 @@ describe('guest email templates', () => {
 
     expect(html).toContain('#6f93b8')
     expect(html).toContain('RSVP now')
-    expect(html).toContain('Marvelous &amp; Lillian')
+    expect(html).toContain('Theo &amp; Ada')
   })
 
   it('builds dark-mode themed RSVP HTML', () => {
     const html = guestRsvpInviteEmailHtml({
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       weddingDateLabel: 'Date to be announced',
       websiteUrl: null,
       rsvpUrl: 'https://example.com/rsvp/token123',
@@ -79,7 +92,7 @@ describe('guest email templates', () => {
   it('builds photo-share email text', () => {
     const text = guestPhotoShareEmailText({
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       shareName: 'Engagement set',
       photosUrl: 'https://example.com/photos/share?g=token123',
       theme: 'botanica',
@@ -92,7 +105,7 @@ describe('guest email templates', () => {
   it('builds themed photo-share HTML', () => {
     const html = guestPhotoShareEmailHtml({
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       shareName: 'Engagement set',
       photosUrl: 'https://example.com/photos/share?g=token123',
       theme: 'rosewater',
@@ -107,9 +120,9 @@ describe('guest email templates', () => {
   it('builds themed date-announced HTML and text', () => {
     const input = {
       guestName: 'Ada',
-      coupleLabel: 'Marvelous & Lillian',
+      coupleLabel: 'Theo & Ada',
       weddingDateLabel: 'June 12, 2027',
-      websiteUrl: 'https://example.com/lillian-marvelous-2026',
+      websiteUrl: 'https://example.com/ada-theo-2026',
       rsvpUrl: 'https://example.com/rsvp/token123',
       theme: 'botanica' as const,
       mode: 'light' as const,

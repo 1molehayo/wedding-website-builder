@@ -40,7 +40,9 @@ export function NavigationProgress() {
       <div
         className={cn(
           'bg-accent h-full origin-left shadow-[0_0_8px_color-mix(in_oklab,var(--color-accent)_55%,transparent)]',
-          completing ? 'w-full transition-[width] duration-200 ease-out' : 'nav-progress-bar',
+          completing
+            ? 'w-full transition-[width] duration-200 ease-out'
+            : 'nav-progress-bar',
         )}
       />
     </div>

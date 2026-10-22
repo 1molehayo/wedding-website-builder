@@ -11,10 +11,7 @@ export type AdminSession = {
 }
 
 export type AdminAccountStatus =
-  | 'active'
-  | 'pending'
-  | 'deletion_requested'
-  | 'cancelled'
+  'active' | 'pending' | 'deletion_requested' | 'cancelled'
 
 export type AdminListItem = {
   id: string

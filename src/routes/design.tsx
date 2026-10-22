@@ -79,11 +79,11 @@ function DesignShowcasePage() {
           <div className="border-border bg-background-secondary rounded-2xl border p-8 text-center">
             <p className="public-kicker mb-6">We&apos;re getting married</p>
             <h3 className="public-display text-[clamp(3rem,10vw,5.5rem)]">
-              Marvelous
+              Theo
               <br />
               <span className="text-highlight">&amp;</span>
               <br />
-              Lillian
+              Ada
             </h3>
             <div className="bg-highlight mx-auto my-8 h-px w-20" />
             <p className="font-serif text-2xl">Date to be announced</p>

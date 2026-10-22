@@ -184,10 +184,12 @@ export async function uploadMediaAssetHandler(input: {
 
   const path = mediaPathForWedding(session.wedding.id, input.name)
 
-  const uploaded = await admin.storage.from(PHOTOS_BUCKET).upload(path, binary, {
-    contentType,
-    upsert: false,
-  })
+  const uploaded = await admin.storage
+    .from(PHOTOS_BUCKET)
+    .upload(path, binary, {
+      contentType,
+      upsert: false,
+    })
   if (uploaded.error) throw new Error(uploaded.error.message)
 
   const created = await admin

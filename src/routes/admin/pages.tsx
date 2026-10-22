@@ -1,4 +1,9 @@
-import { createFileRoute, Link, redirect, useRouter } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useRouter,
+} from '@tanstack/react-router'
 import {
   ArrowCounterClockwiseIcon,
   CaretDownIcon,
@@ -12,7 +17,10 @@ import {
   TrashIcon,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
-import { PageActionBar, formatLastUpdated } from '@/components/admin/page-action-bar'
+import {
+  PageActionBar,
+  formatLastUpdated,
+} from '@/components/admin/page-action-bar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -127,8 +135,8 @@ function NavLabelFields({
       </label>
       {useTitle ? (
         <p className="text-foreground-secondary text-sm">
-          The menu shows this title, and shortens it after {NAV_LABEL_MAX_LENGTH}{' '}
-          characters.
+          The menu shows this title, and shortens it after{' '}
+          {NAV_LABEL_MAX_LENGTH} characters.
         </p>
       ) : (
         <Field>
@@ -436,8 +444,8 @@ function BlockEditor({
           />
         </Field.Control>
         <Field.Description>
-          Shown as the section heading. The nav uses it unless you set a
-          shorter label below.
+          Shown as the section heading. The nav uses it unless you set a shorter
+          label below.
         </Field.Description>
       </Field>
       <NavLabelFields block={block} onChange={onChange} />
@@ -616,9 +624,7 @@ function AdminPagesPage() {
       toast.success('Draft saved. Preview it, then publish to go live.')
       await router.invalidate()
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to save draft.',
-      )
+      toast.error(err instanceof Error ? err.message : 'Unable to save draft.')
     } finally {
       setIsSavingDraft(false)
     }
@@ -739,7 +745,8 @@ function AdminPagesPage() {
     toast.success('Block removed.')
   }
 
-  const allOpen = blocks.length > 0 && blocks.every((block) => openIds.has(block.id))
+  const allOpen =
+    blocks.length > 0 && blocks.every((block) => openIds.has(block.id))
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -774,8 +781,8 @@ function AdminPagesPage() {
         <div className="border-border bg-surface rounded-xl border border-dashed px-6 py-12 text-center">
           <p className="text-lg font-medium">No sections yet</p>
           <p className="text-foreground-secondary mx-auto mt-2 max-w-md text-sm leading-relaxed">
-            Add a hero, story, photo, or details block. This draft stays off
-            the live site until you publish.
+            Add a hero, story, photo, or details block. This draft stays off the
+            live site until you publish.
           </p>
           <div className="mt-6 flex justify-center">
             <AddItemMenu onAdd={onAdd} triggerClassName="px-4" />
@@ -784,128 +791,132 @@ function AdminPagesPage() {
       ) : (
         <div className="space-y-2">
           {blocks.map((block) => {
-          const open = openIds.has(block.id)
-          const hasError = Boolean(fieldErrors[block.id])
-          return (
-            <div
-              key={block.id}
-              draggable={dragEnabled}
-              onDragStart={(event) => {
-                dragIdRef.current = block.id
-                setDraggingId(block.id)
-                event.dataTransfer.effectAllowed = 'move'
-                event.dataTransfer.setData('text/plain', block.id)
-              }}
-              onDragEnd={() => {
-                dragIdRef.current = null
-                setDraggingId(null)
-                setDragEnabled(false)
-              }}
-              onDragOver={(event) => {
-                event.preventDefault()
-                event.dataTransfer.dropEffect = 'move'
-              }}
-              onDrop={(event) => {
-                event.preventDefault()
-                const fromId = dragIdRef.current
-                if (!fromId || fromId === block.id) return
-                setBlocks((current) => {
-                  const from = current.findIndex((item) => item.id === fromId)
-                  const to = current.findIndex((item) => item.id === block.id)
-                  return moveBlock(current, from, to)
-                })
-              }}
-              className={cn(
-                'bg-surface border-border rounded-xl border',
-                draggingId === block.id && 'opacity-50',
-                hasError && 'border-error',
-              )}
-            >
-              <div className="flex items-center gap-1 px-2 py-2">
-                <button
-                  type="button"
-                  className="text-foreground-secondary hover:text-foreground inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg active:cursor-grabbing"
-                  aria-label="Drag to reorder"
-                  onMouseDown={() => setDragEnabled(true)}
-                  onTouchStart={() => setDragEnabled(true)}
-                >
-                  <DotsSixVerticalIcon className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 items-center gap-2 px-1 py-1 text-left"
-                  onClick={() => toggleOpen(block.id)}
-                  aria-expanded={open}
-                >
-                  <span className="truncate font-medium">
-                    {PAGE_BLOCK_TYPE_LABELS[block.type]}
-                  </span>
-                </button>
-                <DropdownMenu
-                  label="Block actions"
-                  items={[
-                    {
-                      id: 'duplicate',
-                      label: 'Duplicate',
-                      icon: <CopySimpleIcon />,
-                      onSelect: () => onDuplicate(block.id),
-                    },
-                    {
-                      id: 'remove',
-                      label: 'Remove',
-                      icon: <TrashIcon />,
-                      tone: 'destructive',
-                      onSelect: () => onRemove(block.id),
-                    },
-                  ]}
-                />
-                <button
-                  type="button"
-                  className="text-foreground-secondary hover:text-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-lg"
-                  aria-label={open ? 'Collapse block' : 'Expand block'}
-                  onClick={() => toggleOpen(block.id)}
-                >
-                  {open ? (
-                    <CaretUpIcon className="size-4" />
-                  ) : (
-                    <CaretDownIcon className="size-4" />
-                  )}
-                </button>
-              </div>
-              {open ? (
-                <div className="border-border border-t px-4 py-4">
-                  <BlockEditor
-                    block={block}
-                    fieldErrors={fieldErrors[block.id]}
-                    onChange={(next) => {
-                      setBlocks((current) =>
-                        current.map((item) =>
-                          item.id === next.id ? next : item,
-                        ),
-                      )
-                      if (next.type === 'story') {
-                        if (next.fields.title.trim()) {
-                          clearBlockFieldError(next.id, 'title')
-                        }
-                        if (next.fields.body.trim()) {
-                          clearBlockFieldError(next.id, 'body')
-                        }
-                      }
-                      if (
-                        next.type === 'image' &&
-                        next.fields.imagePath.trim()
-                      ) {
-                        clearBlockFieldError(next.id, 'imagePath')
-                      }
-                    }}
+            const open = openIds.has(block.id)
+            const hasError = Boolean(fieldErrors[block.id])
+            return (
+              <div
+                key={block.id}
+                draggable={dragEnabled}
+                onDragStart={(event) => {
+                  dragIdRef.current = block.id
+                  setDraggingId(block.id)
+                  event.dataTransfer.effectAllowed = 'move'
+                  event.dataTransfer.setData('text/plain', block.id)
+                }}
+                onDragEnd={() => {
+                  dragIdRef.current = null
+                  setDraggingId(null)
+                  setDragEnabled(false)
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  event.dataTransfer.dropEffect = 'move'
+                }}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  const fromId = dragIdRef.current
+                  if (!fromId || fromId === block.id) return
+                  setBlocks((current) => {
+                    const from = current.findIndex((item) => item.id === fromId)
+                    const to = current.findIndex((item) => item.id === block.id)
+                    return moveBlock(current, from, to)
+                  })
+                }}
+                className={cn(
+                  'bg-surface border-border rounded-xl border',
+                  draggingId === block.id && 'opacity-50',
+                  hasError && 'border-error',
+                )}
+              >
+                <div className="flex items-center gap-1 px-2 py-2">
+                  <button
+                    type="button"
+                    className="text-foreground-secondary hover:text-foreground inline-flex size-8 shrink-0 cursor-grab items-center justify-center rounded-lg active:cursor-grabbing"
+                    aria-label="Drag to reorder"
+                    onMouseDown={() => setDragEnabled(true)}
+                    onTouchStart={() => setDragEnabled(true)}
+                  >
+                    <DotsSixVerticalIcon className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 px-1 py-1 text-left"
+                    onClick={() => toggleOpen(block.id)}
+                    aria-expanded={open}
+                  >
+                    <span className="truncate font-medium">
+                      {PAGE_BLOCK_TYPE_LABELS[block.type]}
+                    </span>
+                  </button>
+                  <DropdownMenu
+                    label="Block actions"
+                    items={[
+                      {
+                        id: 'duplicate',
+                        label: 'Duplicate',
+                        icon: <CopySimpleIcon />,
+                        onSelect: () => onDuplicate(block.id),
+                      },
+                      {
+                        id: 'remove',
+                        label: 'Remove',
+                        icon: <TrashIcon />,
+                        tone: 'destructive',
+                        onSelect: () => onRemove(block.id),
+                      },
+                    ]}
                   />
+                  <button
+                    type="button"
+                    className="text-foreground-secondary hover:text-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-lg"
+                    aria-label={open ? 'Collapse block' : 'Expand block'}
+                    onClick={() => toggleOpen(block.id)}
+                  >
+                    {open ? (
+                      <CaretUpIcon className="size-4" />
+                    ) : (
+                      <CaretDownIcon className="size-4" />
+                    )}
+                  </button>
                 </div>
-              ) : null}
-            </div>
-          )
-        })}
+                {open ? (
+                  <div className="border-border border-t px-4 py-4">
+                    <BlockEditor
+                      block={block}
+                      fieldErrors={fieldErrors[block.id]}
+                      onChange={(next) => {
+                        setBlocks((current) =>
+                          current.map((item) =>
+                            item.id === next.id ? next : item,
+                          ),
+                        )
+                        if (next.type === 'story') {
+                          if (next.fields.title.trim()) {
+                            clearBlockFieldError(next.id, 'title')
+                          }
+                          if (next.fields.body.trim()) {
+                            clearBlockFieldError(next.id, 'body')
+                          }
+                        }
+                        if (
+                          next.type === 'image' &&
+                          next.fields.imagePath.trim()
+                        ) {
+                          clearBlockFieldError(next.id, 'imagePath')
+                        }
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
 
-        <AddItemMenu onAdd={onAdd} className="w-full" triggerClassName="w-full" />
+          <AddItemMenu
+            onAdd={onAdd}
+            className="w-full"
+            triggerClassName="w-full"
+          />
         </div>
       )}
 

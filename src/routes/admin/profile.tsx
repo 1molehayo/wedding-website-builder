@@ -11,20 +11,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import { clearClientAdminSession, readAdminSession } from '@/lib/auth/session'
-import {
-  requestAccountDeletion,
-  updateProfile,
-} from '@/lib/auth/profile'
+import { requestAccountDeletion, updateProfile } from '@/lib/auth/profile'
 import {
   deletionReasonSchema,
   profileFormSchema,
   profileFormSchemaAdmin,
 } from '@/lib/auth/profile-schema'
 import { parseStoredPhone } from '@/lib/auth/phone'
-import {
-  adminFirstName,
-  hasCompleteAdminName,
-} from '@/lib/auth/types'
+import { adminFirstName, hasCompleteAdminName } from '@/lib/auth/types'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import { Route as AdminRoute } from './route'
@@ -139,9 +133,7 @@ function AdminProfilePage() {
           void form.handleSubmit()
         }}
       >
-        <form.Subscribe
-          selector={(state) => state.submissionAttempts > 0}
-        >
+        <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
           {(submitted) => (
             <>
               <div className="grid items-start gap-4 md:grid-cols-2">
@@ -234,7 +226,9 @@ function AdminProfilePage() {
                 {(countryField) => (
                   <form.Field name="phoneNational">
                     {(phoneField) => {
-                      const error = fieldErrorMessage(phoneField.state.meta.errors)
+                      const error = fieldErrorMessage(
+                        phoneField.state.meta.errors,
+                      )
                       const invalid =
                         !!error &&
                         (phoneField.state.meta.isTouched || submitted)

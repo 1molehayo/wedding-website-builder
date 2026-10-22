@@ -1,10 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import {
-  createTtlCache,
-  normalizeAddressQuery,
-} from '@/lib/places/cache'
+import { createTtlCache, normalizeAddressQuery } from '@/lib/places/cache'
 import type { AddressSuggestion } from '@/lib/places/cache'
 import { searchAddresses } from '@/lib/places/search'
 import { cn } from '@/lib/utils'
@@ -188,7 +185,11 @@ export function AddressSearchField({
                 </li>
               ) : (
                 suggestions.map((suggestion, index) => (
-                  <li key={suggestion.id} role="option" aria-selected={index === activeIndex}>
+                  <li
+                    key={suggestion.id}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                  >
                     <button
                       type="button"
                       id={`${listId}-option-${index}`}
@@ -199,7 +200,9 @@ export function AddressSearchField({
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => selectSuggestion(suggestion)}
                     >
-                      <span className="block font-medium">{suggestion.label}</span>
+                      <span className="block font-medium">
+                        {suggestion.label}
+                      </span>
                       {suggestion.secondary ? (
                         <span className="text-foreground-secondary mt-0.5 block text-xs">
                           {suggestion.secondary}

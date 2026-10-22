@@ -55,7 +55,9 @@ export async function submitProductFeedbackHandler(input: {
     throw new Error('Feedback must be 4000 characters or fewer.')
   }
   const pagePath =
-    typeof input.pagePath === 'string' ? input.pagePath.trim().slice(0, 200) : null
+    typeof input.pagePath === 'string'
+      ? input.pagePath.trim().slice(0, 200)
+      : null
 
   const admin = createAdminSupabaseClient()
   const result = await admin.from('product_feedback').insert({

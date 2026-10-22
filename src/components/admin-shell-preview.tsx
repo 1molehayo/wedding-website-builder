@@ -38,7 +38,7 @@ export function AdminShellPreview() {
             ))}
           </nav>
           <div className="mt-auto border-t border-white/10 pt-4 text-sm">
-            <p className="font-serif italic">Marvelous &amp; Lillian</p>
+            <p className="font-serif italic">Theo &amp; Ada</p>
             <p className="text-sidebar-foreground/60 mt-1 text-xs">
               Date to be announced
             </p>

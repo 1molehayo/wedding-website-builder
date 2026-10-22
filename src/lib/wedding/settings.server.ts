@@ -1,9 +1,7 @@
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import { getAppUrl } from '@/lib/app-url'
 import { formatCoupleNames } from '@/lib/constants'
-import {
-  sendGuestDateAnnouncedEmail,
-} from '@/lib/email/resend.server'
+import { sendGuestDateAnnouncedEmail } from '@/lib/email/resend.server'
 import { resolveEmailThemeId } from '@/lib/email/theme'
 import type { Wedding } from '@/lib/supabase/types'
 import {
@@ -40,6 +38,8 @@ export async function getPublicWeddingSettingsHandler(
     }
 
     if (!result.data) {
+      // Empty DB / unknown slug: no fictional couple — callers must treat
+      // missing `public_slug` as “no wedding”.
       return FALLBACK_PUBLIC_WEDDING
     }
 

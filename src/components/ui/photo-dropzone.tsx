@@ -68,9 +68,7 @@ export function PhotoDropzone({
 
     if (accepted.length === 0) {
       setLocalError(
-        badSize
-          ? `File is over ${sizeLabel}.`
-          : `Use ${typeLabel}.`,
+        badSize ? `File is over ${sizeLabel}.` : `Use ${typeLabel}.`,
       )
       return
     }
@@ -153,16 +151,19 @@ export function PhotoDropzone({
       <p className="mt-3 text-sm font-medium">
         {isUploading
           ? 'Uploading…'
-          : replaceLabel ??
+          : (replaceLabel ??
             (multiple
               ? 'Drop photos here, or click to browse'
-              : 'Drop a photo here, or click to browse')}
+              : 'Drop a photo here, or click to browse'))}
       </p>
       <p className="text-foreground-secondary mt-1 text-xs">
         {typeLabel} · up to {sizeLabel}
       </p>
       {hint ? (
-        <p id={hintId} className="text-foreground-secondary mt-2 max-w-sm text-xs">
+        <p
+          id={hintId}
+          className="text-foreground-secondary mt-2 max-w-sm text-xs"
+        >
           {hint}
         </p>
       ) : null}

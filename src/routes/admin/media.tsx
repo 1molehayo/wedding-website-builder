@@ -399,127 +399,129 @@ function AdminMediaPage() {
             onFiles={(files) => enqueueFiles(files)}
           />
           {assets.length === 0 && uploads.length === 0 ? null : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {uploads.map((job) => (
-              <figure
-                key={job.id}
-                className="border-border bg-surface overflow-hidden rounded-xl border"
-              >
-                <div className="bg-background-secondary relative aspect-4/3">
-                  <img
-                    src={job.previewUrl}
-                    alt={job.file.name}
-                    className={cn(
-                      'h-full w-full object-cover',
-                      job.status !== 'error' && 'opacity-70',
-                    )}
-                  />
-                  {job.status !== 'error' ? (
-                    <div className="absolute inset-x-0 bottom-0 space-y-1 bg-black/55 px-3 py-2 text-white">
-                      <div className="flex items-center justify-between gap-2 text-xs">
-                        <span>
-                          {job.status === 'queued'
-                            ? 'Waiting…'
-                            : job.status === 'finalizing'
-                              ? 'Saving…'
-                              : `Uploading ${job.progress}%`}
-                        </span>
-                        <span>{job.progress}%</span>
-                      </div>
-                      <div
-                        className="h-1.5 overflow-hidden rounded-full bg-white/25"
-                        role="progressbar"
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        aria-valuenow={job.progress}
-                      >
-                        <div
-                          className="h-full rounded-full bg-white transition-[width] duration-150 ease-out"
-                          style={{ width: `${job.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-3 text-center text-white">
-                      <p className="text-xs">{job.error ?? 'Upload failed.'}</p>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="border-white/40 bg-transparent text-white hover:bg-white/10"
-                          onClick={() => retryUpload(job.id)}
-                        >
-                          Retry
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="border-white/40 bg-transparent text-white hover:bg-white/10"
-                          onClick={() => removeUpload(job.id)}
-                        >
-                          Dismiss
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <figcaption className="space-y-2 p-3">
-                  <p className="truncate text-sm font-medium">
-                    {job.file.name}
-                  </p>
-                </figcaption>
-              </figure>
-            ))}
-            {assets.map((asset) => (
-              <figure
-                key={asset.id}
-                className="border-border bg-surface overflow-hidden rounded-xl border"
-              >
-                <div className="bg-background-secondary aspect-4/3">
-                  {asset.signedUrl ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {uploads.map((job) => (
+                <figure
+                  key={job.id}
+                  className="border-border bg-surface overflow-hidden rounded-xl border"
+                >
+                  <div className="bg-background-secondary relative aspect-4/3">
                     <img
-                      src={asset.signedUrl}
-                      alt={asset.filename}
-                      className="h-full w-full object-cover"
+                      src={job.previewUrl}
+                      alt={job.file.name}
+                      className={cn(
+                        'h-full w-full object-cover',
+                        job.status !== 'error' && 'opacity-70',
+                      )}
                     />
-                  ) : (
-                    <div className="text-foreground-secondary flex h-full items-center justify-center text-xs uppercase tracking-wider">
-                      Preview unavailable
-                    </div>
-                  )}
-                </div>
-                <figcaption className="space-y-2 p-3">
-                  <p className="truncate text-sm font-medium">
-                    {asset.filename}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        void copyText(asset.storage_path, 'Storage path')
-                      }
-                    >
-                      <CopySimpleIcon />
-                      Path
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setDeleteAssetId(asset.id)}
-                    >
-                      <TrashIcon />
-                      Delete
-                    </Button>
+                    {job.status !== 'error' ? (
+                      <div className="absolute inset-x-0 bottom-0 space-y-1 bg-black/55 px-3 py-2 text-white">
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span>
+                            {job.status === 'queued'
+                              ? 'Waiting…'
+                              : job.status === 'finalizing'
+                                ? 'Saving…'
+                                : `Uploading ${job.progress}%`}
+                          </span>
+                          <span>{job.progress}%</span>
+                        </div>
+                        <div
+                          className="h-1.5 overflow-hidden rounded-full bg-white/25"
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={job.progress}
+                        >
+                          <div
+                            className="h-full rounded-full bg-white transition-[width] duration-150 ease-out"
+                            style={{ width: `${job.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-3 text-center text-white">
+                        <p className="text-xs">
+                          {job.error ?? 'Upload failed.'}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                            onClick={() => retryUpload(job.id)}
+                          >
+                            Retry
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                            onClick={() => removeUpload(job.id)}
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+                  <figcaption className="space-y-2 p-3">
+                    <p className="truncate text-sm font-medium">
+                      {job.file.name}
+                    </p>
+                  </figcaption>
+                </figure>
+              ))}
+              {assets.map((asset) => (
+                <figure
+                  key={asset.id}
+                  className="border-border bg-surface overflow-hidden rounded-xl border"
+                >
+                  <div className="bg-background-secondary aspect-4/3">
+                    {asset.signedUrl ? (
+                      <img
+                        src={asset.signedUrl}
+                        alt={asset.filename}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-foreground-secondary flex h-full items-center justify-center text-xs uppercase tracking-wider">
+                        Preview unavailable
+                      </div>
+                    )}
+                  </div>
+                  <figcaption className="space-y-2 p-3">
+                    <p className="truncate text-sm font-medium">
+                      {asset.filename}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          void copyText(asset.storage_path, 'Storage path')
+                        }
+                      >
+                        <CopySimpleIcon />
+                        Path
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setDeleteAssetId(asset.id)}
+                      >
+                        <TrashIcon />
+                        Delete
+                      </Button>
+                    </div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
           )}
         </div>
       ) : groups.length === 0 ? (

@@ -1,4 +1,9 @@
-import { CheckCircleIcon, InfoIcon, WarningIcon, XCircleIcon } from '@phosphor-icons/react'
+import {
+  CheckCircleIcon,
+  InfoIcon,
+  WarningIcon,
+  XCircleIcon,
+} from '@phosphor-icons/react'
 import { Toaster as SonnerToaster, toast } from 'sonner'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -25,7 +30,9 @@ const Toaster = ({
         },
       }}
       icons={{
-        success: <CheckCircleIcon weight="bold" className="text-success size-4" />,
+        success: (
+          <CheckCircleIcon weight="bold" className="text-success size-4" />
+        ),
         error: <XCircleIcon weight="bold" className="text-error size-4" />,
         loading: <Spinner className="opacity-50" size="sm" />,
         info: <InfoIcon weight="bold" className="text-info size-4" />,

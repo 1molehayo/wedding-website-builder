@@ -382,12 +382,11 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      180deg,
-      transparent 62%,
-      color-mix(in oklab, var(--color-background) 85%, transparent) 100%
-    );
+  background: linear-gradient(
+    180deg,
+    transparent 62%,
+    color-mix(in oklab, var(--color-background) 85%, transparent) 100%
+  );
   pointer-events: none;
 }
 

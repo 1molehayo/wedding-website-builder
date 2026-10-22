@@ -27,9 +27,7 @@ const navFieldsSchema = {
 function makePageBlocksSchema(mode: 'loose' | 'strict') {
   const storyFieldsSchema = z.object({
     title:
-      mode === 'strict'
-        ? requiredTrimmedString('Story title')
-        : trimmedString,
+      mode === 'strict' ? requiredTrimmedString('Story title') : trimmedString,
     body:
       mode === 'strict' ? requiredTrimmedString('Story body') : trimmedString,
     ...navFieldsSchema,

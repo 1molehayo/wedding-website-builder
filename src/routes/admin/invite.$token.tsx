@@ -63,9 +63,7 @@ function AcceptInvitePage() {
         </div>
       ) : (
         <p className="text-foreground-secondary mt-4 text-sm">
-          {isAccepting
-            ? 'Verifying your invite and signing you in.'
-            : null}
+          {isAccepting ? 'Verifying your invite and signing you in.' : null}
         </p>
       )}
     </div>

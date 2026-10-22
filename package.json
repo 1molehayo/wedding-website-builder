@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",
+    "dev:demo": "node scripts/dev-demo.mjs",
+    "env:check": "node scripts/env-check.mjs regular",
+    "env:check:demo": "node scripts/env-check.mjs demo",
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
@@ -18,11 +21,18 @@
     "status": "npx supabase status",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
+    "supabase:demo:start": "npx supabase start --workdir demo-stack",
+    "supabase:demo:stop": "npx supabase stop --workdir demo-stack",
+    "supabase:demo:status": "npx supabase status --workdir demo-stack",
     "db:reset": "npx supabase db reset",
     "db:migrate": "npx supabase migration up",
     "db:seed": "node scripts/db-seed.mjs",
     "db:link": "node scripts/db-link.mjs",
-    "db:push": "node scripts/db-link.mjs && npx supabase db push"
+    "db:push": "node scripts/db-link.mjs && npx supabase db push",
+    "db:demo:reset": "npx supabase db reset --workdir demo-stack",
+    "db:demo:seed": "node scripts/db-seed-demo.mjs",
+    "db:demo:link": "node scripts/db-link-demo.mjs",
+    "db:demo:push": "node scripts/db-link-demo.mjs && npx supabase db push"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",

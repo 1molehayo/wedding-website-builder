@@ -1,10 +1,15 @@
-import { useRouterState, createRouter as createTanStackRouter  } from '@tanstack/react-router'
+import {
+  useRouterState,
+  createRouter as createTanStackRouter,
+} from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
 import { AdminOutletPending, RoutePending } from '@/components/route-pending'
 import { routeTree } from './routeTree.gen'
 
 function DefaultPending() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
   const isDashboard =
     pathname.startsWith('/admin') &&
     pathname !== '/admin/login' &&

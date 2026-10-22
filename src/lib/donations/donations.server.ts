@@ -2,7 +2,9 @@ import { requireAdminSession } from '@/lib/auth/session.server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 function parseEmail(value: unknown): string {
-  const email = String(value ?? '').trim().toLowerCase()
+  const email = String(value ?? '')
+    .trim()
+    .toLowerCase()
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('Enter a valid email address.')
   }

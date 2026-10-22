@@ -224,10 +224,7 @@ export function toPublicRsvpFormValues(guest: {
     guest.rsvp_status === 'pending' ? 'attending' : guest.rsvp_status
   return {
     status,
-    attendingCount:
-      status === 'attending'
-        ? (guest.attending_count ?? 1)
-        : 0,
+    attendingCount: status === 'attending' ? (guest.attending_count ?? 1) : 0,
     dietaryNotes: guest.dietary_notes ?? '',
     message: guest.rsvp_message ?? '',
   }

@@ -144,7 +144,9 @@ export async function submitSupportHandler(input: {
   const session = await requireAdminSession()
 
   if (isSuperAdminProfile(session.profile)) {
-    throw new Error('Support is for admins. Super admins manage issues directly.')
+    throw new Error(
+      'Support is for admins. Super admins manage issues directly.',
+    )
   }
 
   const message = input.message.trim()

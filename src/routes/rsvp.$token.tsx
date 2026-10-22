@@ -16,11 +16,13 @@ import {
   publicRsvpFormSchema,
   toPublicRsvpFormValues,
 } from '@/lib/rsvp/schema'
-import type { PublicRsvpFormValues, PublicRsvpPageData } from '@/lib/rsvp/schema'
+import type {
+  PublicRsvpFormValues,
+  PublicRsvpPageData,
+} from '@/lib/rsvp/schema'
 
 type RsvpLoaderResult =
-  | { ok: true; data: PublicRsvpPageData }
-  | { ok: false; message: string }
+  { ok: true; data: PublicRsvpPageData } | { ok: false; message: string }
 
 export const Route = createFileRoute('/rsvp/$token')({
   loader: async ({ params }): Promise<RsvpLoaderResult> => {
@@ -162,9 +164,7 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
       <Toaster />
       <main className="public-section mx-auto max-w-xl px-6 py-12 md:py-20">
         <p className="public-kicker mb-4">RSVP</p>
-        <h1 className="public-section-title">
-          Hello, {page.guestFirstName}
-        </h1>
+        <h1 className="public-section-title">Hello, {page.guestFirstName}</h1>
         <p className="text-foreground-secondary mt-4 text-base leading-relaxed">
           You’re invited to celebrate {page.coupleLabel}.
           {page.weddingDateLabel !== 'Date to be announced'
@@ -209,8 +209,8 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
               </p>
             ) : null}
             <p className="text-foreground-secondary text-xs leading-relaxed">
-              Need to change this? Contact {page.coupleLabel} and they can unlock
-              your RSVP.
+              Need to change this? Contact {page.coupleLabel} and they can
+              unlock your RSVP.
             </p>
           </div>
         ) : (
@@ -247,8 +247,7 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
                               onBlur={field.handleBlur}
                               onChange={(event) => {
                                 const next = event.target.value as
-                                  | 'attending'
-                                  | 'declined'
+                                  'attending' | 'declined'
                                 field.handleChange(next)
                                 if (next === 'declined') {
                                   form.setFieldValue('attendingCount', 0)
@@ -362,9 +361,7 @@ function RsvpFormView({ initial }: { initial: PublicRsvpPageData }) {
             </form.Subscribe>
 
             <Button type="submit" size="md" isLoading={isSaving}>
-              {page.rsvpStatus === 'pending'
-                ? 'Send RSVP'
-                : 'Update RSVP'}
+              {page.rsvpStatus === 'pending' ? 'Send RSVP' : 'Update RSVP'}
             </Button>
           </form>
         )}

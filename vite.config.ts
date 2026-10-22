@@ -7,14 +7,25 @@ import { nitro } from 'nitro/vite'
 
 const srcDir = fileURLToPath(new URL('./src', import.meta.url))
 
-const config = defineConfig({
-  resolve: {
-    tsconfigPaths: true,
-    alias: {
-      '@': srcDir,
+const config = defineConfig(({ mode }) => {
+  const isDemo = mode === 'demo'
+
+  return {
+    resolve: {
+      tsconfigPaths: true,
+      alias: {
+        '@': srcDir,
+      },
     },
-  },
-  plugins: [nitro(), tailwindcss(), tanstackStart(), viteReact()],
+    // Demo: disable Vite .env file loading so demo never reads `.env` /
+    // `.env.local`. `pnpm dev:demo` injects vars from `.env.demo` only.
+    envDir: isDemo ? false : undefined,
+    plugins: [nitro(), tailwindcss(), tanstackStart(), viteReact()],
+    server: {
+      port: isDemo ? 3001 : 3000,
+      strictPort: true,
+    },
+  }
 })
 
 export default config

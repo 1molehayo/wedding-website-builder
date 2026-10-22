@@ -22,27 +22,27 @@ export const listPhotoShareGroups = createServerFn({ method: 'GET' }).handler(
     groups: PhotoShareGroupListItem[]
     guests: PhotoShareGuestOption[]
   }> => {
-    const { listPhotoShareGroupsHandler } = await import(
-      './photo-shares.server'
-    )
+    const { listPhotoShareGroupsHandler } =
+      await import('./photo-shares.server')
     return listPhotoShareGroupsHandler()
   },
 )
 
 export const createPhotoShareGroup = createServerFn({ method: 'POST' })
-  .validator((data: { name: string; assetIds: string[]; guestIds: string[] }) => {
-    const name = String(data.name).trim()
-    if (!name) throw new Error('Share name is required.')
-    return {
-      name,
-      assetIds: parseIdList(data.assetIds, 'Photos'),
-      guestIds: parseIdList(data.guestIds, 'Guests'),
-    }
-  })
+  .validator(
+    (data: { name: string; assetIds: string[]; guestIds: string[] }) => {
+      const name = String(data.name).trim()
+      if (!name) throw new Error('Share name is required.')
+      return {
+        name,
+        assetIds: parseIdList(data.assetIds, 'Photos'),
+        guestIds: parseIdList(data.guestIds, 'Guests'),
+      }
+    },
+  )
   .handler(async ({ data }): Promise<PhotoShareGroupListItem> => {
-    const { createPhotoShareGroupHandler } = await import(
-      './photo-shares.server'
-    )
+    const { createPhotoShareGroupHandler } =
+      await import('./photo-shares.server')
     return createPhotoShareGroupHandler(data)
   })
 
@@ -67,9 +67,8 @@ export const updatePhotoShareGroup = createServerFn({ method: 'POST' })
     },
   )
   .handler(async ({ data }): Promise<PhotoShareGroupListItem> => {
-    const { updatePhotoShareGroupHandler } = await import(
-      './photo-shares.server'
-    )
+    const { updatePhotoShareGroupHandler } =
+      await import('./photo-shares.server')
     return updatePhotoShareGroupHandler(data)
   })
 
@@ -80,9 +79,8 @@ export const deletePhotoShareGroup = createServerFn({ method: 'POST' })
     return { groupId }
   })
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { deletePhotoShareGroupHandler } = await import(
-      './photo-shares.server'
-    )
+    const { deletePhotoShareGroupHandler } =
+      await import('./photo-shares.server')
     return deletePhotoShareGroupHandler(data.groupId)
   })
 
@@ -93,9 +91,8 @@ export const sendPhotoShareEmails = createServerFn({ method: 'POST' })
     return { groupId }
   })
   .handler(async ({ data }) => {
-    const { sendPhotoShareEmailsHandler } = await import(
-      './photo-shares.server'
-    )
+    const { sendPhotoShareEmailsHandler } =
+      await import('./photo-shares.server')
     return sendPhotoShareEmailsHandler(data.groupId)
   })
 
@@ -107,8 +104,6 @@ export const getPhotoShareViewer = createServerFn({ method: 'GET' })
     return { token, guestRsvpToken }
   })
   .handler(async ({ data }): Promise<PhotoShareViewerData> => {
-    const { getPhotoShareViewerHandler } = await import(
-      './photo-shares.server'
-    )
+    const { getPhotoShareViewerHandler } = await import('./photo-shares.server')
     return getPhotoShareViewerHandler(data)
   })

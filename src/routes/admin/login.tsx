@@ -1,4 +1,9 @@
-import { createFileRoute, redirect, useNavigate, useRouter } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   getAdminSession,
@@ -24,6 +29,18 @@ function isLocalSupabaseUrl(url: string | undefined) {
   )
 }
 
+/** Regular API 54321 → Mailpit 54324; Demo 54331 → 54334. */
+function localMailpitUrl(supabaseUrl: string | undefined): string {
+  if (!supabaseUrl) return 'http://127.0.0.1:54324'
+  try {
+    const parsed = new URL(supabaseUrl)
+    const apiPort = Number(parsed.port || '54321')
+    return `${parsed.protocol}//${parsed.hostname}:${apiPort + 3}`
+  } catch {
+    return 'http://127.0.0.1:54324'
+  }
+}
+
 export const Route = createFileRoute('/admin/login')({
   beforeLoad: async () => {
     const session = await getAdminSession()
@@ -41,7 +58,9 @@ function AdminLoginPage() {
   const [email, setEmail] = useState('')
   const [token, setToken] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const localAuth = isLocalSupabaseUrl(import.meta.env.VITE_SUPABASE_URL)
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const localAuth = isLocalSupabaseUrl(supabaseUrl)
+  const mailpitUrl = localMailpitUrl(supabaseUrl)
 
   const onRequestCode = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -52,7 +71,7 @@ function AdminLoginPage() {
       setStep('otp')
       toast.success(
         localAuth
-          ? 'Code sent. Open Mailpit at http://127.0.0.1:54324. Expires in 1 hour.'
+          ? `Code sent. Open Mailpit at ${mailpitUrl}. Expires in 1 hour.`
           : 'Check your email for a one-time code. It expires in 1 hour.',
       )
     } catch (err) {
@@ -115,7 +134,12 @@ function AdminLoginPage() {
               </Field.Control>
             </Field>
 
-            <Button type="submit" size="md" className="w-full" isLoading={isSubmitting}>
+            <Button
+              type="submit"
+              size="md"
+              className="w-full"
+              isLoading={isSubmitting}
+            >
               Send code
             </Button>
           </form>
@@ -145,12 +169,17 @@ function AdminLoginPage() {
               </Field.Control>
               <Field.Description>
                 {localAuth
-                  ? 'Open Mailpit at http://127.0.0.1:54324 (also listed in `supabase status`) to read the code. It expires in 1 hour.'
+                  ? `Open Mailpit at ${mailpitUrl} (also listed in \`supabase status\`) to read the code. It expires in 1 hour.`
                   : 'Check your email for the one-time code, then enter it here. It expires in 1 hour.'}
               </Field.Description>
             </Field>
 
-            <Button type="submit" size="md" className="w-full" isLoading={isSubmitting}>
+            <Button
+              type="submit"
+              size="md"
+              className="w-full"
+              isLoading={isSubmitting}
+            >
               Verify &amp; sign in
             </Button>
             <Button

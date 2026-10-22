@@ -27,13 +27,13 @@ These paths are identified from in-repo attribution and project documentation.
 This list may be incomplete if additional Foundations material was adapted
 without a local comment.
 
-| Location | Notes |
-| -------- | ----- |
-| `src/hooks/use-top-layer.ts` | Explicit comment: “Copied/adapted from Significa Foundations.” |
-| `src/components/ui/` | Admin UI primitives documented as Foundations-based (e.g. button, input, field, modal, select, tooltip, and related files in this directory). |
-| `src/components/slot.tsx` | Shared slot helper used with the Foundations-style UI layer. |
-| `src/lib/utils.ts` | Shared `cva` / `cn` helpers used by those UI primitives. |
-| `src/styles/app.css` | Documents a “Foundations @theme baseline” alongside wedding tokens. |
+| Location                     | Notes                                                                                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/hooks/use-top-layer.ts` | Explicit comment: “Copied/adapted from Significa Foundations.”                                                                                |
+| `src/components/ui/`         | Admin UI primitives documented as Foundations-based (e.g. button, input, field, modal, select, tooltip, and related files in this directory). |
+| `src/components/slot.tsx`    | Shared slot helper used with the Foundations-style UI layer.                                                                                  |
+| `src/lib/utils.ts`           | Shared `cva` / `cn` helpers used by those UI primitives.                                                                                      |
+| `src/styles/app.css`         | Documents a “Foundations @theme baseline” alongside wedding tokens.                                                                           |
 
 Existing in-source attribution (such as the comment in `use-top-layer.ts`) is
 preserved and was not removed by the licensing setup for this release.

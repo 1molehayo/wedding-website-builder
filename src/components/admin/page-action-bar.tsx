@@ -26,9 +26,7 @@ export function PageActionBar({
         <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3 md:px-8">
           {lastUpdatedAt !== undefined ? (
             <p className="text-foreground-secondary min-w-0 text-sm">
-              {lastUpdated
-                ? `Last updated ${lastUpdated}`
-                : 'Not saved yet'}
+              {lastUpdated ? `Last updated ${lastUpdated}` : 'Not saved yet'}
             </p>
           ) : null}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">

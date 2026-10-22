@@ -1,4 +1,10 @@
-import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from '@tanstack/react-router'
 import { useState } from 'react'
 import { AdminShell } from '@/components/admin-shell'
 import { AdminOutletPending, RoutePending } from '@/components/route-pending'

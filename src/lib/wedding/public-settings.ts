@@ -16,9 +16,13 @@ export type PublicWeddingSettings = {
   public_slug: string | null
 }
 
+/**
+ * Empty public settings when no wedding row exists.
+ * Must not invent fictional couple names (those belong only in opt-in seed.sql).
+ */
 export const FALLBACK_PUBLIC_WEDDING: PublicWeddingSettings = {
-  groom_name: 'Marvelous',
-  bride_name: 'Lillian',
+  groom_name: '',
+  bride_name: '',
   wedding_date: null,
   date_published_at: null,
   venue_name: null,
@@ -29,12 +33,22 @@ export const FALLBACK_PUBLIC_WEDDING: PublicWeddingSettings = {
   public_slug: null,
 }
 
+/** True when settings represent a real wedding row with a public slug. */
+export function hasPublicWedding(
+  settings: PublicWeddingSettings | null | undefined,
+): boolean {
+  return Boolean(settings?.public_slug?.trim())
+}
+
 /** Date shown to guests. Draft dates stay private until published. */
 export function resolvePublicWeddingDate(
-  wedding: Pick<Wedding, 'wedding_date' | 'date_published_at'> | {
-    wedding_date: string | null
-    date_published_at?: string | null
-  } | null,
+  wedding:
+    | Pick<Wedding, 'wedding_date' | 'date_published_at'>
+    | {
+        wedding_date: string | null
+        date_published_at?: string | null
+      }
+    | null,
 ): string | null {
   if (!wedding?.wedding_date) return null
   if (!wedding.date_published_at) return null

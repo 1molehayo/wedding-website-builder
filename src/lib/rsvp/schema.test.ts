@@ -32,19 +32,13 @@ describe('rsvp schema', () => {
 
   it('rejects attending count above invitation max', () => {
     expect(() =>
-      parsePublicRsvpInput(
-        { status: 'attending', attendingCount: 4 },
-        2,
-      ),
+      parsePublicRsvpInput({ status: 'attending', attendingCount: 4 }, 2),
     ).toThrow(/cannot exceed 2/)
   })
 
   it('allows admin to reset to pending', () => {
     expect(
-      parseAdminRsvpInput(
-        { status: 'pending', attendingCount: 0 },
-        2,
-      ),
+      parseAdminRsvpInput({ status: 'pending', attendingCount: 0 }, 2),
     ).toEqual({
       rsvp_status: 'pending',
       attending_count: null,

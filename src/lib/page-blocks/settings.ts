@@ -34,12 +34,12 @@ export const publishPageBlocks = createServerFn({ method: 'POST' })
     return publishPageBlocksHandler(data.page_blocks)
   })
 
-export const listPageContentVersions = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<PageContentVersion[]> => {
-    const { listPageContentVersionsHandler } = await import('./settings.server')
-    return listPageContentVersionsHandler()
-  },
-)
+export const listPageContentVersions = createServerFn({
+  method: 'GET',
+}).handler(async (): Promise<PageContentVersion[]> => {
+  const { listPageContentVersionsHandler } = await import('./settings.server')
+  return listPageContentVersionsHandler()
+})
 
 export const restorePageContentVersion = createServerFn({ method: 'POST' })
   .validator((data: { versionId: string }) => {
@@ -48,9 +48,8 @@ export const restorePageContentVersion = createServerFn({ method: 'POST' })
     return { versionId }
   })
   .handler(async ({ data }): Promise<PageContentEditorData> => {
-    const { restorePageContentVersionHandler } = await import(
-      './settings.server'
-    )
+    const { restorePageContentVersionHandler } =
+      await import('./settings.server')
     return restorePageContentVersionHandler(data.versionId)
   })
 

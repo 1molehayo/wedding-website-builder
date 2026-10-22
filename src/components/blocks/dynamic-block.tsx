@@ -16,9 +16,7 @@ export function DynamicBlock({
 }) {
   switch (block.type) {
     case 'hero':
-      return (
-        <HeroBlock block={block} wedding={wedding} imageUrl={imageUrl} />
-      )
+      return <HeroBlock block={block} wedding={wedding} imageUrl={imageUrl} />
     case 'story':
       return <StoryBlock block={block} />
     case 'image':

@@ -124,9 +124,7 @@ function AdminSupportPage() {
             accept={['image/jpeg', 'image/png', 'image/webp']}
             maxBytes={Math.floor(4.5 * 1024 * 1024)}
             hint={
-              image
-                ? image.name
-                : 'Optional screenshot. Attached to the email.'
+              image ? image.name : 'Optional screenshot. Attached to the email.'
             }
             replaceLabel={image ? 'Drop a photo to replace' : undefined}
             onFiles={(files) => setImage(files[0] ?? null)}

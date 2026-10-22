@@ -3,7 +3,10 @@ import type { RefCallback } from 'react'
 
 type PopoverType = 'manual' | 'hint'
 
-const showAsPopover = <T extends HTMLElement>(element: T, type: PopoverType) => {
+const showAsPopover = <T extends HTMLElement>(
+  element: T,
+  type: PopoverType,
+) => {
   element.setAttribute('popover', type)
   try {
     element.showPopover()

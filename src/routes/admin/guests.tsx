@@ -16,8 +16,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
-import { useMemo, useState  } from 'react'
-import type {ReactNode} from 'react';
+import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { OverviewCard } from '@/components/admin/overview-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -62,7 +62,11 @@ import {
 } from '@/lib/rsvp/schema'
 import type { AdminRsvpFormValues } from '@/lib/rsvp/schema'
 import type { Guest } from '@/lib/supabase/types'
-import { internalError, raiseRouteError, shouldRethrowRouteFailure } from '@/lib/errors/route-error'
+import {
+  internalError,
+  raiseRouteError,
+  shouldRethrowRouteFailure,
+} from '@/lib/errors/route-error'
 
 export const Route = createFileRoute('/admin/guests')({
   beforeLoad: ({ context }) => {
@@ -165,13 +169,9 @@ function AdminGuestsPage() {
   const initialGuests = Route.useLoaderData()
   const { session } = AdminRoute.useRouteContext()
   const router = useRouter()
-  const coupleLabel =
-    session?.wedding
-      ? formatCoupleNames(
-          session.wedding.groom_name,
-          session.wedding.bride_name,
-        )
-      : 'us'
+  const coupleLabel = session?.wedding
+    ? formatCoupleNames(session.wedding.groom_name, session.wedding.bride_name)
+    : 'us'
   const [guests, setGuests] = useState<Guest[]>(initialGuests)
   const [search, setSearch] = useState('')
   const [sorting, setSorting] = useState<SortingState>([
@@ -363,9 +363,7 @@ function AdminGuestsPage() {
       setConflictOpen(false)
       setPendingPayload(null)
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to save guest.',
-      )
+      toast.error(err instanceof Error ? err.message : 'Unable to save guest.')
     } finally {
       setIsSaving(false)
     }
@@ -418,9 +416,7 @@ function AdminGuestsPage() {
       )
       toast.success('Guest can update their RSVP again.')
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to unlock RSVP.',
-      )
+      toast.error(err instanceof Error ? err.message : 'Unable to unlock RSVP.')
     } finally {
       setIsUnlocking(false)
     }
@@ -435,7 +431,9 @@ function AdminGuestsPage() {
     setConflictNeedsLabels(false)
     if (guest) {
       openEdit(guest)
-      toast.message('Opened the matching guest instead of creating a duplicate.')
+      toast.message(
+        'Opened the matching guest instead of creating a duplicate.',
+      )
       return
     }
     toast.message('Use the matching guest already on your list.')
@@ -488,9 +486,7 @@ function AdminGuestsPage() {
       } else if (result.failed.length === 0) {
         toast.success(
           `Sent ${result.sent} invite${result.sent === 1 ? '' : 's'}${
-            result.skipped
-              ? ` · ${result.skipped} skipped (no email)`
-              : ''
+            result.skipped ? ` · ${result.skipped} skipped (no email)` : ''
           }.`,
         )
       } else {
@@ -545,9 +541,7 @@ function AdminGuestsPage() {
       applySavedGuest(result.guest)
       requestEmailGuestInvite(result.guest)
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to save guest.',
-      )
+      toast.error(err instanceof Error ? err.message : 'Unable to save guest.')
     } finally {
       setIsSaving(false)
     }
@@ -707,7 +701,9 @@ function AdminGuestsPage() {
 
   const attendingSummary = guests.reduce(
     (sum, guest) =>
-      guest.rsvp_status === 'attending' ? sum + (guest.attending_count ?? 0) : sum,
+      guest.rsvp_status === 'attending'
+        ? sum + (guest.attending_count ?? 0)
+        : sum,
     0,
   )
   const pendingCount = guests.filter((g) => g.rsvp_status === 'pending').length
@@ -778,7 +774,7 @@ function AdminGuestsPage() {
       >
         {drawerOpen ? (
           <GuestDrawerForms
-            key={isCreating ? 'new' : selectedId ?? 'edit'}
+            key={isCreating ? 'new' : (selectedId ?? 'edit')}
             guest={isCreating ? null : selectedGuest}
             isCreating={isCreating}
             onSubmit={async (value, rsvpValues) => {
@@ -799,437 +795,488 @@ function AdminGuestsPage() {
           >
             {({ form, rsvpForm }) => (
               <>
-        <SideDrawer.Header
-          title={
-            isCreating
-              ? 'Add guest'
-              : selectedGuest
-                ? guestAdminDisplayName(selectedGuest)
-                : 'Guest'
-          }
-          drawerDescription="Guest details"
-        />
-          <form
-            id="guest-form"
-            className="flex min-h-0 flex-1 flex-col"
-            noValidate
-            onSubmit={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              void form.handleSubmit()
-            }}
-          >
-        <SideDrawer.Content>
-          <div className="space-y-4">
-            <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
-              {(submitted) => (
-                <>
-                  <div className="grid items-start gap-4 sm:grid-cols-2">
-                    <form.Field name="firstName">
-                      {(field) => {
-                        const error = fieldErrorMessage(field.state.meta.errors)
-                        const invalid =
-                          !!error && (field.state.meta.isTouched || submitted)
-                        return (
-                          <Field invalid={invalid}>
-                            <Field.Label required>First name</Field.Label>
-                            <Field.Control>
-                              <Input
-                                value={field.state.value}
-                                invalid={invalid}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                              />
-                            </Field.Control>
-                            <Field.Error>{invalid ? error : null}</Field.Error>
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                    <form.Field name="lastName">
-                      {(field) => {
-                        const error = fieldErrorMessage(field.state.meta.errors)
-                        const invalid =
-                          !!error && (field.state.meta.isTouched || submitted)
-                        return (
-                          <Field invalid={invalid}>
-                            <Field.Label required>Last name</Field.Label>
-                            <Field.Control>
-                              <Input
-                                value={field.state.value}
-                                invalid={invalid}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                              />
-                            </Field.Control>
-                            <Field.Error>{invalid ? error : null}</Field.Error>
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                  </div>
+                <SideDrawer.Header
+                  title={
+                    isCreating
+                      ? 'Add guest'
+                      : selectedGuest
+                        ? guestAdminDisplayName(selectedGuest)
+                        : 'Guest'
+                  }
+                  drawerDescription="Guest details"
+                />
+                <form
+                  id="guest-form"
+                  className="flex min-h-0 flex-1 flex-col"
+                  noValidate
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    void form.handleSubmit()
+                  }}
+                >
+                  <SideDrawer.Content>
+                    <div className="space-y-4">
+                      <form.Subscribe
+                        selector={(state) => state.submissionAttempts > 0}
+                      >
+                        {(submitted) => (
+                          <>
+                            <div className="grid items-start gap-4 sm:grid-cols-2">
+                              <form.Field name="firstName">
+                                {(field) => {
+                                  const error = fieldErrorMessage(
+                                    field.state.meta.errors,
+                                  )
+                                  const invalid =
+                                    !!error &&
+                                    (field.state.meta.isTouched || submitted)
+                                  return (
+                                    <Field invalid={invalid}>
+                                      <Field.Label required>
+                                        First name
+                                      </Field.Label>
+                                      <Field.Control>
+                                        <Input
+                                          value={field.state.value}
+                                          invalid={invalid}
+                                          onBlur={field.handleBlur}
+                                          onChange={(event) =>
+                                            field.handleChange(
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </Field.Control>
+                                      <Field.Error>
+                                        {invalid ? error : null}
+                                      </Field.Error>
+                                    </Field>
+                                  )
+                                }}
+                              </form.Field>
+                              <form.Field name="lastName">
+                                {(field) => {
+                                  const error = fieldErrorMessage(
+                                    field.state.meta.errors,
+                                  )
+                                  const invalid =
+                                    !!error &&
+                                    (field.state.meta.isTouched || submitted)
+                                  return (
+                                    <Field invalid={invalid}>
+                                      <Field.Label required>
+                                        Last name
+                                      </Field.Label>
+                                      <Field.Control>
+                                        <Input
+                                          value={field.state.value}
+                                          invalid={invalid}
+                                          onBlur={field.handleBlur}
+                                          onChange={(event) =>
+                                            field.handleChange(
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </Field.Control>
+                                      <Field.Error>
+                                        {invalid ? error : null}
+                                      </Field.Error>
+                                    </Field>
+                                  )
+                                }}
+                              </form.Field>
+                            </div>
 
-                  <form.Field name="email">
-                    {(field) => {
-                      const error = fieldErrorMessage(field.state.meta.errors)
-                      const invalid =
-                        !!error && (field.state.meta.isTouched || submitted)
-                      return (
-                        <Field invalid={invalid}>
-                          <Field.Label required>Email</Field.Label>
-                          <Field.Control>
-                            <Input
-                              type="email"
-                              value={field.state.value}
-                              invalid={invalid}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                            />
-                          </Field.Control>
-                          <Field.Error>{invalid ? error : null}</Field.Error>
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
+                            <form.Field name="email">
+                              {(field) => {
+                                const error = fieldErrorMessage(
+                                  field.state.meta.errors,
+                                )
+                                const invalid =
+                                  !!error &&
+                                  (field.state.meta.isTouched || submitted)
+                                return (
+                                  <Field invalid={invalid}>
+                                    <Field.Label required>Email</Field.Label>
+                                    <Field.Control>
+                                      <Input
+                                        type="email"
+                                        value={field.state.value}
+                                        invalid={invalid}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) =>
+                                          field.handleChange(event.target.value)
+                                        }
+                                      />
+                                    </Field.Control>
+                                    <Field.Error>
+                                      {invalid ? error : null}
+                                    </Field.Error>
+                                  </Field>
+                                )
+                              }}
+                            </form.Field>
 
-                  <form.Field name="phone">
-                    {(field) => {
-                      const error = fieldErrorMessage(field.state.meta.errors)
-                      const invalid =
-                        !!error && (field.state.meta.isTouched || submitted)
-                      return (
-                        <Field invalid={invalid}>
-                          <Field.Label>Phone</Field.Label>
-                          <Field.Control>
-                            <Input
-                              value={field.state.value}
-                              invalid={invalid}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                            />
-                          </Field.Control>
-                          <Field.Error>{invalid ? error : null}</Field.Error>
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
+                            <form.Field name="phone">
+                              {(field) => {
+                                const error = fieldErrorMessage(
+                                  field.state.meta.errors,
+                                )
+                                const invalid =
+                                  !!error &&
+                                  (field.state.meta.isTouched || submitted)
+                                return (
+                                  <Field invalid={invalid}>
+                                    <Field.Label>Phone</Field.Label>
+                                    <Field.Control>
+                                      <Input
+                                        value={field.state.value}
+                                        invalid={invalid}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) =>
+                                          field.handleChange(event.target.value)
+                                        }
+                                      />
+                                    </Field.Control>
+                                    <Field.Error>
+                                      {invalid ? error : null}
+                                    </Field.Error>
+                                  </Field>
+                                )
+                              }}
+                            </form.Field>
 
-                  <form.Field name="partyName">
-                    {(field) => (
-                      <Field>
-                        <Field.Label>Party / household</Field.Label>
-                        <Field.Control>
-                          <Input
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                            placeholder="Optional group label"
-                          />
-                        </Field.Control>
-                      </Field>
-                    )}
-                  </form.Field>
+                            <form.Field name="partyName">
+                              {(field) => (
+                                <Field>
+                                  <Field.Label>Party / household</Field.Label>
+                                  <Field.Control>
+                                    <Input
+                                      value={field.state.value}
+                                      onBlur={field.handleBlur}
+                                      onChange={(event) =>
+                                        field.handleChange(event.target.value)
+                                      }
+                                      placeholder="Optional group label"
+                                    />
+                                  </Field.Control>
+                                </Field>
+                              )}
+                            </form.Field>
 
-                  <form.Field name="plusOnes">
-                    {(field) => {
-                      const error = fieldErrorMessage(field.state.meta.errors)
-                      const invalid =
-                        !!error && (field.state.meta.isTouched || submitted)
-                      return (
-                        <Field invalid={invalid}>
-                          <Field.Label>Plus-ones</Field.Label>
-                          <Field.Control>
-                            <Input
-                              type="number"
-                              min={0}
-                              max={20}
-                              value={String(field.state.value)}
-                              invalid={invalid}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(
-                                  Number(event.target.value || 0),
+                            <form.Field name="plusOnes">
+                              {(field) => {
+                                const error = fieldErrorMessage(
+                                  field.state.meta.errors,
+                                )
+                                const invalid =
+                                  !!error &&
+                                  (field.state.meta.isTouched || submitted)
+                                return (
+                                  <Field invalid={invalid}>
+                                    <Field.Label>Plus-ones</Field.Label>
+                                    <Field.Control>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={20}
+                                        value={String(field.state.value)}
+                                        invalid={invalid}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) =>
+                                          field.handleChange(
+                                            Number(event.target.value || 0),
+                                          )
+                                        }
+                                      />
+                                    </Field.Control>
+                                    {invalid ? (
+                                      <Field.Error>{error}</Field.Error>
+                                    ) : null}
+                                  </Field>
+                                )
+                              }}
+                            </form.Field>
+
+                            <form.Field name="notes">
+                              {(field) => (
+                                <Field>
+                                  <Field.Label>Notes</Field.Label>
+                                  <Field.Control>
+                                    <Textarea
+                                      rows={4}
+                                      value={field.state.value}
+                                      onBlur={field.handleBlur}
+                                      onChange={(event) =>
+                                        field.handleChange(event.target.value)
+                                      }
+                                    />
+                                  </Field.Control>
+                                </Field>
+                              )}
+                            </form.Field>
+
+                            <Field>
+                              <Field.Label>Admin label</Field.Label>
+                              <Field.Control>
+                                <Input
+                                  value={adminLabelDraft}
+                                  placeholder="Optional. Only you see this"
+                                  onChange={(event) =>
+                                    setAdminLabelDraft(event.target.value)
+                                  }
+                                />
+                              </Field.Control>
+                              <p className="text-foreground-secondary mt-1 text-xs">
+                                Helps tell apart guests with the same name.
+                                Never shown to guests.
+                              </p>
+                            </Field>
+                          </>
+                        )}
+                      </form.Subscribe>
+
+                      <div className="border-border space-y-4 border-t pt-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                              Invite
+                            </p>
+                            {selectedGuest?.invite_emailed_at ? (
+                              <p className="text-foreground-secondary mt-1 text-xs">
+                                Last emailed{' '}
+                                {new Date(
+                                  selectedGuest.invite_emailed_at,
+                                ).toLocaleString()}
+                              </p>
+                            ) : (
+                              <p className="text-foreground-secondary mt-1 text-xs">
+                                Invite not emailed yet
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              isLoading={isEmailing || isSaving}
+                              onClick={() =>
+                                void emailInviteFromDrawer(
+                                  form.state.values,
+                                  async () => {
+                                    await form.handleSubmit()
+                                  },
+                                  rsvpForm.state.values,
                                 )
                               }
-                            />
-                          </Field.Control>
-                          {invalid ? <Field.Error>{error}</Field.Error> : null}
-                        </Field>
-                      )
-                    }}
-                  </form.Field>
-
-                  <form.Field name="notes">
-                    {(field) => (
-                      <Field>
-                        <Field.Label>Notes</Field.Label>
-                        <Field.Control>
-                          <Textarea
-                            rows={4}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(event) =>
-                              field.handleChange(event.target.value)
-                            }
-                          />
-                        </Field.Control>
-                      </Field>
-                    )}
-                  </form.Field>
-
-                  <Field>
-                    <Field.Label>Admin label</Field.Label>
-                    <Field.Control>
-                      <Input
-                        value={adminLabelDraft}
-                        placeholder="Optional. Only you see this"
-                        onChange={(event) =>
-                          setAdminLabelDraft(event.target.value)
-                        }
-                      />
-                    </Field.Control>
-                    <p className="text-foreground-secondary mt-1 text-xs">
-                      Helps tell apart guests with the same name. Never shown to
-                      guests.
-                    </p>
-                  </Field>
-                </>
-              )}
-            </form.Subscribe>
-
-            <div className="border-border space-y-4 border-t pt-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-                      Invite
-                    </p>
-                    {selectedGuest?.invite_emailed_at ? (
-                      <p className="text-foreground-secondary mt-1 text-xs">
-                        Last emailed{' '}
-                        {new Date(
-                          selectedGuest.invite_emailed_at,
-                        ).toLocaleString()}
-                      </p>
-                    ) : (
-                      <p className="text-foreground-secondary mt-1 text-xs">
-                        Invite not emailed yet
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      isLoading={isEmailing || isSaving}
-                      onClick={() =>
-                        void emailInviteFromDrawer(
-                          form.state.values,
-                          async () => {
-                            await form.handleSubmit()
-                          },
-                          rsvpForm.state.values,
-                        )
-                      }
-                    >
-                      <EnvelopeSimpleIcon />
-                      {selectedGuest?.invite_emailed_at
-                        ? 'Email again'
-                        : 'Email invite'}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (!selectedGuest) {
-                          toast.error(
-                            'Save the guest before sharing on WhatsApp.',
-                          )
-                          return
-                        }
-                        shareWhatsApp(selectedGuest)
-                      }}
-                    >
-                      <WhatsappLogoIcon />
-                      WhatsApp
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (!selectedGuest) {
-                          toast.error('Save the guest before copying the RSVP link.')
-                          return
-                        }
-                        void copyRsvpLink(selectedGuest)
-                      }}
-                    >
-                      <CopySimpleIcon />
-                      Copy link
-                    </Button>
-                  </div>
-                </div>
-            </div>
-
-            {!isCreating && selectedGuest ? (
-              <div className="border-border space-y-4 border-t pt-4">
-                <div className="min-w-0">
-                  <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-                    RSVP
-                  </p>
-                </div>
-
-                {!selectedGuest.allow_rsvp_update &&
-                selectedGuest.rsvp_status !== 'pending' ? (
-                  <div className="border-border bg-background flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-3">
-                    <p className="text-foreground-secondary text-sm">
-                      This guest already responded. Their RSVP page is locked
-                      until you unlock it.
-                    </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      isLoading={isUnlocking}
-                      onClick={() => void unlockGuestForUpdate(selectedGuest)}
-                    >
-                      <LockOpenIcon />
-                      Unlock for update
-                    </Button>
-                  </div>
-                ) : null}
-
-                <rsvpForm.Field name="status">
-                  {(field) => (
-                    <Field>
-                      <Field.Label>Status</Field.Label>
-                      <Field.Control>
-                        <Select
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(event) => {
-                            const next = event.target
-                              .value as AdminRsvpFormValues['status']
-                            field.handleChange(next)
-                            if (next !== 'attending') {
-                              rsvpForm.setFieldValue('attendingCount', 0)
-                            } else if (
-                              rsvpForm.getFieldValue('attendingCount') < 1
-                            ) {
-                              rsvpForm.setFieldValue('attendingCount', 1)
-                            }
-                          }}
-                        >
-                          {RSVP_STATUSES.map((status) => (
-                            <option key={status} value={status}>
-                              {RSVP_STATUS_LABELS[status]}
-                            </option>
-                          ))}
-                        </Select>
-                      </Field.Control>
-                    </Field>
-                  )}
-                </rsvpForm.Field>
-
-                <rsvpForm.Subscribe selector={(state) => state.values.status}>
-                  {(status) =>
-                    status === 'attending' ? (
-                      <rsvpForm.Field name="attendingCount">
-                        {(field) => (
-                          <Field>
-                            <Field.Label>Number attending</Field.Label>
-                            <Field.Control>
-                              <Input
-                                type="number"
-                                min={1}
-                                max={maxAttendingForPlusOnes(
-                                  selectedGuest.plus_ones,
-                                )}
-                                value={String(field.state.value)}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(
-                                    Number(event.target.value || 0),
+                            >
+                              <EnvelopeSimpleIcon />
+                              {selectedGuest?.invite_emailed_at
+                                ? 'Email again'
+                                : 'Email invite'}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (!selectedGuest) {
+                                  toast.error(
+                                    'Save the guest before sharing on WhatsApp.',
                                   )
+                                  return
                                 }
-                              />
-                            </Field.Control>
-                          </Field>
-                        )}
-                      </rsvpForm.Field>
-                    ) : null
-                  }
-                </rsvpForm.Subscribe>
+                                shareWhatsApp(selectedGuest)
+                              }}
+                            >
+                              <WhatsappLogoIcon />
+                              WhatsApp
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (!selectedGuest) {
+                                  toast.error(
+                                    'Save the guest before copying the RSVP link.',
+                                  )
+                                  return
+                                }
+                                void copyRsvpLink(selectedGuest)
+                              }}
+                            >
+                              <CopySimpleIcon />
+                              Copy link
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
 
-                <rsvpForm.Field name="dietaryNotes">
-                  {(field) => (
-                    <Field>
-                      <Field.Label>Dietary notes</Field.Label>
-                      <Field.Control>
-                        <Textarea
-                          rows={3}
-                          value={field.state.value ?? ''}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                        />
-                      </Field.Control>
-                    </Field>
-                  )}
-                </rsvpForm.Field>
+                      {!isCreating && selectedGuest ? (
+                        <div className="border-border space-y-4 border-t pt-4">
+                          <div className="min-w-0">
+                            <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                              RSVP
+                            </p>
+                          </div>
 
-                <rsvpForm.Field name="message">
-                  {(field) => (
-                    <Field>
-                      <Field.Label>Guest message</Field.Label>
-                      <Field.Control>
-                        <Textarea
-                          rows={3}
-                          value={field.state.value ?? ''}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                        />
-                      </Field.Control>
-                    </Field>
-                  )}
-                </rsvpForm.Field>
-              </div>
-            ) : null}
-          </div>
-        </SideDrawer.Content>
-        <SideDrawer.Footer className="justify-between">
-          {!isCreating && selectedGuest ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              onClick={() => setDeleteOpen(true)}
-            >
-              Remove
-            </Button>
-          ) : (
-            <span />
-          )}
-          <Button type="submit" size="sm" isLoading={isSaving}>
-            {isCreating ? 'Add guest' : 'Save changes'}
-          </Button>
-        </SideDrawer.Footer>
-          </form>
+                          {!selectedGuest.allow_rsvp_update &&
+                          selectedGuest.rsvp_status !== 'pending' ? (
+                            <div className="border-border bg-background flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-3">
+                              <p className="text-foreground-secondary text-sm">
+                                This guest already responded. Their RSVP page is
+                                locked until you unlock it.
+                              </p>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                isLoading={isUnlocking}
+                                onClick={() =>
+                                  void unlockGuestForUpdate(selectedGuest)
+                                }
+                              >
+                                <LockOpenIcon />
+                                Unlock for update
+                              </Button>
+                            </div>
+                          ) : null}
+
+                          <rsvpForm.Field name="status">
+                            {(field) => (
+                              <Field>
+                                <Field.Label>Status</Field.Label>
+                                <Field.Control>
+                                  <Select
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(event) => {
+                                      const next = event.target
+                                        .value as AdminRsvpFormValues['status']
+                                      field.handleChange(next)
+                                      if (next !== 'attending') {
+                                        rsvpForm.setFieldValue(
+                                          'attendingCount',
+                                          0,
+                                        )
+                                      } else if (
+                                        rsvpForm.getFieldValue(
+                                          'attendingCount',
+                                        ) < 1
+                                      ) {
+                                        rsvpForm.setFieldValue(
+                                          'attendingCount',
+                                          1,
+                                        )
+                                      }
+                                    }}
+                                  >
+                                    {RSVP_STATUSES.map((status) => (
+                                      <option key={status} value={status}>
+                                        {RSVP_STATUS_LABELS[status]}
+                                      </option>
+                                    ))}
+                                  </Select>
+                                </Field.Control>
+                              </Field>
+                            )}
+                          </rsvpForm.Field>
+
+                          <rsvpForm.Subscribe
+                            selector={(state) => state.values.status}
+                          >
+                            {(status) =>
+                              status === 'attending' ? (
+                                <rsvpForm.Field name="attendingCount">
+                                  {(field) => (
+                                    <Field>
+                                      <Field.Label>
+                                        Number attending
+                                      </Field.Label>
+                                      <Field.Control>
+                                        <Input
+                                          type="number"
+                                          min={1}
+                                          max={maxAttendingForPlusOnes(
+                                            selectedGuest.plus_ones,
+                                          )}
+                                          value={String(field.state.value)}
+                                          onBlur={field.handleBlur}
+                                          onChange={(event) =>
+                                            field.handleChange(
+                                              Number(event.target.value || 0),
+                                            )
+                                          }
+                                        />
+                                      </Field.Control>
+                                    </Field>
+                                  )}
+                                </rsvpForm.Field>
+                              ) : null
+                            }
+                          </rsvpForm.Subscribe>
+
+                          <rsvpForm.Field name="dietaryNotes">
+                            {(field) => (
+                              <Field>
+                                <Field.Label>Dietary notes</Field.Label>
+                                <Field.Control>
+                                  <Textarea
+                                    rows={3}
+                                    value={field.state.value ?? ''}
+                                    onBlur={field.handleBlur}
+                                    onChange={(event) =>
+                                      field.handleChange(event.target.value)
+                                    }
+                                  />
+                                </Field.Control>
+                              </Field>
+                            )}
+                          </rsvpForm.Field>
+
+                          <rsvpForm.Field name="message">
+                            {(field) => (
+                              <Field>
+                                <Field.Label>Guest message</Field.Label>
+                                <Field.Control>
+                                  <Textarea
+                                    rows={3}
+                                    value={field.state.value ?? ''}
+                                    onBlur={field.handleBlur}
+                                    onChange={(event) =>
+                                      field.handleChange(event.target.value)
+                                    }
+                                  />
+                                </Field.Control>
+                              </Field>
+                            )}
+                          </rsvpForm.Field>
+                        </div>
+                      ) : null}
+                    </div>
+                  </SideDrawer.Content>
+                  <SideDrawer.Footer className="justify-between">
+                    {!isCreating && selectedGuest ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setDeleteOpen(true)}
+                      >
+                        Remove
+                      </Button>
+                    ) : (
+                      <span />
+                    )}
+                    <Button type="submit" size="sm" isLoading={isSaving}>
+                      {isCreating ? 'Add guest' : 'Save changes'}
+                    </Button>
+                  </SideDrawer.Footer>
+                </form>
               </>
             )}
           </GuestDrawerForms>
@@ -1280,7 +1327,9 @@ function AdminGuestsPage() {
         title="Possible duplicate guest"
         description="We found an existing guest that looks similar by name, email, or phone. Choose whether this is the same person or different people."
         confirmLabel={
-          conflictNeedsLabels ? 'Save with labels' : 'These are different people'
+          conflictNeedsLabels
+            ? 'Save with labels'
+            : 'These are different people'
         }
         cancelLabel="Cancel"
         isConfirming={isSaving}

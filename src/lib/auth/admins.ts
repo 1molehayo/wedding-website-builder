@@ -48,9 +48,8 @@ export const listAdmins = createServerFn({ method: 'GET' }).handler(
 )
 
 export const inviteAdmin = createServerFn({ method: 'POST' })
-  .validator(
-    (data: { email: string; first_name: string; last_name: string }) =>
-      parseInviteInput(data),
+  .validator((data: { email: string; first_name: string; last_name: string }) =>
+    parseInviteInput(data),
   )
   .handler(async ({ data }): Promise<AdminListItem> => {
     const { inviteAdminHandler } = await import('./admins.server')
@@ -109,7 +108,9 @@ export const acceptAdminInvite = createServerFn({ method: 'POST' })
   .handler(
     async ({
       data,
-    }): Promise<{ redirectTo: '/admin' | '/admin/onboarding' | '/admin/profile' }> => {
+    }): Promise<{
+      redirectTo: '/admin' | '/admin/onboarding' | '/admin/profile'
+    }> => {
       const { acceptAdminInviteHandler } = await import('./admins.server')
       return acceptAdminInviteHandler(data.token)
     },

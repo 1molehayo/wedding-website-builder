@@ -34,12 +34,7 @@ function LandingPage() {
         <p className="font-serif text-xl tracking-tight text-foreground italic md:text-2xl">
           {PRODUCT_NAME}
         </p>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="rounded-full"
-        >
+        <Button asChild variant="outline" size="sm" className="rounded-full">
           <Link to={signedIn ? '/admin' : '/admin/login'}>
             {signedIn ? 'Dashboard' : 'Get started'}
             <ArrowUpRightIcon data-icon="inline-end" className="size-4" />

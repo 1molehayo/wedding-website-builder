@@ -5,8 +5,8 @@ describe('wedding date contract', () => {
   it('allows a wedding record with a null date', () => {
     const wedding: Wedding = {
       id: '00000000-0000-0000-0000-000000000001',
-      groom_name: 'Marvelous',
-      bride_name: 'Lillian',
+      groom_name: 'Theo',
+      bride_name: 'Ada',
       wedding_date: null,
       date_published_at: null,
       status: 'planning',
@@ -14,7 +14,7 @@ describe('wedding date contract', () => {
       venue_location: 'Chicago',
       dress_code: 'Formal attire',
       active_public_theme: 'celeste',
-      public_slug: 'lillian-marvelous-2026',
+      public_slug: 'ada-theo-2026',
       page_blocks: [],
       page_blocks_draft: [],
       page_draft_updated_at: null,

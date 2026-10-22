@@ -89,7 +89,8 @@ export async function listRegistryAdminHandler(): Promise<RegistryAdminData> {
 
   if (itemsResult.error) throw new Error(itemsResult.error.message)
   if (accountsResult.error) throw new Error(accountsResult.error.message)
-  if (reservationsResult.error) throw new Error(reservationsResult.error.message)
+  if (reservationsResult.error)
+    throw new Error(reservationsResult.error.message)
 
   return {
     items: itemsResult.data,
@@ -380,7 +381,11 @@ export async function reserveRegistryItemHandler(input: {
   }
 
   const nextClaimed = item.claimed_qty + quantity
-  const nextStatus = deriveItemStatus(item.desired_qty, nextClaimed, item.status)
+  const nextStatus = deriveItemStatus(
+    item.desired_qty,
+    nextClaimed,
+    item.status,
+  )
 
   const updated = await admin
     .from('registry_items')

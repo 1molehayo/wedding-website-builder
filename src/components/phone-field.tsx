@@ -2,10 +2,7 @@ import { useMemo } from 'react'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import {
-  listPhoneCountries,
-  sanitizeNationalNumber,
-} from '@/lib/auth/phone'
+import { listPhoneCountries, sanitizeNationalNumber } from '@/lib/auth/phone'
 import type { CountryCode } from '@/lib/auth/phone'
 
 export function PhoneField({
