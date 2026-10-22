@@ -3,10 +3,7 @@ import { ArrowSquareOutIcon } from '@phosphor-icons/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
-import {
-  adminFirstName,
-  hasCompleteAdminName,
-} from '@/lib/auth/types'
+import { adminFirstName, hasCompleteAdminName } from '@/lib/auth/types'
 import { formatCoupleNames } from '@/lib/constants'
 import { PUBLIC_THEME_META } from '@/lib/site-settings'
 import type { WeddingStatus } from '@/lib/supabase/types'

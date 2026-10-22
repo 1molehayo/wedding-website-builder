@@ -83,21 +83,23 @@ export const deleteRegistryAccount = createServerFn({ method: 'POST' })
   })
 
 export const reserveRegistryItem = createServerFn({ method: 'POST' })
-  .validator((data: {
-    itemId: string
-    guestName?: string | null
-    quantity?: number
-  }) => {
-    const itemId = String(data.itemId).trim()
-    if (!itemId) throw new Error('Item id is required.')
-    const quantity = Number(data.quantity ?? 1)
-    if (!Number.isFinite(quantity) || quantity < 1) {
-      throw new Error('Quantity must be at least 1.')
-    }
-    const guestName =
-      data.guestName == null ? null : String(data.guestName).trim() || null
-    return { itemId, guestName, quantity }
-  })
+  .validator(
+    (data: {
+      itemId: string
+      guestName?: string | null
+      quantity?: number
+    }) => {
+      const itemId = String(data.itemId).trim()
+      if (!itemId) throw new Error('Item id is required.')
+      const quantity = Number(data.quantity ?? 1)
+      if (!Number.isFinite(quantity) || quantity < 1) {
+        throw new Error('Quantity must be at least 1.')
+      }
+      const guestName =
+        data.guestName == null ? null : String(data.guestName).trim() || null
+      return { itemId, guestName, quantity }
+    },
+  )
   .handler(async ({ data }): Promise<PublicRegistryItem> => {
     const { reserveRegistryItemHandler } = await import('./registry.server')
     return reserveRegistryItemHandler(data)

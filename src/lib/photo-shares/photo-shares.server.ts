@@ -56,24 +56,29 @@ export async function listPhotoShareGroupsHandler(): Promise<{
   const admin = createAdminSupabaseClient()
   const weddingId = session.wedding.id
 
-  const [groupsResult, guestsResult, membershipsResult, assetsResult, opensResult] =
-    await Promise.all([
-      admin
-        .from('photo_share_groups')
-        .select('*')
-        .eq('wedding_id', weddingId)
-        .order('created_at', { ascending: false }),
-      admin
-        .from('guests')
-        .select('id, first_name, last_name, email, rsvp_token')
-        .eq('wedding_id', weddingId)
-        .order('last_name', { ascending: true }),
-      admin.from('photo_share_group_guests').select('group_id, guest_id'),
-      admin
-        .from('photo_share_group_assets')
-        .select('group_id, media_asset_id, sort_order'),
-      admin.from('photo_share_opens').select('group_id'),
-    ])
+  const [
+    groupsResult,
+    guestsResult,
+    membershipsResult,
+    assetsResult,
+    opensResult,
+  ] = await Promise.all([
+    admin
+      .from('photo_share_groups')
+      .select('*')
+      .eq('wedding_id', weddingId)
+      .order('created_at', { ascending: false }),
+    admin
+      .from('guests')
+      .select('id, first_name, last_name, email, rsvp_token')
+      .eq('wedding_id', weddingId)
+      .order('last_name', { ascending: true }),
+    admin.from('photo_share_group_guests').select('group_id, guest_id'),
+    admin
+      .from('photo_share_group_assets')
+      .select('group_id, media_asset_id, sort_order'),
+    admin.from('photo_share_opens').select('group_id'),
+  ])
 
   if (groupsResult.error) throw new Error(groupsResult.error.message)
   if (guestsResult.error) throw new Error(guestsResult.error.message)
@@ -491,9 +496,7 @@ async function assertGuestsAvailable(
 
   for (const row of memberships.data) {
     if (currentGroupId && row.group_id === currentGroupId) continue
-    throw new Error(
-      'A selected guest is already in another photo share group.',
-    )
+    throw new Error('A selected guest is already in another photo share group.')
   }
 }
 

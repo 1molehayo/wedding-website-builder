@@ -23,15 +23,15 @@ export const getPublicWeddingSettings = createServerFn({
     return { slug: slug || undefined }
   })
   .handler(async ({ data }): Promise<PublicWeddingSettings> => {
-    const { getPublicWeddingSettingsHandler } = await import('./settings.server')
+    const { getPublicWeddingSettingsHandler } =
+      await import('./settings.server')
     return getPublicWeddingSettingsHandler(data.slug)
   })
 
 export const checkPublicSlugAvailable = createServerFn({ method: 'GET' })
   .validator((data: { slug: string; currentSlug?: string }) => ({
     slug: String(data.slug),
-    currentSlug:
-      data.currentSlug === undefined ? '' : String(data.currentSlug),
+    currentSlug: data.currentSlug === undefined ? '' : String(data.currentSlug),
   }))
   .handler(async ({ data }): Promise<PublicSlugAvailability> => {
     try {
@@ -40,9 +40,8 @@ export const checkPublicSlugAvailable = createServerFn({ method: 'GET' })
       if (current && slug === current) {
         return { status: 'current', slug }
       }
-      const { checkPublicSlugAvailableHandler } = await import(
-        './settings.server'
-      )
+      const { checkPublicSlugAvailableHandler } =
+        await import('./settings.server')
       const result = await checkPublicSlugAvailableHandler(slug)
       return result.available
         ? { status: 'available', slug }

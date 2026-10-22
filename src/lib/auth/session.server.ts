@@ -6,6 +6,8 @@ import {
   normalizeAdminEmail,
 } from '@/lib/auth/roles'
 import type { AdminSession } from '@/lib/auth/types'
+import { adminOtpEmailSubject } from '@/lib/email/otp-subject'
+import { sendAdminOtpEmail } from '@/lib/email/resend.server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import { isLocalSupabase } from '@/lib/supabase/env'
 import { createServerSupabaseClient } from '@/lib/supabase/server.server'
@@ -264,6 +266,25 @@ export async function getAdminSessionHandler(): Promise<AdminSession | null> {
   return session
 }
 
+async function loadOtpEmailSubject(): Promise<string> {
+  const admin = createAdminSupabaseClient()
+  const wedding = await admin
+    .from('weddings')
+    .select('groom_name, bride_name')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (wedding.error) {
+    throw new Error(wedding.error.message)
+  }
+
+  return adminOtpEmailSubject({
+    groomName: wedding.data?.groom_name,
+    brideName: wedding.data?.bride_name,
+  })
+}
+
 export async function requestAdminOtpHandler(email: string) {
   const allowed = await isAuthorizedAdminEmail(email)
   if (!allowed) {
@@ -276,17 +297,25 @@ export async function requestAdminOtpHandler(email: string) {
 
   await ensureAuthUserExists(email)
 
-  const supabase = createServerSupabaseClient()
-  const { error } = await supabase.auth.signInWithOtp({
+  // App-owned OTP: Admin API generates the code (no GoTrue template email),
+  // then we send with a subject from wedding state or the product name.
+  const admin = createAdminSupabaseClient()
+  const link = await admin.auth.admin.generateLink({
+    type: 'magiclink',
     email,
-    options: {
-      shouldCreateUser: false,
-    },
   })
 
-  if (error) {
-    throw new Error(error.message)
+  if (link.error) {
+    throw new Error(link.error.message)
   }
+
+  const token = link.data.properties.email_otp
+  if (!token) {
+    throw new Error('Unable to generate a sign-in code.')
+  }
+
+  const subject = await loadOtpEmailSubject()
+  await sendAdminOtpEmail({ to: email, subject, token })
 
   return { ok: true as const, email }
 }
@@ -299,7 +328,7 @@ export async function verifyAdminOtpHandler(input: {
   const { data: authData, error } = await supabase.auth.verifyOtp({
     email: input.email,
     token: input.token,
-    type: 'email',
+    type: 'magiclink',
   })
 
   if (error) {

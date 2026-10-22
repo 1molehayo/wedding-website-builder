@@ -5,8 +5,7 @@ import { getPhotoShareViewer } from '@/lib/photo-shares/photo-shares'
 import type { PhotoShareViewerData } from '@/lib/photo-shares/photo-shares'
 
 type ViewerResult =
-  | { ok: true; data: PhotoShareViewerData }
-  | { ok: false; message: string }
+  { ok: true; data: PhotoShareViewerData } | { ok: false; message: string }
 
 type PhotoShareSearch = {
   g?: string

@@ -1,8 +1,5 @@
 import { z } from 'zod'
-import {
-  isValidOptionalPhone,
-  toStoredPhone,
-} from '@/lib/auth/phone'
+import { isValidOptionalPhone, toStoredPhone } from '@/lib/auth/phone'
 import type { Guest } from '@/lib/supabase/types'
 
 const requiredName = (label: string) =>

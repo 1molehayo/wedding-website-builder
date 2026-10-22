@@ -1,10 +1,11 @@
 # Dependencies
 node_modules/
 
-# Environment / secrets
+# Environment / secrets — ignore real env files; keep committed templates
 .env
 .env.*
 !.env.example
+!.env.*.example
 
 # Build / tooling outputs
 dist/
@@ -33,9 +34,11 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
-# Supabase local
+# Supabase local (regular + demo workdir)
 supabase/.branches
 supabase/.temp
+demo-stack/supabase/.branches
+demo-stack/supabase/.temp
 
 # Misc
 .cache/

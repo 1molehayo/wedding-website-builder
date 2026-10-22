@@ -43,10 +43,7 @@ export function DropdownMenu({
       }}
     >
       {trigger ? (
-        <div
-          className="w-full"
-          onClick={() => setOpen((value) => !value)}
-        >
+        <div className="w-full" onClick={() => setOpen((value) => !value)}>
           {trigger}
         </div>
       ) : (

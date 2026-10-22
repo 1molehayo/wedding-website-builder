@@ -135,10 +135,7 @@ export async function createGuestHandler(
   const admin = createAdminSupabaseClient()
   const existing = await listWeddingGuests(session.wedding.id)
   const matches = findConflicts(existing, input)
-  const {
-    admin_label: inputAdminLabel,
-    ...guestFields
-  } = input
+  const { admin_label: inputAdminLabel, ...guestFields } = input
 
   if (matches.length > 0 && !resolution) {
     return { status: 'conflict', matches }
@@ -151,7 +148,9 @@ export async function createGuestHandler(
       throw new Error('Add a label for each existing matching guest.')
     }
     for (const match of matches) {
-      const label = resolution.existingLabels.find((item) => item.guestId === match.id)
+      const label = resolution.existingLabels.find(
+        (item) => item.guestId === match.id,
+      )
       if (!label?.adminLabel.trim()) {
         throw new Error('Add a label for each existing matching guest.')
       }
@@ -202,9 +201,7 @@ export async function updateGuestHandler(
   }
 
   const adminLabel =
-    resolution?.newAdminLabel.trim() ||
-    input.admin_label?.trim() ||
-    null
+    resolution?.newAdminLabel.trim() || input.admin_label?.trim() || null
 
   if (matches.length > 0 && resolution) {
     if (!resolution.newAdminLabel.trim()) {
@@ -237,7 +234,9 @@ export async function updateGuestHandler(
   return { status: 'updated', guest: result.data }
 }
 
-export async function deleteGuestHandler(guestId: string): Promise<{ ok: true }> {
+export async function deleteGuestHandler(
+  guestId: string,
+): Promise<{ ok: true }> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
 
@@ -254,9 +253,7 @@ export async function deleteGuestHandler(guestId: string): Promise<{ ok: true }>
   return { ok: true as const }
 }
 
-export async function unlockGuestRsvpHandler(
-  guestId: string,
-): Promise<Guest> {
+export async function unlockGuestRsvpHandler(guestId: string): Promise<Guest> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
 
@@ -346,9 +343,7 @@ async function sendInviteForGuest(
     guestName: guest.first_name,
     coupleLabel,
     weddingDateLabel: formatWeddingDate(publicDate),
-    websiteUrl: wedding.public_slug
-      ? `${origin}/${wedding.public_slug}`
-      : null,
+    websiteUrl: wedding.public_slug ? `${origin}/${wedding.public_slug}` : null,
     rsvpUrl: `${origin}/rsvp/${encodeURIComponent(guest.rsvp_token)}`,
     photosUrl,
     theme: resolveEmailThemeId(wedding.active_public_theme),

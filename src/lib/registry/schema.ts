@@ -20,17 +20,14 @@ export const registryItemFormSchema = z.object({
     .trim()
     .min(1, 'Store / gift link is required.')
     .max(2000)
-    .refine(
-      (value) => {
-        try {
-          const url = new URL(value)
-          return url.protocol === 'http:' || url.protocol === 'https:'
-        } catch {
-          return false
-        }
-      },
-      'Enter a valid http(s) gift or store link.',
-    ),
+    .refine((value) => {
+      try {
+        const url = new URL(value)
+        return url.protocol === 'http:' || url.protocol === 'https:'
+      } catch {
+        return false
+      }
+    }, 'Enter a valid http(s) gift or store link.'),
   price_label: optionalText('Price label', 40),
   desired_qty: z.coerce.number().int().min(1).max(100),
   claimed_qty: z.coerce.number().int().min(0).max(100),
@@ -60,7 +57,9 @@ export const registryAccountFormSchema = z.object({
   is_enabled: z.boolean(),
 })
 
-export type RegistryAccountFormValues = z.infer<typeof registryAccountFormSchema>
+export type RegistryAccountFormValues = z.infer<
+  typeof registryAccountFormSchema
+>
 
 export function parseRegistryItemInput(data: unknown): RegistryItemFormValues {
   const result = registryItemFormSchema.safeParse(data)

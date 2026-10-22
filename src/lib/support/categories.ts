@@ -28,11 +28,7 @@ export function supportCategoryLabel(id: string): string {
 }
 
 const MAX_SUPPORT_IMAGE_BYTES = 4.5 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-])
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 export function assertSupportImage(input: {
   name: string

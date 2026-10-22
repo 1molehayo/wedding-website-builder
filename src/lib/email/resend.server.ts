@@ -1,11 +1,10 @@
 import { Resend } from 'resend'
+import { getSuperAdminEmail } from '@/lib/auth/roles'
+import { getLocalMailpitUrl, isLocalSupabase } from '@/lib/supabase/env'
+import { PRODUCT_NAME, PRODUCT_NAME_ASCII } from '@/lib/constants'
 import {
-  getSuperAdminEmail,
-  PRODUCTION_SUPER_ADMIN_EMAIL,
-} from '@/lib/auth/roles'
-import { isLocalSupabase } from '@/lib/supabase/env'
-import { PRODUCT_NAME } from '@/lib/constants'
-import {
+  adminOtpEmailHtml,
+  adminOtpEmailText,
   guestDateAnnouncedEmailHtml,
   guestDateAnnouncedEmailText,
   guestPhotoShareEmailHtml,
@@ -180,7 +179,7 @@ export async function sendDeletionRequestEmail(
     input.reason,
     '',
     `Review and remove them from Admins if appropriate.`,
-    `Super admin inbox: ${PRODUCTION_SUPER_ADMIN_EMAIL}`,
+    `Super admin inbox: ${superAdminInbox()}`,
   ].join('\n')
 
   return sendResendEmail({
@@ -204,6 +203,72 @@ export async function sendAdminInviteEmail(input: {
     text: inviteEmailText(input),
     html: inviteEmailHtml(input),
   })
+}
+
+/**
+ * Admin sign-in OTP. Always delivered (unlike guest mail which can be skipped).
+ * Prefer Resend when configured; otherwise local Mailpit; never invent couple names.
+ */
+export async function sendAdminOtpEmail(input: {
+  to: string
+  subject: string
+  token: string
+}) {
+  const text = adminOtpEmailText({ token: input.token })
+  const html = adminOtpEmailHtml({ token: input.token })
+
+  const apiKey = getResendApiKey()
+  if (apiKey) {
+    const resend = getResendClient()
+    const result = await resend.emails.send({
+      from: supportFromAddress(),
+      to: [input.to],
+      subject: input.subject,
+      text,
+      html,
+    })
+    if (result.error) {
+      throw new Error(result.error.message)
+    }
+    return { ok: true as const, id: result.data.id, channel: 'resend' as const }
+  }
+
+  if (isLocalSupabase()) {
+    const mailpit = getLocalMailpitUrl()
+    if (mailpit) {
+      const response = await fetch(`${mailpit}/api/v1/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          From: {
+            Email: `${PRODUCT_NAME_ASCII.toLowerCase()}@localhost`,
+            Name: PRODUCT_NAME,
+          },
+          To: [{ Email: input.to }],
+          Subject: input.subject,
+          Text: text,
+          HTML: html,
+        }),
+      })
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '')
+        throw new Error(
+          `Failed to deliver OTP to local Mailpit (${response.status})${detail ? `: ${detail}` : ''}`,
+        )
+      }
+    }
+    console.info('[admin otp local]', {
+      to: input.to,
+      subject: input.subject,
+      mailpit: mailpit ?? 'unavailable — code logged below',
+      text,
+    })
+    return { ok: true as const, id: 'local-mailpit', channel: 'local' as const }
+  }
+
+  throw new Error(
+    'Email is not configured (missing RESEND_API_KEY). Add it to send admin sign-in codes.',
+  )
 }
 
 export async function sendGuestRsvpInviteEmail(

@@ -1,10 +1,7 @@
 import type { PageBlock } from '@/lib/page-blocks/types'
 
 export type WeddingStatus =
-  | 'planning'
-  | 'date_confirmed'
-  | 'invitations_sent'
-  | 'completed'
+  'planning' | 'date_confirmed' | 'invitations_sent' | 'completed'
 
 export type PublicThemeId = 'celeste' | 'botanica' | 'rosewater' | 'nocturne'
 
@@ -302,9 +299,7 @@ export type Database = {
           byte_size?: number | null
           created_by?: string | null
         }
-        Update: Partial<
-          Omit<MediaAsset, 'id' | 'wedding_id' | 'created_at'>
-        >
+        Update: Partial<Omit<MediaAsset, 'id' | 'wedding_id' | 'created_at'>>
       }
       photo_share_groups: {
         Row: PhotoShareGroup
@@ -314,7 +309,10 @@ export type Database = {
           share_token: string
         }
         Update: Partial<
-          Omit<PhotoShareGroup, 'id' | 'wedding_id' | 'created_at' | 'updated_at'>
+          Omit<
+            PhotoShareGroup,
+            'id' | 'wedding_id' | 'created_at' | 'updated_at'
+          >
         >
       }
     }

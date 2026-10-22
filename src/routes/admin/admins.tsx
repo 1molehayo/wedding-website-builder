@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -40,7 +36,11 @@ import {
   adminFullName,
 } from '@/lib/auth/types'
 import type { AdminAccountStatus } from '@/lib/auth/types'
-import { internalError, raiseRouteError, shouldRethrowRouteFailure } from '@/lib/errors/route-error'
+import {
+  internalError,
+  raiseRouteError,
+  shouldRethrowRouteFailure,
+} from '@/lib/errors/route-error'
 
 export const Route = createFileRoute('/admin/admins')({
   beforeLoad: ({ context }) => {
@@ -247,7 +247,9 @@ function AdminAdminsPage() {
         header: 'Name',
         cell: ({ row }) => (
           <div className="min-w-0">
-            <p className="truncate font-medium">{adminFullName(row.original)}</p>
+            <p className="truncate font-medium">
+              {adminFullName(row.original)}
+            </p>
             <p className="text-foreground-secondary truncate text-sm">
               {row.original.email ?? row.original.id}
             </p>
@@ -403,7 +405,9 @@ function AdminAdminsPage() {
       selectedAdmin.status === 'pending')
 
   const activeCount = admins.filter((admin) => admin.status === 'active').length
-  const pendingCount = admins.filter((admin) => admin.status === 'pending').length
+  const pendingCount = admins.filter(
+    (admin) => admin.status === 'pending',
+  ).length
   const deletionCount = admins.filter(
     (admin) => admin.status === 'deletion_requested',
   ).length
@@ -476,10 +480,7 @@ function AdminAdminsPage() {
         }}
       >
         {isCreating ? (
-          <form
-            className="flex min-h-0 flex-1 flex-col"
-            onSubmit={onInvite}
-          >
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={onInvite}>
             <SideDrawer.Header
               title="Invite admin"
               drawerDescription="Send an invite email"

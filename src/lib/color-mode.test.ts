@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  appliedColorMode,
-  parseColorModePreference,
-} from '@/lib/color-mode'
+import { appliedColorMode, parseColorModePreference } from '@/lib/color-mode'
 
 describe('color mode preference', () => {
   it('treats a missing or unknown value as system', () => {

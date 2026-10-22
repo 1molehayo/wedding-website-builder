@@ -45,7 +45,12 @@ export const profileFormSchema = z
     email: z.email('Enter a valid email.'),
   })
   .superRefine((value, ctx) => {
-    addPhoneIssue(ctx, ['phoneNational'], value.phoneCountry, value.phoneNational)
+    addPhoneIssue(
+      ctx,
+      ['phoneNational'],
+      value.phoneCountry,
+      value.phoneNational,
+    )
   })
 
 /** Regular admin: email is read-only, skip format gate on save. */
@@ -55,7 +60,12 @@ export const profileFormSchemaAdmin = z
     email: z.string(),
   })
   .superRefine((value, ctx) => {
-    addPhoneIssue(ctx, ['phoneNational'], value.phoneCountry, value.phoneNational)
+    addPhoneIssue(
+      ctx,
+      ['phoneNational'],
+      value.phoneCountry,
+      value.phoneNational,
+    )
   })
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>

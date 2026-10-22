@@ -243,9 +243,9 @@ function AdminRegistryPage() {
         <div>
           <h1 className="font-serif text-3xl italic">Registry</h1>
           <p className="text-foreground-secondary mt-2 max-w-2xl text-sm leading-relaxed">
-            Add buy-as-gift or gift-card store links, manage quantities manually,
-            and share bank details for cash gifts. No card payments and no
-            Amazon auto-sync.
+            Add buy-as-gift or gift-card store links, manage quantities
+            manually, and share bank details for cash gifts. No card payments
+            and no Amazon auto-sync.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -266,8 +266,9 @@ function AdminRegistryPage() {
       <div className="bg-surface border-border flex w-full items-start gap-3 rounded-xl border p-4 text-sm">
         <InfoIcon className="text-foreground-secondary mt-0.5 size-4 shrink-0" />
         <p className="text-foreground-secondary leading-relaxed">
-          Use a store&apos;s <strong className="text-foreground">buy as gift</strong>{' '}
-          or <strong className="text-foreground">gift card</strong> link whenever
+          Use a store&apos;s{' '}
+          <strong className="text-foreground">buy as gift</strong> or{' '}
+          <strong className="text-foreground">gift card</strong> link whenever
           possible so guests are not asked for your shipping address. After
           someone buys externally, update claimed quantity or mark purchased
           here.
@@ -370,7 +371,9 @@ function AdminRegistryPage() {
                   {account.account_name}
                   {account.is_enabled ? '' : ' · hidden'}
                 </p>
-                <p className="mt-1 font-mono text-sm">{account.account_number}</p>
+                <p className="mt-1 font-mono text-sm">
+                  {account.account_number}
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -555,10 +558,7 @@ function AdminRegistryPage() {
         </SideDrawer.Footer>
       </SideDrawer>
 
-      <SideDrawer
-        open={accountDrawerOpen}
-        onOpenChange={setAccountDrawerOpen}
-      >
+      <SideDrawer open={accountDrawerOpen} onOpenChange={setAccountDrawerOpen}>
         <SideDrawer.Header
           title={editingAccount ? 'Edit bank account' : 'Add bank account'}
         />

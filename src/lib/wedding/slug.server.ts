@@ -1,8 +1,5 @@
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
-import {
-  buildWeddingPublicSlug,
-  withPublicSlugUuid,
-} from '@/lib/wedding/slug'
+import { buildWeddingPublicSlug, withPublicSlugUuid } from '@/lib/wedding/slug'
 
 type AllocateSlugInput = {
   brideName: string
@@ -49,10 +46,7 @@ export async function isPublicSlugAvailable(input: {
   excludeWeddingId?: string
 }): Promise<boolean> {
   const admin = createAdminSupabaseClient()
-  let query = admin
-    .from('weddings')
-    .select('id')
-    .eq('public_slug', input.slug)
+  let query = admin.from('weddings').select('id').eq('public_slug', input.slug)
 
   if (input.excludeWeddingId) {
     query = query.neq('id', input.excludeWeddingId)

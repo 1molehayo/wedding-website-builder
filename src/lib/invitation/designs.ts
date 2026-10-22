@@ -26,7 +26,8 @@ export const INVITATION_DESIGNS = [
   {
     id: 'wreath',
     name: 'Wreath',
-    description: 'Names inside a ring of leaves, with the date and venue below.',
+    description:
+      'Names inside a ring of leaves, with the date and venue below.',
     categories: ['floral', 'classic'],
     compositions: ['floral', 'wreath', 'cursive'],
   },
@@ -68,7 +69,8 @@ export const INVITATION_DESIGNS = [
   {
     id: 'canopy',
     name: 'Canopy',
-    description: 'A solid arch panel with script names and the date in columns.',
+    description:
+      'A solid arch panel with script names and the date in columns.',
     categories: ['classic'],
     compositions: ['arch', 'cursive'],
   },

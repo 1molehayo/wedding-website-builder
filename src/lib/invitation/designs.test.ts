@@ -9,8 +9,8 @@ import {
 
 describe('invitation monogram initials', () => {
   it('uses the first letter', () => {
-    expect(nameInitial('Marvelous')).toBe('M')
-    expect(nameInitial('  lillian ')).toBe('L')
+    expect(nameInitial('Theo')).toBe('T')
+    expect(nameInitial('  ada ')).toBe('A')
   })
 
   it('keeps an accented first letter', () => {
@@ -50,9 +50,9 @@ describe('invitation design catalog', () => {
   })
 
   it('searches by design name and composition tag', () => {
-    expect(filterInvitationDesigns('all', 'masthead').map((design) => design.id)).toEqual([
-      'masthead',
-    ])
+    expect(
+      filterInvitationDesigns('all', 'masthead').map((design) => design.id),
+    ).toEqual(['masthead'])
     expect(
       filterInvitationDesigns('all', 'acrylic').map((design) => design.id),
     ).toEqual(['facet'])

@@ -84,11 +84,7 @@ export const updateGuest = createServerFn({ method: 'POST' })
   })
   .handler(async ({ data }): Promise<UpdateGuestResult> => {
     const { updateGuestHandler } = await import('./guests.server')
-    return updateGuestHandler(
-      data.guestId,
-      data.input,
-      data.conflictResolution,
-    )
+    return updateGuestHandler(data.guestId, data.input, data.conflictResolution)
   })
 
 export const deleteGuest = createServerFn({ method: 'POST' })

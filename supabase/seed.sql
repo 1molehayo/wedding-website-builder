@@ -1,5 +1,7 @@
--- Local only. Applied by `pnpm db:reset` and `pnpm db:seed`.
--- Never run against the cloud project (`pnpm db:seed` refuses non-local URLs).
+-- Local only. Applied explicitly by `pnpm db:seed` / `pnpm db:demo:seed`.
+-- NOT run automatically on `db reset` (see [db.seed] enabled = false).
+-- Never run against a cloud project (seed scripts refuse non-local URLs).
+-- Safe if a wedding already exists: the INSERT is a no-op (`where not exists`).
 
 insert into public.weddings (
   groom_name,
@@ -12,14 +14,14 @@ insert into public.weddings (
   public_slug
 )
 select
-  'Marvelous',
-  'Lillian',
+  'Theo',
+  'Ada',
   null,
   'planning',
-  'Woodridge, Illinois · Chicago',
+  'Harbourview Conservatory · Portland',
   'Formal attire',
   'celeste',
-  'lillian-marvelous-2026'
+  'ada-theo-2026'
 where not exists (select 1 from public.weddings);
 
 -- Restore starter home sections into draft only. Live stays empty until Publish.
@@ -58,7 +60,7 @@ set
   page_blocks_draft = starter.blocks,
   page_draft_updated_at = now()
 from starter
-where w.public_slug = 'lillian-marvelous-2026'
+where w.public_slug = 'ada-theo-2026'
   and coalesce(w.page_blocks, '[]'::jsonb) = '[]'::jsonb
   and coalesce(w.page_blocks_draft, '[]'::jsonb) = '[]'::jsonb;
 

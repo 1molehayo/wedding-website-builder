@@ -1,11 +1,12 @@
-import { getAdminSessionHandler, requireWeddingSession } from '@/lib/auth/session.server'
+import {
+  getAdminSessionHandler,
+  requireWeddingSession,
+} from '@/lib/auth/session.server'
 import {
   isMissingPageContentSchema,
   pageContentSchemaUserMessage,
 } from '@/lib/page-blocks/schema-error'
-import {
-  PAGE_CONTENT_VERSION_LIMIT,
-} from '@/lib/page-blocks/types'
+import { PAGE_CONTENT_VERSION_LIMIT } from '@/lib/page-blocks/types'
 import type {
   PageBlock,
   PageContentEditorData,
@@ -235,12 +236,7 @@ export async function publishPageBlocksHandler(
     }
   }
 
-  await recordPublishedVersion(
-    admin,
-    session.wedding.id,
-    pageBlocks,
-    now,
-  )
+  await recordPublishedVersion(admin, session.wedding.id, pageBlocks, now)
 
   return toEditorData(updated.data)
 }
@@ -412,9 +408,8 @@ export async function getPublicHomeDataHandler(
     }),
   )
 
-  const { getPublicRegistryForWeddingId } = await import(
-    '@/lib/registry/registry.server'
-  )
+  const { getPublicRegistryForWeddingId } =
+    await import('@/lib/registry/registry.server')
   const registry = await getPublicRegistryForWeddingId(weddingRow.id)
 
   return {

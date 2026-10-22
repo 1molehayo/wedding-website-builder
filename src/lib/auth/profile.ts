@@ -17,9 +17,7 @@ export const requestAccountDeletion = createServerFn({ method: 'POST' })
   .validator((data: { reason: string }) => {
     const parsed = deletionReasonSchema.safeParse(data.reason)
     if (!parsed.success) {
-      throw new Error(
-        parsed.error.issues[0]?.message ?? 'Reason is required.',
-      )
+      throw new Error(parsed.error.issues[0]?.message ?? 'Reason is required.')
     }
     return { reason: parsed.data }
   })

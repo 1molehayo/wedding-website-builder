@@ -71,7 +71,10 @@ export function parseStoredPhone(phone: string | null | undefined): {
 
   const parsed = parsePhoneNumberFromString(phone)
   if (!parsed) {
-    return { country: defaultPhoneCountry(), nationalNumber: sanitizeNationalNumber(phone) }
+    return {
+      country: defaultPhoneCountry(),
+      nationalNumber: sanitizeNationalNumber(phone),
+    }
   }
 
   return {

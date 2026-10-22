@@ -1,57 +1,19 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
+import {
+  isRegularLocalSupabaseUrl,
+  parseEnvFile as parseEnv,
+  sqlStatements,
+} from './env/local-supabase.mjs'
 
 /**
- * Apply `supabase/seed.sql` to local Supabase only.
- * Cloud is never seeded — production content comes from onboarding / admin.
- *
- * `supabase db query` can only run one statement at a time (prepared
- * statements), so the seed file is split and executed in order.
+ * Apply `supabase/seed.sql` to the Regular local Supabase stack only (:54321).
+ * Cloud is never seeded. Idempotent if a wedding already exists.
  */
 
 function parseEnvFile(filePath) {
-  if (!existsSync(filePath)) return {}
-  const values = {}
-  for (const line of readFileSync(filePath, 'utf8').split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const eq = trimmed.indexOf('=')
-    if (eq === -1) continue
-    const key = trimmed.slice(0, eq).trim()
-    let value = trimmed.slice(eq + 1).trim()
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1)
-    }
-    values[key] = value
-  }
-  return values
-}
-
-function isLocalSupabaseUrl(url) {
-  if (!url) return false
-  let hostname
-  try {
-    hostname = new URL(url).hostname
-  } catch {
-    return false
-  }
-  return (
-    hostname.includes('127.0.0.1') ||
-    hostname.includes('localhost') ||
-    hostname.includes('0.0.0.0')
-  )
-}
-
-function sqlStatements(sql) {
-  return sql
-    .replace(/^\s*--.*$/gm, '')
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
+  return parseEnv(filePath, existsSync, readFileSync)
 }
 
 const root = resolve(import.meta.dirname, '..')
@@ -60,9 +22,10 @@ const env = {
   ...parseEnvFile(resolve(root, '.env.local')),
 }
 
-if (!isLocalSupabaseUrl(env.VITE_SUPABASE_URL)) {
+if (!isRegularLocalSupabaseUrl(env.VITE_SUPABASE_URL)) {
   throw new Error(
-    'pnpm db:seed only runs against local Supabase. The app URL is not local. Cloud is never seeded.',
+    'pnpm db:seed only runs against the Regular local Supabase API (http://127.0.0.1:54321). ' +
+      'Set VITE_SUPABASE_URL in .env.local from `pnpm status`. Cloud and Demo (:54331) are refused.',
   )
 }
 
@@ -77,7 +40,8 @@ if (statements.length === 0) {
 }
 
 console.log(
-  `Seeding local Supabase from supabase/seed.sql (${statements.length} statements)`,
+  `Seeding Regular local Supabase from supabase/seed.sql (${statements.length} statements). ` +
+    'Existing weddings are left unchanged (INSERT … WHERE NOT EXISTS).',
 )
 
 for (const [index, statement] of statements.entries()) {
@@ -88,9 +52,13 @@ for (const [index, statement] of statements.entries()) {
     shell: process.platform === 'win32',
   })
   if (result.status !== 0) {
-    console.error(`Seed failed on statement ${index + 1} of ${statements.length}.`)
+    console.error(
+      `Seed failed on statement ${index + 1} of ${statements.length}.`,
+    )
     process.exit(result.status ?? 1)
   }
 }
 
-console.log('Local seed complete.')
+console.log(
+  'Regular local seed complete (fictional sample wedding if none existed).',
+)

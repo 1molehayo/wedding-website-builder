@@ -23,7 +23,14 @@ import {
   useRole,
   useTransitionStatus,
 } from '@floating-ui/react'
-import { createContext, use, useCallback, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  use,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Slot } from '@/components/slot'
 import { useTopLayer } from '@/hooks/use-top-layer'
 import { cn } from '@/lib/utils'
@@ -103,8 +110,7 @@ const useTooltipFloating = ({
 }
 
 interface TooltipContextType
-  extends ReturnType<typeof useTooltipFloating>,
-    UseInteractionsReturn {}
+  extends ReturnType<typeof useTooltipFloating>, UseInteractionsReturn {}
 
 const TooltipContext = createContext<TooltipContextType | null>(null)
 
@@ -151,9 +157,7 @@ const TooltipRoot = ({ children, ...props }: TooltipProps) => {
     [floating, interactions],
   )
 
-  return (
-    <TooltipContext value={tooltipContextValue}>{children}</TooltipContext>
-  )
+  return <TooltipContext value={tooltipContextValue}>{children}</TooltipContext>
 }
 
 interface TooltipTriggerProps extends React.ComponentPropsWithRef<'button'> {

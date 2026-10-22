@@ -1,8 +1,5 @@
 import { isNotFound, isRedirect } from '@tanstack/react-router'
-import {
-  logAppError,
-  serializeUnknownCause,
-} from '@/lib/errors/logger'
+import { logAppError, serializeUnknownCause } from '@/lib/errors/logger'
 import type { AppLogSource } from '@/lib/errors/logger'
 
 export function isAbortError(cause: unknown) {
@@ -19,11 +16,7 @@ export function shouldRethrowRouteFailure(cause: unknown): boolean {
 export type RouteErrorStatus = 403 | 404 | 500
 
 export type RouteErrorCode =
-  | 'NOT_FOUND'
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'ADMIN_FORBIDDEN'
-  | 'INTERNAL'
+  'NOT_FOUND' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'ADMIN_FORBIDDEN' | 'INTERNAL'
 
 export type RouteErrorCopy = {
   status: RouteErrorStatus

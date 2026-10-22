@@ -1,7 +1,4 @@
-import {
-  createTtlCache,
-  normalizeAddressQuery,
-} from '@/lib/places/cache'
+import { createTtlCache, normalizeAddressQuery } from '@/lib/places/cache'
 import type { AddressSuggestion } from '@/lib/places/cache'
 
 type SearchResult = {
@@ -32,9 +29,7 @@ type GoogleAutocompleteResponse = {
   }>
 }
 
-async function searchGooglePlaces(
-  query: string,
-): Promise<AddressSuggestion[]> {
+async function searchGooglePlaces(query: string): Promise<AddressSuggestion[]> {
   const apiKey = googleMapsApiKey()
   if (!apiKey) {
     throw new Error('Google Maps API key is not configured.')

@@ -3,8 +3,9 @@ import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
 /**
- * Link the Supabase CLI to the cloud project from `.env` → VITE_SUPABASE_URL.
+ * Link the Supabase CLI to the **regular** cloud project from `.env` → VITE_SUPABASE_URL.
  * Does not use `.env.local` (that is usually local Mailpit / 127.0.0.1).
+ * For the demo cloud project, use `pnpm db:demo:link` (reads `.env.demo` only).
  */
 
 function parseEnvFile(filePath) {
