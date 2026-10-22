@@ -32,7 +32,7 @@
     "db:demo:reset": "npx supabase db reset --workdir demo-stack",
     "db:demo:seed": "node scripts/db-seed-demo.mjs",
     "db:demo:link": "node scripts/db-link-demo.mjs",
-    "db:demo:push": "node scripts/db-link-demo.mjs && npx supabase db push"
+    "db:demo:push": "node scripts/db-push-demo.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",

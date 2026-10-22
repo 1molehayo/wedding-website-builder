@@ -128,18 +128,53 @@ Both stacks can run at once (different Docker `project_id` + ports). Schema/seed
 
 ### Demo Database commands (safe targeting)
 
-| Script                               | Target                                         |
-| ------------------------------------ | ---------------------------------------------- |
-| `pnpm db:demo:reset`                 | Demo local stack only (`--workdir demo-stack`) |
-| `pnpm db:demo:seed`                  | Demo local only (refuses non-`:54331` URLs)    |
-| `pnpm db:demo:link` / `db:demo:push` | Demo cloud from `.env.demo` only               |
+| Script                               | Target                                                                 |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| `pnpm db:demo:reset`                 | Demo local stack only (`--workdir demo-stack`)                          |
+| `pnpm db:demo:seed`                  | Demo local only (refuses non-`:54331` URLs)                             |
+| `pnpm db:demo:link`                  | Demo cloud link via `--workdir demo-stack` + `.env.demo` only           |
+| `pnpm db:demo:push`                  | Demo cloud migrations only (same workdir; no seed)                      |
+| `pnpm db:demo:push --dry-run`        | Preview pending Demo cloud migrations without applying them             |
 
-Regular `pnpm db:link` / `db:push` still read `.env` and must not be used for the Demo Database.
+Regular `pnpm db:link` / `db:push` still read `.env` / default `supabase/` and **must not** be used for the Demo Database.
+
+#### Demo cloud Supabase (migrations, empty wedding)
+
+Demo cloud uses the **same 20 historical migrations** as Regular (shared via `demo-stack/supabase/migrations` → `supabase/migrations`). `db push` applies schema only — it does **not** run `seed.sql`, so a fresh Demo cloud DB has **zero weddings**; use onboarding after deploy.
+
+1. Create a **separate** Demo Supabase project (not the Regular/production project).
+2. In `.env.demo`, keep local `VITE_SUPABASE_URL=http://127.0.0.1:54331` for `pnpm dev:demo`, and set:
+
+```bash
+DEMO_SUPABASE_PROJECT_REF=<your-demo-cloud-ref>
+```
+
+   (Or temporarily set `VITE_SUPABASE_URL` to the Demo cloud URL.) The scripts refuse a ref that matches Regular `.env` cloud URL.
+3. Authenticate the Supabase CLI once (personal access token; not a project API key):
+
+```bash
+npx supabase login
+```
+
+4. Verify target, preview, then apply (only when you intend to migrate):
+
+```bash
+# Confirm expected ref (script prints it; no secrets)
+pnpm db:demo:link
+
+# Review pending migrations — does not apply
+pnpm db:demo:push --dry-run
+
+# Apply migrations to Demo cloud only (after approval)
+pnpm db:demo:push
+```
+
+All Demo cloud CLI calls use `--workdir demo-stack` so Regular `supabase/` link state is never used.
 
 ### Limitations
 
 - First-time demo setup requires creating `.env.demo` and starting Docker.
-- Cloud migration/push is manual (`pnpm db:demo:push`) — not run automatically.
+- Cloud migration/push is manual (`pnpm db:demo:push`) — not run automatically. Prefer `--dry-run` first.
 - Pushing a non-`main` branch to GitHub can trigger **preview** deploys on the regular Vercel project unless you use a separate Demo Deployment project or ignore that branch.
 - Regular `pnpm dev` still loads `.env` (if present) in addition to `.env.local` — that is current Vite behavior and was left unchanged so existing setups keep working.
 
@@ -174,7 +209,8 @@ Mailpit (local OTP emails): [http://127.0.0.1:54324](http://127.0.0.1:54324)
 | `pnpm db:push`               | Link from `.env`, then push migrations to cloud                 |
 | `pnpm db:demo:reset`         | Reset Demo local DB + migrations (**no** auto-seed)             |
 | `pnpm db:demo:seed`          | Opt-in fictional wedding on Demo local (:54331) only            |
-| `pnpm db:demo:link` / `push` | Demo cloud from `.env.demo` only                                |
+| `pnpm db:demo:link`          | Link CLI to Demo cloud (`--workdir demo-stack`, `.env.demo`)    |
+| `pnpm db:demo:push`          | Push migrations to Demo cloud only (supports `--dry-run`)       |
 | `pnpm env:check`             | Summarize regular env (hosts/lengths only)                      |
 | `pnpm env:check:demo`        | Summarize demo env; fail if required keys missing               |
 

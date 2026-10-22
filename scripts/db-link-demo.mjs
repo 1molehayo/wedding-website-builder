@@ -1,54 +1,70 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { buildDemoProcessEnv, requireKeys } from './env/load-env.mjs'
+import { parseEnvFile } from './env/local-supabase.mjs'
+import {
+  assertDemoRefDistinctFromRegular,
+  resolveDemoCloudProjectRef,
+  tryRegularCloudProjectRef,
+} from './env/supabase-project-ref.mjs'
 
 /**
- * Link the Supabase CLI to the demo cloud project using ONLY `.env.demo`.
- * Never reads `.env` / `.env.local`.
+ * Link the Supabase CLI to the **Demo cloud** project only.
+ * - Reads `.env.demo` only (never `.env` / `.env.local`)
+ * - Always uses `--workdir demo-stack` (isolated from Regular)
+ * - Target ref: `DEMO_SUPABASE_PROJECT_REF` or cloud `VITE_SUPABASE_URL`
  */
 
-function projectRefFromUrl(url) {
-  if (!url) {
-    throw new Error('VITE_SUPABASE_URL is missing in .env.demo')
-  }
-  let hostname
-  try {
-    hostname = new URL(url).hostname
-  } catch {
-    throw new Error(`VITE_SUPABASE_URL is not a valid URL`)
-  }
-  if (
-    hostname.includes('127.0.0.1') ||
-    hostname.includes('localhost') ||
-    hostname.includes('0.0.0.0')
-  ) {
-    throw new Error(
-      'VITE_SUPABASE_URL in .env.demo points at local Supabase. Use the demo cloud URL to link.',
-    )
-  }
-  const match = hostname.match(/^([a-z0-9]+)\.supabase.co$/i)
-  if (!match) {
-    throw new Error(`Could not parse project ref from host: ${hostname}`)
-  }
-  return match[1]
-}
-
 const root = resolve(import.meta.dirname, '..')
+const workdir = resolve(root, 'demo-stack')
+
 if (!existsSync(resolve(root, '.env.demo'))) {
   console.error('Missing .env.demo — refuse to link (would not use .env).')
   process.exit(1)
 }
 
+if (!existsSync(resolve(workdir, 'supabase', 'config.toml'))) {
+  console.error('Missing demo-stack/supabase/config.toml')
+  process.exit(1)
+}
+
 const { env } = buildDemoProcessEnv(root, ['.env.demo'])
 requireKeys(env, ['VITE_SUPABASE_URL'], 'Demo db:link')
-const projectRef = projectRefFromUrl(env.VITE_SUPABASE_URL)
 
-console.log(`Linking Supabase CLI to demo project ref: ${projectRef}`)
+const projectRef = resolveDemoCloudProjectRef(env)
+const regularEnv = parseEnvFile(
+  resolve(root, '.env'),
+  existsSync,
+  readFileSync,
+)
+assertDemoRefDistinctFromRegular(
+  projectRef,
+  tryRegularCloudProjectRef(regularEnv),
+)
+
+console.log(
+  `Linking Demo stack (--workdir demo-stack) to cloud project ref: ${projectRef}`,
+)
+
+if (!env.SUPABASE_ACCESS_TOKEN?.trim()) {
+  console.info(
+    'Tip: cloud link needs a personal access token. Run `npx supabase login` once, ' +
+      'or set SUPABASE_ACCESS_TOKEN in the shell (not in committed files).',
+  )
+}
 
 const result = spawnSync(
   'npx',
-  ['supabase', 'link', '--project-ref', projectRef, ...process.argv.slice(2)],
+  [
+    'supabase',
+    'link',
+    '--workdir',
+    workdir,
+    '--project-ref',
+    projectRef,
+    ...process.argv.slice(2),
+  ],
   {
     cwd: root,
     stdio: 'inherit',
@@ -56,5 +72,13 @@ const result = spawnSync(
     env,
   },
 )
+
+if ((result.status ?? 1) !== 0) {
+  console.error(
+    'Demo link failed. If the CLI said “Access token not provided”, run:\n' +
+      '  npx supabase login\n' +
+      'then retry `pnpm db:demo:link`.',
+  )
+}
 
 process.exit(result.status ?? 1)
