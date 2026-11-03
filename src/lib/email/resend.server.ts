@@ -49,6 +49,47 @@ function superAdminInbox() {
   return getSuperAdminEmail(isLocalSupabase())
 }
 
+async function deliverViaLocalMailpit(input: {
+  to: string | string[]
+  subject: string
+  text: string
+  html?: string
+}) {
+  const recipients = (Array.isArray(input.to) ? input.to : [input.to]).map(
+    (email) => ({ Email: email }),
+  )
+  const mailpit = getLocalMailpitUrl()
+  if (mailpit) {
+    const response = await fetch(`${mailpit}/api/v1/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        From: {
+          Email: `${PRODUCT_NAME_ASCII.toLowerCase()}@localhost`,
+          Name: PRODUCT_NAME,
+        },
+        To: recipients,
+        Subject: input.subject,
+        Text: input.text,
+        HTML: input.html,
+      }),
+    })
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      throw new Error(
+        `Failed to deliver email to local Mailpit (${response.status})${detail ? `: ${detail}` : ''}`,
+      )
+    }
+  }
+  console.info('[email local]', {
+    to: input.to,
+    subject: input.subject,
+    mailpit: mailpit ?? 'unavailable — body logged below',
+    text: input.text,
+  })
+  return { ok: true as const, id: 'local-mailpit', channel: 'local' as const }
+}
+
 async function sendResendEmail(input: {
   to: string | string[]
   subject: string
@@ -64,14 +105,9 @@ async function sendResendEmail(input: {
     return { ok: true as const, id: 'skipped' }
   }
 
-  const apiKey = getResendApiKey()
-  if (!apiKey && isLocalSupabase()) {
-    console.info('[email local fallback]', {
-      to: input.to,
-      subject: input.subject,
-      text: input.text,
-    })
-    return { ok: true as const, id: 'local-log' }
+  // Local Auth always uses Mailpit, even if a cloud RESEND_API_KEY is in `.env`.
+  if (isLocalSupabase()) {
+    return deliverViaLocalMailpit(input)
   }
 
   const resend = getResendClient()
@@ -207,7 +243,7 @@ export async function sendAdminInviteEmail(input: {
 
 /**
  * Admin sign-in OTP. Always delivered (unlike guest mail which can be skipped).
- * Prefer Resend when configured; otherwise local Mailpit; never invent couple names.
+ * Local Supabase → Mailpit (ignore cloud RESEND_API_KEY). Cloud → Resend.
  */
 export async function sendAdminOtpEmail(input: {
   to: string
@@ -217,58 +253,34 @@ export async function sendAdminOtpEmail(input: {
   const text = adminOtpEmailText({ token: input.token })
   const html = adminOtpEmailHtml({ token: input.token })
 
-  const apiKey = getResendApiKey()
-  if (apiKey) {
-    const resend = getResendClient()
-    const result = await resend.emails.send({
-      from: supportFromAddress(),
-      to: [input.to],
+  if (isLocalSupabase()) {
+    return deliverViaLocalMailpit({
+      to: input.to,
       subject: input.subject,
       text,
       html,
     })
-    if (result.error) {
-      throw new Error(result.error.message)
-    }
-    return { ok: true as const, id: result.data.id, channel: 'resend' as const }
   }
 
-  if (isLocalSupabase()) {
-    const mailpit = getLocalMailpitUrl()
-    if (mailpit) {
-      const response = await fetch(`${mailpit}/api/v1/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          From: {
-            Email: `${PRODUCT_NAME_ASCII.toLowerCase()}@localhost`,
-            Name: PRODUCT_NAME,
-          },
-          To: [{ Email: input.to }],
-          Subject: input.subject,
-          Text: text,
-          HTML: html,
-        }),
-      })
-      if (!response.ok) {
-        const detail = await response.text().catch(() => '')
-        throw new Error(
-          `Failed to deliver OTP to local Mailpit (${response.status})${detail ? `: ${detail}` : ''}`,
-        )
-      }
-    }
-    console.info('[admin otp local]', {
-      to: input.to,
-      subject: input.subject,
-      mailpit: mailpit ?? 'unavailable — code logged below',
-      text,
-    })
-    return { ok: true as const, id: 'local-mailpit', channel: 'local' as const }
+  const apiKey = getResendApiKey()
+  if (!apiKey) {
+    throw new Error(
+      'Email is not configured (missing RESEND_API_KEY). Add it to send admin sign-in codes.',
+    )
   }
 
-  throw new Error(
-    'Email is not configured (missing RESEND_API_KEY). Add it to send admin sign-in codes.',
-  )
+  const resend = getResendClient()
+  const result = await resend.emails.send({
+    from: supportFromAddress(),
+    to: [input.to],
+    subject: input.subject,
+    text,
+    html,
+  })
+  if (result.error) {
+    throw new Error(result.error.message)
+  }
+  return { ok: true as const, id: result.data.id, channel: 'resend' as const }
 }
 
 export async function sendGuestRsvpInviteEmail(

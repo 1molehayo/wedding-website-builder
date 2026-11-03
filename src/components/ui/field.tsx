@@ -79,7 +79,7 @@ const FieldLabel = ({
     <label
       htmlFor={controlId}
       id={labelId}
-      className={cn('font-medium text-base text-foreground', className)}
+      className={cn('text-sm font-medium text-foreground', className)}
       {...props}
     >
       {children}
@@ -149,15 +149,13 @@ const FieldError = ({
     return registerMessage(id)
   }, [id, hasContent, registerMessage])
 
-  if (!hasContent) {
-    return <p className={cn('min-h-5 text-sm', className)} aria-hidden />
-  }
+  if (!hasContent) return null
 
   return (
     <p
       id={id}
       role="alert"
-      className={cn('text-error min-h-5 text-sm', className)}
+      className={cn('text-error text-sm', className)}
       {...props}
     >
       {children}

@@ -1,8 +1,10 @@
 import {
   getCountries,
   getCountryCallingCode,
+  getExampleNumber,
   parsePhoneNumberFromString,
 } from 'libphonenumber-js'
+import examples from 'libphonenumber-js/mobile/examples'
 import type { CountryCode } from 'libphonenumber-js'
 
 export type { CountryCode }
@@ -57,6 +59,13 @@ export function defaultPhoneCountry(): CountryCode {
 /** Digits only for the national-number input. */
 export function sanitizeNationalNumber(value: string): string {
   return value.replace(/\D/g, '').slice(0, 15)
+}
+
+/** Sample national number for the selected country (placeholder). */
+export function exampleNationalNumber(country: CountryCode): string {
+  const example = getExampleNumber(country, examples)
+  if (!example) return 'Phone number'
+  return example.formatNational().replace(/^0/, '').trim() || example.nationalNumber
 }
 
 export function toE164Phone(

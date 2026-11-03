@@ -1,3 +1,7 @@
+import {
+  ALLOWED_MEDIA_MIME_TYPES,
+  MAX_MEDIA_UPLOAD_BYTES,
+} from '@/lib/media/constants'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 const PHOTOS_BUCKET = 'photos'
@@ -6,10 +10,60 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60 * 6
 /** Proxy redirects use a short fresh signature per request. */
 const PROXY_SIGNED_URL_TTL_SECONDS = 60 * 10
 
+const ALLOWED_MIME = new Set<string>(ALLOWED_MEDIA_MIME_TYPES)
+
 export function isAllowedPhotoStoragePath(imagePath: string): boolean {
   const path = imagePath.trim()
   if (!path || path.includes('..') || path.startsWith('/')) return false
   return path.startsWith('page-blocks/') || path.startsWith('media/')
+}
+
+export type PageBlockSignedUpload = {
+  path: string
+  token: string
+  signedUrl: string
+  filename: string
+  contentType: string
+  byteSize: number
+}
+
+export async function createPageBlockSignedUpload(input: {
+  name: string
+  type: string
+  byteSize: number
+}): Promise<PageBlockSignedUpload> {
+  const contentType = input.type || 'application/octet-stream'
+  if (!ALLOWED_MIME.has(contentType)) {
+    throw new Error('Only JPEG, PNG, WebP, and GIF images are allowed.')
+  }
+  if (!Number.isFinite(input.byteSize) || input.byteSize <= 0) {
+    throw new Error('Image data is empty.')
+  }
+  if (input.byteSize > MAX_MEDIA_UPLOAD_BYTES) {
+    throw new Error('Image must be 12MB or smaller.')
+  }
+
+  const filename = input.name.trim() || 'photo'
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'photo'
+  const path = `page-blocks/${crypto.randomUUID()}-${safeName}`
+  const admin = createAdminSupabaseClient()
+
+  const signed = await admin.storage
+    .from(PHOTOS_BUCKET)
+    .createSignedUploadUrl(path)
+
+  if (signed.error) {
+    throw new Error(signed.error.message)
+  }
+
+  return {
+    path: signed.data.path,
+    token: signed.data.token,
+    signedUrl: signed.data.signedUrl,
+    filename,
+    contentType,
+    byteSize: input.byteSize,
+  }
 }
 
 export async function createPhotoSignedUrl(

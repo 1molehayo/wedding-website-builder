@@ -1,9 +1,11 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import {
   CopySimpleIcon,
+  DownloadSimpleIcon,
   EnvelopeSimpleIcon,
   InfoIcon,
   PlusIcon,
+  ShareNetworkIcon,
   TrashIcon,
   XIcon,
 } from '@phosphor-icons/react'
@@ -16,16 +18,18 @@ import { PhotoDropzone } from '@/components/ui/photo-dropzone'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
+import { prepareImageForUpload } from '@/lib/media/compress-image'
+import {
+  ALLOWED_MEDIA_MIME_TYPES,
+  MAX_MEDIA_UPLOAD_BYTES,
+} from '@/lib/media/constants'
 import {
   createMediaUpload,
   deleteMediaAsset,
   finalizeMediaUpload,
   listMediaAssets,
 } from '@/lib/media/media'
-import {
-  ALLOWED_MEDIA_MIME_TYPES,
-  MAX_MEDIA_UPLOAD_BYTES,
-} from '@/lib/media/constants'
+import { downloadBlob, qrDataUrl, qrPngFile, shareQrImage } from '@/lib/media/qr'
 import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
   createPhotoShareGroup,
@@ -66,17 +70,126 @@ type UploadJob = {
   id: string
   file: File
   previewUrl: string
-  status: 'queued' | 'uploading' | 'finalizing' | 'error'
+  status: 'queued' | 'preparing' | 'uploading' | 'finalizing' | 'error'
   progress: number
   error: string | null
 }
 
-function qrImageUrl(value: string) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(value)}`
-}
-
 function newUploadId() {
   return crypto.randomUUID()
+}
+
+function ShareQrPanel({ url }: { url: string }) {
+  const [qrSrc, setQrSrc] = useState<string | null>(null)
+  const [isSharing, setIsSharing] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void qrDataUrl(url, 320)
+      .then((src) => {
+        if (!cancelled) setQrSrc(src)
+      })
+      .catch(() => {
+        if (!cancelled) setQrSrc(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [url])
+
+  const onShare = async () => {
+    setIsSharing(true)
+    try {
+      const result = await shareQrImage(url, 'photo-share-qr.png')
+      toast.success(
+        result === 'shared'
+          ? 'QR ready to send.'
+          : 'QR downloaded. Attach that image when you share.',
+      )
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to share the QR code.',
+      )
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  const onDownload = async () => {
+    setIsDownloading(true)
+    try {
+      const file = await qrPngFile(url, 'photo-share-qr.png')
+      downloadBlob(file, file.name)
+      toast.success('QR downloaded.')
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Unable to download the QR code.',
+      )
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-foreground text-base font-medium">Share link & QR</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => void copyTextSafe(url)}
+        >
+          <CopySimpleIcon />
+          Copy link
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          isLoading={isSharing}
+          onClick={() => void onShare()}
+        >
+          <ShareNetworkIcon />
+          Share QR
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          isLoading={isDownloading}
+          onClick={() => void onDownload()}
+        >
+          <DownloadSimpleIcon />
+          Download QR
+        </Button>
+      </div>
+      {qrSrc ? (
+        <img
+          src={qrSrc}
+          alt="QR code for share link"
+          className="border-border rounded-lg border bg-white p-2"
+          width={160}
+          height={160}
+        />
+      ) : (
+        <div className="border-border bg-background-secondary text-foreground-secondary flex size-40 items-center justify-center rounded-lg border text-xs">
+          Preparing QR…
+        </div>
+      )}
+    </div>
+  )
+}
+
+async function copyTextSafe(value: string) {
+  try {
+    await navigator.clipboard.writeText(value)
+    toast.success('Share link copied.')
+  } catch {
+    toast.error('Unable to copy to clipboard.')
+  }
 }
 
 function AdminMediaPage() {
@@ -90,6 +203,7 @@ function AdminMediaPage() {
   const uploadQueueRef = useRef<string[]>([])
   const activeUploadsRef = useRef(0)
   const uploadsRef = useRef<UploadJob[]>([])
+  const abortControllersRef = useRef(new Map<string, AbortController>())
   const [deleteAssetId, setDeleteAssetId] = useState<string | null>(null)
   const [isDeletingAsset, setIsDeletingAsset] = useState(false)
 
@@ -115,6 +229,10 @@ function AdminMediaPage() {
 
   useEffect(() => {
     return () => {
+      for (const controller of abortControllersRef.current.values()) {
+        controller.abort()
+      }
+      abortControllersRef.current.clear()
       for (const job of uploadsRef.current) {
         URL.revokeObjectURL(job.previewUrl)
       }
@@ -132,6 +250,11 @@ function AdminMediaPage() {
   }
 
   const removeUpload = (id: string) => {
+    abortControllersRef.current.get(id)?.abort()
+    abortControllersRef.current.delete(id)
+    uploadQueueRef.current = uploadQueueRef.current.filter(
+      (queuedId) => queuedId !== id,
+    )
     setUploads((current) => {
       const job = current.find((item) => item.id === id)
       if (job) URL.revokeObjectURL(job.previewUrl)
@@ -141,21 +264,49 @@ function AdminMediaPage() {
     })
   }
 
+  const cancelUpload = (id: string) => {
+    const job = uploadsRef.current.find((item) => item.id === id)
+    if (!job) return
+    if (job.status === 'queued') {
+      removeUpload(id)
+      return
+    }
+    abortControllersRef.current.get(id)?.abort()
+  }
+
   const runUploadJob = async (id: string) => {
     const job = uploadsRef.current.find((item) => item.id === id)
     if (!job) return
 
-    patchUpload(id, { status: 'uploading', progress: 0, error: null })
+    const controller = new AbortController()
+    abortControllersRef.current.set(id, controller)
+
+    patchUpload(id, { status: 'preparing', progress: 0, error: null })
     try {
+      const prepared = await prepareImageForUpload(job.file)
+      if (controller.signal.aborted) {
+        throw new Error('Upload cancelled.')
+      }
+      if (prepared.size > MAX_MEDIA_UPLOAD_BYTES) {
+        throw new Error('Image must be 12MB or smaller after compression.')
+      }
+
+      patchUpload(id, {
+        status: 'uploading',
+        progress: 0,
+        file: prepared,
+      })
+
       const signed = await createMediaUpload({
         data: {
-          name: job.file.name,
-          type: job.file.type,
-          byteSize: job.file.size,
+          name: prepared.name,
+          type: prepared.type,
+          byteSize: prepared.size,
         },
       })
 
-      await uploadFileToSignedUrl(signed.signedUrl, job.file, {
+      await uploadFileToSignedUrl(signed.signedUrl, prepared, {
+        signal: controller.signal,
         onProgress: (progress) => {
           patchUpload(id, { progress, status: 'uploading' })
         },
@@ -175,8 +326,11 @@ function AdminMediaPage() {
         asset,
         ...current.filter((a) => a.id !== asset.id),
       ])
+      abortControllersRef.current.delete(id)
       removeUpload(id)
     } catch (err) {
+      abortControllersRef.current.delete(id)
+      if (!uploadsRef.current.some((item) => item.id === id)) return
       patchUpload(id, {
         status: 'error',
         error: err instanceof Error ? err.message : 'Unable to upload photo.',
@@ -420,11 +574,19 @@ function AdminMediaPage() {
                           <span>
                             {job.status === 'queued'
                               ? 'Waiting…'
-                              : job.status === 'finalizing'
-                                ? 'Saving…'
-                                : `Uploading ${job.progress}%`}
+                              : job.status === 'preparing'
+                                ? 'Preparing…'
+                                : job.status === 'finalizing'
+                                  ? 'Saving…'
+                                  : `Uploading ${job.progress}%`}
                           </span>
-                          <span>{job.progress}%</span>
+                          <button
+                            type="button"
+                            className="underline-offset-2 hover:underline"
+                            onClick={() => cancelUpload(job.id)}
+                          >
+                            Cancel
+                          </button>
                         </div>
                         <div
                           className="h-1.5 overflow-hidden rounded-full bg-white/25"
@@ -863,33 +1025,7 @@ function AdminMediaPage() {
               ) : null}
             </div>
 
-            {editing ? (
-              <div className="space-y-3">
-                <p className="text-foreground text-base font-medium">
-                  Share link & QR
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      void copyText(editing.groupUrl, 'Share link')
-                    }
-                  >
-                    <CopySimpleIcon />
-                    Copy link
-                  </Button>
-                </div>
-                <img
-                  src={qrImageUrl(editing.groupUrl)}
-                  alt="QR code for share link"
-                  className="border-border rounded-lg border bg-white p-2"
-                  width={160}
-                  height={160}
-                />
-              </div>
-            ) : null}
+            {editing ? <ShareQrPanel url={editing.groupUrl} /> : null}
           </form>
         </SideDrawer.Content>
         <SideDrawer.Footer>

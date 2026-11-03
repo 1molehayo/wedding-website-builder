@@ -113,10 +113,18 @@ export function DropdownMenu({
                     'hover:bg-foreground/5 flex w-full items-center gap-2 px-3 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-40',
                     item.tone === 'destructive' && 'text-error',
                   )}
-                  onClick={() => {
+                  onPointerDown={(event) => {
+                    // Prevent the closing click from falling through to a
+                    // table row underneath the portaled menu.
                     if (item.disabled) return
+                    event.preventDefault()
+                    event.stopPropagation()
                     setOpen(false)
                     item.onSelect()
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
                   }}
                 >
                   {item.icon ? (

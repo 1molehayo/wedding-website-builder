@@ -1,3 +1,6 @@
+/** Default wait for the storage PUT before failing the upload. */
+export const MEDIA_UPLOAD_TIMEOUT_MS = 60_000
+
 /**
  * PUT a file to a Supabase signed upload URL with real XHR progress.
  * Mirrors storage-js `uploadToSignedUrl` FormData shape for Blob/File bodies.
@@ -8,6 +11,7 @@ export function uploadFileToSignedUrl(
   options?: {
     onProgress?: (percent: number) => void
     signal?: AbortSignal
+    timeoutMs?: number
   },
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -15,6 +19,7 @@ export function uploadFileToSignedUrl(
     const body = new FormData()
     body.append('cacheControl', '3600')
     body.append('', file)
+    const timeoutMs = options?.timeoutMs ?? MEDIA_UPLOAD_TIMEOUT_MS
 
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable || event.total <= 0) return
@@ -46,6 +51,12 @@ export function uploadFileToSignedUrl(
 
     xhr.onerror = () => reject(new Error('Network error during upload.'))
     xhr.onabort = () => reject(new Error('Upload cancelled.'))
+    xhr.ontimeout = () =>
+      reject(
+        new Error(
+          'Upload timed out. Try again, or use a smaller photo.',
+        ),
+      )
 
     if (options?.signal) {
       if (options.signal.aborted) {
@@ -62,6 +73,7 @@ export function uploadFileToSignedUrl(
     }
 
     xhr.open('PUT', signedUrl)
+    xhr.timeout = timeoutMs
     xhr.send(body)
   })
 }

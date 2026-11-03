@@ -18,7 +18,11 @@ import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import { getSupabaseUrl, isLocalSupabase } from '@/lib/supabase/env'
 import { toPublicSettings } from '@/lib/wedding/public-settings'
 import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
-import { createPhotoSignedUrl, uploadPageBlockImage } from './storage.server'
+import {
+  createPageBlockSignedUpload,
+  createPhotoSignedUrl,
+  uploadPageBlockImage,
+} from './storage.server'
 
 export type PublicHomeData = PublicWeddingSettings & {
   page_blocks: PageBlock[]
@@ -429,6 +433,31 @@ export async function getSignedPhotoUrlHandler(
   return createPhotoSignedUrl(imagePath)
 }
 
+export async function createPageBlockUploadHandler(input: {
+  name: string
+  type: string
+  byteSize: number
+}) {
+  await requireWeddingSession()
+  return createPageBlockSignedUpload(input)
+}
+
+export async function confirmPageBlockUploadHandler(input: {
+  path: string
+}): Promise<{ path: string; signedUrl: string | null }> {
+  await requireWeddingSession()
+  const path = input.path.trim()
+  if (!path.startsWith('page-blocks/') || path.includes('..')) {
+    throw new Error('Invalid image path.')
+  }
+  const signedUrl = await createPhotoSignedUrl(path)
+  if (!signedUrl) {
+    throw new Error('Upload did not complete. Please try again.')
+  }
+  return { path, signedUrl }
+}
+
+/** @deprecated Prefer createPageBlockUpload + browser signed PUT. */
 export async function uploadPageBlockImageHandler(file: {
   name: string
   type: string

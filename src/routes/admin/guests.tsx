@@ -9,7 +9,6 @@ import {
   LockOpenIcon,
   PencilSimpleIcon,
   PlusIcon,
-  QuestionIcon,
   WhatsappLogoIcon,
 } from '@phosphor-icons/react'
 import {
@@ -35,7 +34,6 @@ import { SideDrawer } from '@/components/ui/side-drawer'
 import { TableView } from '@/components/ui/table-view'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
-import { Tooltip } from '@/components/ui/tooltip'
 import { formatStoredPhone } from '@/lib/auth/phone'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
@@ -104,37 +102,10 @@ const emptyGuestForm: GuestFormValues = emptyGuestFormValues()
 
 type GuestDrawerMode = 'create' | 'edit' | 'view'
 
-function NotesHint() {
-  return (
-    <Tooltip>
-      <Tooltip.Trigger
-        aria-label="About notes"
-        className="text-foreground-secondary inline-flex"
-      >
-        <QuestionIcon className="size-4" />
-      </Tooltip.Trigger>
-      <Tooltip.Content>
-        Private notes for you and other admins. Guests never see these.
-      </Tooltip.Content>
-    </Tooltip>
-  )
-}
-
-function ReadValue({
-  label,
-  value,
-  hint,
-}: {
-  label: string
-  value: string
-  hint?: ReactNode
-}) {
+function ReadValue({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <p className="text-base font-medium">{label}</p>
-        {hint}
-      </div>
+      <p className="text-sm font-medium">{label}</p>
       <p className="text-foreground-secondary text-sm">{value || '—'}</p>
     </div>
   )
@@ -866,11 +837,7 @@ function AdminGuestsPage() {
                   label="Plus-ones"
                   value={String(selectedGuest.plus_ones)}
                 />
-                <ReadValue
-                  label="Notes"
-                  value={selectedGuest.notes ?? ''}
-                  hint={<NotesHint />}
-                />
+                <ReadValue label="Notes" value={selectedGuest.notes ?? ''} />
                 <ReadValue
                   label="Admin label"
                   value={selectedGuest.admin_label ?? ''}
@@ -983,7 +950,11 @@ function AdminGuestsPage() {
           </>
         ) : drawerOpen ? (
           <GuestDrawerForms
-            key={isCreating ? 'new' : (selectedId ?? 'edit')}
+            key={
+              isCreating
+                ? 'new'
+                : `${drawerMode}-${selectedId ?? 'guest'}`
+            }
             guest={isCreating ? null : selectedGuest}
             isCreating={isCreating}
             onSubmit={async (value, rsvpValues) => {
@@ -1031,7 +1002,7 @@ function AdminGuestsPage() {
                   }}
                 >
                   <SideDrawer.Content>
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
                       <form.Subscribe
                         selector={(state) => ({
                           submitted: state.submissionAttempts > 0,
@@ -1214,7 +1185,6 @@ function AdminGuestsPage() {
                                       Sends when you add this guest. You can
                                       invite again from their page.
                                     </Field.Description>
-                                    <Field.Error>{null}</Field.Error>
                                   </Field>
                                 )}
                               </form.Field>
@@ -1239,12 +1209,16 @@ function AdminGuestsPage() {
                                         onChange={(event) =>
                                           field.handleChange(event.target.value)
                                         }
-                                        placeholder="Optional group label"
+                                        placeholder="e.g. The Ademusires"
                                       />
                                     </Field.Control>
-                                    <Field.Error>
-                                      {invalid ? error : null}
-                                    </Field.Error>
+                                    {invalid ? (
+                                      <Field.Error>{error}</Field.Error>
+                                    ) : (
+                                      <Field.Description>
+                                        Family or group this guest sits with.
+                                      </Field.Description>
+                                    )}
                                   </Field>
                                 )
                               }}
@@ -1294,24 +1268,22 @@ function AdminGuestsPage() {
                                   (field.state.meta.isTouched || submitted)
                                 return (
                                   <Field invalid={invalid}>
-                                    <div className="flex items-center gap-1.5">
-                                      <Field.Label>Notes</Field.Label>
-                                      <NotesHint />
-                                    </div>
+                                    <Field.Label>Notes</Field.Label>
                                     <Field.Control>
                                       <Textarea
-                                        rows={4}
+                                        rows={3}
                                         invalid={invalid}
                                         value={field.state.value}
                                         onBlur={field.handleBlur}
                                         onChange={(event) =>
                                           field.handleChange(event.target.value)
                                         }
+                                        placeholder="Optional private notes"
                                       />
                                     </Field.Control>
-                                    <Field.Error>
-                                      {invalid ? error : null}
-                                    </Field.Error>
+                                    {invalid ? (
+                                      <Field.Error>{error}</Field.Error>
+                                    ) : null}
                                   </Field>
                                 )
                               }}
@@ -1322,17 +1294,16 @@ function AdminGuestsPage() {
                               <Field.Control>
                                 <Input
                                   value={adminLabelDraft}
-                                  placeholder="Optional. Only you see this"
+                                  placeholder="e.g. Cousin on groom’s side"
                                   onChange={(event) =>
                                     setAdminLabelDraft(event.target.value)
                                   }
                                 />
                               </Field.Control>
-                              <Field.Error>{null}</Field.Error>
-                              <p className="text-foreground-secondary text-xs">
-                                Helps tell apart guests with the same name.
+                              <Field.Description>
+                                Only needed when two guests share the same name.
                                 Never shown to guests.
-                              </p>
+                              </Field.Description>
                             </Field>
                           </>
                         )}

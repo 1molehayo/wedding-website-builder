@@ -76,18 +76,33 @@ export const getSignedPhotoUrl = createServerFn({ method: 'POST' })
     return getSignedPhotoUrlHandler(data.imagePath)
   })
 
-export const uploadPageBlockImage = createServerFn({ method: 'POST' })
-  .validator((data: { name: string; type: string; dataBase64: string }) => {
-    if (!data.name.trim() || !data.dataBase64) {
-      throw new Error('Image upload payload is incomplete.')
+export const createPageBlockUpload = createServerFn({ method: 'POST' })
+  .validator((data: { name: string; type: string; byteSize: number }) => {
+    const name = String(data.name).trim()
+    const type = String(data.type).trim()
+    const byteSize = Number(data.byteSize)
+    if (!name) throw new Error('Image name is required.')
+    if (!Number.isFinite(byteSize) || byteSize <= 0) {
+      throw new Error('Image data is empty.')
     }
     return {
-      name: data.name,
-      type: data.type || 'application/octet-stream',
-      dataBase64: data.dataBase64,
+      name,
+      type: type || 'application/octet-stream',
+      byteSize,
     }
   })
   .handler(async ({ data }) => {
-    const { uploadPageBlockImageHandler } = await import('./settings.server')
-    return uploadPageBlockImageHandler(data)
+    const { createPageBlockUploadHandler } = await import('./settings.server')
+    return createPageBlockUploadHandler(data)
+  })
+
+export const confirmPageBlockUpload = createServerFn({ method: 'POST' })
+  .validator((data: { path: string }) => {
+    const path = String(data.path).trim()
+    if (!path) throw new Error('Upload path is required.')
+    return { path }
+  })
+  .handler(async ({ data }) => {
+    const { confirmPageBlockUploadHandler } = await import('./settings.server')
+    return confirmPageBlockUploadHandler(data)
   })

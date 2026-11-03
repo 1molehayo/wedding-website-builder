@@ -31,14 +31,18 @@ import { PhotoDropzone } from '@/components/ui/photo-dropzone'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
+import { prepareImageForUpload } from '@/lib/media/compress-image'
+import { MAX_MEDIA_UPLOAD_BYTES } from '@/lib/media/constants'
+import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
+  confirmPageBlockUpload,
+  createPageBlockUpload,
   getPageBlocks,
   getSignedPhotoUrl,
   listPageContentVersions,
   publishPageBlocks,
   restorePageContentVersion,
   savePageBlocksDraft,
-  uploadPageBlockImage,
 } from '@/lib/page-blocks/settings'
 import {
   PAGE_BLOCK_TYPES,
@@ -70,15 +74,6 @@ export const Route = createFileRoute('/admin/pages')({
   component: AdminPagesPage,
 })
 
-async function fileToBase64(file: File) {
-  const buffer = await file.arrayBuffer()
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte)
-  }
-  return btoa(binary)
-}
 
 function moveBlock(blocks: PageBlock[], from: number, to: number) {
   if (to < 0 || to >= blocks.length) return blocks
@@ -209,13 +204,20 @@ function BlockEditor({
     setUploadError(null)
     setIsUploading(true)
     try {
-      const dataBase64 = await fileToBase64(file)
-      const uploaded = await uploadPageBlockImage({
+      const prepared = await prepareImageForUpload(file)
+      if (prepared.size > MAX_MEDIA_UPLOAD_BYTES) {
+        throw new Error('Image must be 12MB or smaller after compression.')
+      }
+      const signed = await createPageBlockUpload({
         data: {
-          name: file.name,
-          type: file.type,
-          dataBase64,
+          name: prepared.name,
+          type: prepared.type,
+          byteSize: prepared.size,
         },
+      })
+      await uploadFileToSignedUrl(signed.signedUrl, prepared)
+      const uploaded = await confirmPageBlockUpload({
+        data: { path: signed.path },
       })
       if (block.type === 'hero') {
         onChange({

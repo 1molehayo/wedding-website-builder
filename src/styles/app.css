@@ -249,7 +249,8 @@ html {
   --theme-surface: var(--admin-panel);
   --theme-foreground: var(--admin-ink);
   --theme-foreground-secondary: var(--admin-muted);
-  --theme-accent: var(--admin-accent);
+  /* Darkest admin ink so primary actions read as enabled, not washed out. */
+  --theme-accent: var(--admin-ink);
   --theme-accent-foreground: #ffffff;
   --theme-highlight: var(--admin-gold);
   --theme-border: var(--admin-line);
