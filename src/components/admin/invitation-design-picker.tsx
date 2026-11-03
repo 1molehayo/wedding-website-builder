@@ -278,13 +278,15 @@ export function InvitationDesignPicker({
           </div>
         </div>
 
-        <div
-          ref={captureRef}
-          data-theme={theme}
-          data-mode={mode}
-          className="bg-background text-foreground mx-auto h-160 w-full max-w-sm overflow-hidden rounded-sm shadow-sm"
-        >
-          <InvitationCard design={design} content={content} />
+        <div className="overflow-x-auto">
+          <div
+            ref={captureRef}
+            data-theme={theme}
+            data-mode={mode}
+            className="bg-background text-foreground mx-auto h-160 w-96 shrink-0 overflow-hidden rounded-sm shadow-sm"
+          >
+            <InvitationCard design={design} content={content} />
+          </div>
         </div>
       </div>
     </div>

@@ -138,14 +138,18 @@ export function guestRsvpInviteEmailHtml(
     : ''
 
   const cardBlock = input.includeInvitationCard
-    ? `<p style="margin:0 0 24px;text-align:center;">
-        <img
-          src="cid:${INVITATION_CARD_CONTENT_ID}"
-          alt="Invitation for ${escapeAttr(input.coupleLabel)}"
-          width="360"
-          style="display:block;width:100%;max-width:360px;height:auto;margin:0 auto;border:0;border-radius:4px;"
-        />
-      </p>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;border-collapse:collapse;">
+        <tr>
+          <td align="center" style="padding:0;">
+            <img
+              src="cid:${INVITATION_CARD_CONTENT_ID}"
+              alt="Invitation for ${escapeAttr(input.coupleLabel)}"
+              width="360"
+              style="display:block;width:360px;max-width:100%;height:auto;margin:0 auto;border:0;outline:none;text-decoration:none;"
+            />
+          </td>
+        </tr>
+      </table>`
     : ''
 
   const body = `
