@@ -44,6 +44,9 @@ importers:
       cva:
         specifier: 1.0.0-beta.8
         version: 1.0.0-beta.8(typescript@6.0.3)
+      html-to-image:
+        specifier: ^1.11.13
+        version: 1.11.13
       libphonenumber-js:
         specifier: ^1.13.10
         version: 1.13.10
@@ -1658,6 +1661,9 @@ packages:
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
+
+  html-to-image@1.11.13:
+    resolution: {integrity: sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg==}
 
   httpxy@0.5.5:
     resolution: {integrity: sha512-uDjmnPyp1q4Sgzf3w+J/Fc6UqcCEj0x4Wjp7OqK5dGhNeDgpyrAmnS6ey8QWrX3SWDon2DMKf9sBa5X9+CVyMA==}
@@ -4171,6 +4177,8 @@ snapshots:
   hookable@6.1.1: {}
 
   html-escaper@2.0.2: {}
+
+  html-to-image@1.11.13: {}
 
   httpxy@0.5.5: {}
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { CheckIcon } from '@phosphor-icons/react'
 import { InvitationCard } from '@/components/invitation/invitation-card'
 import { Button } from '@/components/ui/button'
@@ -91,6 +92,11 @@ export function InvitationDesignPicker({
   weddingDate,
   venueName,
   venueLocation,
+  design,
+  mode,
+  onDesignChange,
+  onModeChange,
+  captureRef,
 }: {
   theme: PublicThemeId
   groomName: string
@@ -98,13 +104,14 @@ export function InvitationDesignPicker({
   weddingDate: string | null
   venueName: string
   venueLocation: string
+  design: InvitationDesignId
+  mode: 'light' | 'dark'
+  onDesignChange: (design: InvitationDesignId) => void
+  onModeChange: (mode: 'light' | 'dark') => void
+  captureRef?: RefObject<HTMLDivElement | null>
 }) {
-  const [mode, setMode] = useState<ColorMode>('light')
   const [category, setCategory] = useState<InvitationCategoryFilter>('all')
   const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState<InvitationDesignId>(
-    INVITATION_DESIGNS[0].id,
-  )
   const previewRef = useRef<HTMLDivElement>(null)
   const skipPreviewScroll = useRef(true)
 
@@ -121,10 +128,10 @@ export function InvitationDesignPicker({
       behavior: reduceMotion ? 'auto' : 'smooth',
       block: 'start',
     })
-  }, [selected])
+  }, [design])
+
   const selectedDesign =
-    INVITATION_DESIGNS.find((design) => design.id === selected) ??
-    INVITATION_DESIGNS[0]
+    INVITATION_DESIGNS.find((item) => item.id === design) ?? INVITATION_DESIGNS[0]
   const visible = filterInvitationDesigns(category, query)
   const content = {
     groomName: groomName.trim() || 'Groom',
@@ -142,7 +149,7 @@ export function InvitationDesignPicker({
         </p>
         <p className="text-foreground-secondary mt-1 max-w-xl text-sm">
           Filter by category, or search by name and tag. Preview uses the colour
-          theme above. The guest email does not include this card yet.
+          theme above. Saving settings embeds this card in guest invite emails.
         </p>
       </div>
 
@@ -189,15 +196,15 @@ export function InvitationDesignPicker({
         </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {visible.map((design) => {
-            const isSelected = selected === design.id
-            const tags = design.compositions.map((id) => compositionLabel(id))
+          {visible.map((item) => {
+            const isSelected = design === item.id
+            const tags = item.compositions.map((id) => compositionLabel(id))
             return (
               <button
-                key={design.id}
+                key={item.id}
                 type="button"
                 aria-pressed={isSelected}
-                onClick={() => setSelected(design.id)}
+                onClick={() => onDesignChange(item.id)}
                 className={cn(
                   'border-border bg-surface flex items-start gap-3 rounded-xl border p-3 text-left transition',
                   isSelected
@@ -207,7 +214,7 @@ export function InvitationDesignPicker({
               >
                 <div className="w-21 shrink-0">
                   <DesignThumbnail
-                    design={design.id}
+                    design={item.id}
                     theme={theme}
                     mode={mode}
                     content={content}
@@ -215,16 +222,16 @@ export function InvitationDesignPicker({
                 </div>
                 <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium">{design.name}</p>
+                    <p className="font-medium">{item.name}</p>
                     <p className="text-foreground-secondary mt-1 text-xs leading-relaxed">
-                      {design.description}
+                      {item.description}
                     </p>
                     <p className="text-foreground-secondary mt-2 text-[0.65rem] tracking-wide">
                       {tags.join(' · ')}
                       <span className="sr-only">
                         {' '}
                         Categories{' '}
-                        {design.categories
+                        {item.categories
                           .map((id) => categoryLabel(id))
                           .join(', ')}
                       </span>
@@ -263,7 +270,7 @@ export function InvitationDesignPicker({
                 type="button"
                 size="sm"
                 variant={mode === next ? 'primary' : 'outline'}
-                onClick={() => setMode(next)}
+                onClick={() => onModeChange(next)}
               >
                 {next === 'light' ? 'Light' : 'Dark'}
               </Button>
@@ -272,11 +279,12 @@ export function InvitationDesignPicker({
         </div>
 
         <div
+          ref={captureRef}
           data-theme={theme}
           data-mode={mode}
           className="bg-background text-foreground mx-auto h-160 w-full max-w-sm overflow-hidden rounded-sm shadow-sm"
         >
-          <InvitationCard design={selected} content={content} />
+          <InvitationCard design={design} content={content} />
         </div>
       </div>
     </div>

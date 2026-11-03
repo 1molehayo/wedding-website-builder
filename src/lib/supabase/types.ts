@@ -48,6 +48,12 @@ export type Wedding = {
   dress_code: string | null
   active_public_theme: PublicThemeId
   public_slug: string
+  /** Selected e-invitation catalog id (e.g. wreath). */
+  invitation_design_id: string
+  /** light | dark card rendering for preview and email. */
+  invitation_design_mode: 'light' | 'dark'
+  /** photos bucket path for the rendered invitation PNG, if generated. */
+  invitation_card_path: string | null
   page_blocks: PageBlock[]
   page_blocks_draft: PageBlock[]
   page_draft_updated_at: string | null

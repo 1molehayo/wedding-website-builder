@@ -62,6 +62,27 @@ export const updateWedding = createServerFn({ method: 'POST' })
     return updateWeddingHandler(data)
   })
 
+export const createInvitationCardUpload = createServerFn({ method: 'POST' })
+  .validator((data: { name: string; type: string; byteSize: number }) => {
+    const name = String(data.name).trim()
+    const type = String(data.type).trim()
+    const byteSize = Number(data.byteSize)
+    if (!name) throw new Error('Image name is required.')
+    if (!Number.isFinite(byteSize) || byteSize <= 0) {
+      throw new Error('Image data is empty.')
+    }
+    return {
+      name,
+      type: type || 'image/png',
+      byteSize,
+    }
+  })
+  .handler(async ({ data }) => {
+    const { createInvitationCardUploadHandler } =
+      await import('./settings.server')
+    return createInvitationCardUploadHandler(data)
+  })
+
 export type { PublishWeddingDateResult } from './settings.server'
 
 export const publishWeddingDate = createServerFn({ method: 'POST' })

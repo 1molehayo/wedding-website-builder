@@ -1505,7 +1505,7 @@ function AdminGuestsPage() {
         tone="destructive"
         isConfirming={isDeleting}
         onOpenChange={setDeleteOpen}
-        onConfirm={onDelete}
+        onConfirm={() => void onDelete()}
       />
 
       <ConfirmDialog

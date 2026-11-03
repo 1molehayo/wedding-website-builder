@@ -71,6 +71,24 @@ describe('guest email templates', () => {
     expect(html).toContain('#6f93b8')
     expect(html).toContain('RSVP now')
     expect(html).toContain('Theo &amp; Ada')
+    expect(html).not.toContain('cid:invitation-card')
+  })
+
+  it('embeds the invitation card cid when includeInvitationCard is set', () => {
+    const html = guestRsvpInviteEmailHtml({
+      guestName: 'Ada',
+      coupleLabel: 'Theo & Ada',
+      weddingDateLabel: 'Date to be announced',
+      websiteUrl: null,
+      rsvpUrl: 'https://example.com/rsvp/token123',
+      photosUrl: null,
+      theme: 'celeste',
+      mode: 'light',
+      includeInvitationCard: true,
+    })
+
+    expect(html).toContain('cid:invitation-card')
+    expect(html).toContain('Invitation for Theo &amp; Ada')
   })
 
   it('builds dark-mode themed RSVP HTML', () => {

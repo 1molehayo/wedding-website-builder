@@ -94,6 +94,8 @@ export function adminOtpEmailText(input: { token: string }): string {
   ].join('\n')
 }
 
+export const INVITATION_CARD_CONTENT_ID = 'invitation-card'
+
 export type GuestRsvpInviteEmailInput = {
   guestName: string
   coupleLabel: string
@@ -104,6 +106,8 @@ export type GuestRsvpInviteEmailInput = {
   theme: PublicThemeId
   /** Preview can toggle; live sends default to light. */
   mode?: ColorMode
+  /** When true, HTML includes a cid: image for the invitation card. */
+  includeInvitationCard?: boolean
 }
 
 export function guestRsvpInviteEmailHtml(
@@ -133,6 +137,17 @@ export function guestRsvpInviteEmailHtml(
       </p>`
     : ''
 
+  const cardBlock = input.includeInvitationCard
+    ? `<p style="margin:0 0 24px;text-align:center;">
+        <img
+          src="cid:${INVITATION_CARD_CONTENT_ID}"
+          alt="Invitation for ${escapeAttr(input.coupleLabel)}"
+          width="360"
+          style="display:block;width:100%;max-width:360px;height:auto;margin:0 auto;border:0;border-radius:4px;"
+        />
+      </p>`
+    : ''
+
   const body = `
     <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:${palette.foregroundSecondary};">
       You’re invited
@@ -141,6 +156,7 @@ export function guestRsvpInviteEmailHtml(
       ${escapeHtml(input.coupleLabel)}
     </p>
     <div style="width:48px;height:1px;background:${palette.highlight};margin:0 0 20px;"></div>
+    ${cardBlock}
     <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foreground};">
       Hi ${escapeHtml(input.guestName)},
     </p>

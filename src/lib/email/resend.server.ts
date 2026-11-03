@@ -3,6 +3,7 @@ import { getSuperAdminEmail } from '@/lib/auth/roles'
 import { getLocalMailpitUrl, isLocalSupabase } from '@/lib/supabase/env'
 import { PRODUCT_NAME, PRODUCT_NAME_ASCII } from '@/lib/constants'
 import {
+  INVITATION_CARD_CONTENT_ID,
   adminOtpEmailHtml,
   adminOtpEmailText,
   guestDateAnnouncedEmailHtml,
@@ -19,6 +20,13 @@ import type {
   GuestPhotoShareEmailInput,
   GuestRsvpInviteEmailInput,
 } from '@/lib/email/templates'
+
+export type EmailInlineAttachment = {
+  filename: string
+  content: Buffer
+  contentType: string
+  contentId: string
+}
 
 function getResendApiKey(): string | null {
   return process.env.RESEND_API_KEY?.trim() || null
@@ -54,6 +62,7 @@ async function deliverViaLocalMailpit(input: {
   subject: string
   text: string
   html?: string
+  inlineAttachments?: EmailInlineAttachment[]
 }) {
   const recipients = (Array.isArray(input.to) ? input.to : [input.to]).map(
     (email) => ({ Email: email }),
@@ -72,6 +81,12 @@ async function deliverViaLocalMailpit(input: {
         Subject: input.subject,
         Text: input.text,
         HTML: input.html,
+        Attachments: input.inlineAttachments?.map((item) => ({
+          Content: item.content.toString('base64'),
+          Filename: item.filename,
+          ContentType: item.contentType,
+          ContentID: item.contentId,
+        })),
       }),
     })
     if (!response.ok) {
@@ -85,6 +100,7 @@ async function deliverViaLocalMailpit(input: {
     to: input.to,
     subject: input.subject,
     mailpit: mailpit ?? 'unavailable — body logged below',
+    attachments: input.inlineAttachments?.length ?? 0,
     text: input.text,
   })
   return { ok: true as const, id: 'local-mailpit', channel: 'local' as const }
@@ -96,6 +112,7 @@ async function sendResendEmail(input: {
   text: string
   html?: string
   replyTo?: string
+  inlineAttachments?: EmailInlineAttachment[]
 }) {
   if (!emailDeliveryEnabled()) {
     console.info('[email skipped]', {
@@ -118,6 +135,12 @@ async function sendResendEmail(input: {
     subject: input.subject,
     text: input.text,
     html: input.html,
+    attachments: input.inlineAttachments?.map((item) => ({
+      filename: item.filename,
+      content: item.content,
+      contentType: item.contentType,
+      contentId: item.contentId,
+    })),
   })
 
   if (result.error) {
@@ -284,15 +307,40 @@ export async function sendAdminOtpEmail(input: {
 }
 
 export async function sendGuestRsvpInviteEmail(
-  input: GuestRsvpInviteEmailInput & { to: string; replyTo?: string },
+  input: GuestRsvpInviteEmailInput & {
+    to: string
+    replyTo?: string
+    invitationCard?: {
+      bytes: Buffer
+      contentType: string
+      filename?: string
+    } | null
+  },
 ) {
   const subject = `You’re invited: ${input.coupleLabel}`
+  const includeInvitationCard = Boolean(input.invitationCard)
+  const payload = {
+    ...input,
+    includeInvitationCard,
+  }
+  const inlineAttachments = input.invitationCard
+    ? [
+        {
+          filename: input.invitationCard.filename ?? 'invitation-card.png',
+          content: input.invitationCard.bytes,
+          contentType: input.invitationCard.contentType || 'image/png',
+          contentId: INVITATION_CARD_CONTENT_ID,
+        } satisfies EmailInlineAttachment,
+      ]
+    : undefined
+
   return sendResendEmail({
     to: input.to,
     replyTo: input.replyTo,
     subject,
-    text: guestRsvpInviteEmailText(input),
-    html: guestRsvpInviteEmailHtml(input),
+    text: guestRsvpInviteEmailText(payload),
+    html: guestRsvpInviteEmailHtml(payload),
+    inlineAttachments,
   })
 }
 

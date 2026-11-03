@@ -15,7 +15,11 @@ const ALLOWED_MIME = new Set<string>(ALLOWED_MEDIA_MIME_TYPES)
 export function isAllowedPhotoStoragePath(imagePath: string): boolean {
   const path = imagePath.trim()
   if (!path || path.includes('..') || path.startsWith('/')) return false
-  return path.startsWith('page-blocks/') || path.startsWith('media/')
+  return (
+    path.startsWith('page-blocks/') ||
+    path.startsWith('media/') ||
+    path.startsWith('invitations/')
+  )
 }
 
 export type PageBlockSignedUpload = {
@@ -25,6 +29,73 @@ export type PageBlockSignedUpload = {
   filename: string
   contentType: string
   byteSize: number
+}
+
+export type InvitationCardSignedUpload = {
+  path: string
+  token: string
+  signedUrl: string
+  filename: string
+  contentType: string
+  byteSize: number
+}
+
+export async function createInvitationCardSignedUpload(input: {
+  weddingId: string
+  name: string
+  type: string
+  byteSize: number
+}): Promise<InvitationCardSignedUpload> {
+  const contentType = input.type || 'image/png'
+  if (contentType !== 'image/png' && contentType !== 'image/jpeg') {
+    throw new Error('Invitation card must be a PNG or JPEG image.')
+  }
+  if (!Number.isFinite(input.byteSize) || input.byteSize <= 0) {
+    throw new Error('Image data is empty.')
+  }
+  if (input.byteSize > MAX_MEDIA_UPLOAD_BYTES) {
+    throw new Error('Image must be 12MB or smaller.')
+  }
+
+  const filename = input.name.trim() || 'invitation-card.png'
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'invitation-card.png'
+  const path = `invitations/${input.weddingId}/${crypto.randomUUID()}-${safeName}`
+  const admin = createAdminSupabaseClient()
+
+  const signed = await admin.storage
+    .from(PHOTOS_BUCKET)
+    .createSignedUploadUrl(path)
+
+  if (signed.error) {
+    throw new Error(signed.error.message)
+  }
+
+  return {
+    path: signed.data.path,
+    token: signed.data.token,
+    signedUrl: signed.data.signedUrl,
+    filename,
+    contentType,
+    byteSize: input.byteSize,
+  }
+}
+
+export async function downloadPhotoObject(
+  path: string,
+): Promise<{ bytes: Buffer; contentType: string } | null> {
+  const trimmed = path.trim()
+  if (!isAllowedPhotoStoragePath(trimmed)) return null
+
+  const admin = createAdminSupabaseClient()
+  const result = await admin.storage.from(PHOTOS_BUCKET).download(trimmed)
+  if (result.error) return null
+
+  const bytes = Buffer.from(await result.data.arrayBuffer())
+  const contentType =
+    result.data.type && result.data.type !== 'application/octet-stream'
+      ? result.data.type
+      : 'image/png'
+  return { bytes, contentType }
 }
 
 export async function createPageBlockSignedUpload(input: {

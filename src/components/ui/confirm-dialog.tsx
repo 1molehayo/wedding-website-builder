@@ -1,4 +1,5 @@
 import { useEffect, useId } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -33,7 +34,7 @@ export function ConfirmDialog({
   useEffect(() => {
     if (!open) return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onOpenChange(false)
+      if (event.key === 'Escape' && !isConfirming) onOpenChange(false)
     }
     document.addEventListener('keydown', onKeyDown)
     const previous = document.body.style.overflow
@@ -42,17 +43,20 @@ export function ConfirmDialog({
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previous
     }
-  }, [open, onOpenChange])
+  }, [open, onOpenChange, isConfirming])
 
   if (!open) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
         aria-label="Close dialog"
-        onClick={() => onOpenChange(false)}
+        disabled={isConfirming}
+        onClick={() => {
+          if (!isConfirming) onOpenChange(false)
+        }}
       />
       <div
         role="alertdialog"
@@ -87,12 +91,16 @@ export function ConfirmDialog({
             variant={tone === 'destructive' ? 'destructive' : 'primary'}
             isLoading={isConfirming}
             className={cn(tone === 'destructive' && 'text-white')}
-            onClick={onConfirm}
+            onClick={() => {
+              if (isConfirming) return
+              onConfirm()
+            }}
           >
             {confirmLabel}
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

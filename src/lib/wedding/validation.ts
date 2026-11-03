@@ -1,7 +1,12 @@
+import { isInvitationDesignId } from '@/lib/invitation/designs'
+import type { InvitationDesignId } from '@/lib/invitation/designs'
 import { PUBLIC_THEMES } from '@/lib/site-settings'
 import type { PublicThemeId } from '@/lib/site-settings'
 import type { WeddingStatus } from '@/lib/supabase/types'
 import { parsePublicSlug } from '@/lib/wedding/slug'
+
+export const INVITATION_DESIGN_MODES = ['light', 'dark'] as const
+export type InvitationDesignMode = (typeof INVITATION_DESIGN_MODES)[number]
 
 export const WEDDING_STATUSES = [
   'planning',
@@ -27,6 +32,9 @@ export type UpdateWeddingInput = {
   dress_code: string | null
   active_public_theme: PublicThemeId
   public_slug: string
+  invitation_design_id: InvitationDesignId
+  invitation_design_mode: InvitationDesignMode
+  invitation_card_path: string | null
 }
 
 function requiredName(value: unknown, label: string): string {
@@ -96,6 +104,39 @@ function parseTheme(value: unknown): PublicThemeId {
   throw new Error('Public theme is invalid.')
 }
 
+function parseInvitationDesignId(value: unknown): InvitationDesignId {
+  if (typeof value === 'string' && isInvitationDesignId(value)) {
+    return value
+  }
+  throw new Error('Invitation design is invalid.')
+}
+
+function parseInvitationDesignMode(value: unknown): InvitationDesignMode {
+  if (
+    typeof value === 'string' &&
+    (INVITATION_DESIGN_MODES as readonly string[]).includes(value)
+  ) {
+    return value as InvitationDesignMode
+  }
+  throw new Error('Invitation design mode is invalid.')
+}
+
+function optionalStoragePath(value: unknown): string | null {
+  if (value == null) return null
+  if (typeof value !== 'string') {
+    throw new Error('Invitation card path must be text.')
+  }
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (trimmed.includes('..') || trimmed.startsWith('/')) {
+    throw new Error('Invitation card path is invalid.')
+  }
+  if (!trimmed.startsWith('invitations/')) {
+    throw new Error('Invitation card path is invalid.')
+  }
+  return trimmed
+}
+
 export function parseUpdateWeddingInput(data: unknown): UpdateWeddingInput {
   if (!data || typeof data !== 'object') {
     throw new Error('Invalid wedding settings payload.')
@@ -117,5 +158,10 @@ export function parseUpdateWeddingInput(data: unknown): UpdateWeddingInput {
       typeof input.public_slug === 'string' && !input.public_slug.trim()
         ? ''
         : parsePublicSlug(input.public_slug),
+    invitation_design_id: parseInvitationDesignId(input.invitation_design_id),
+    invitation_design_mode: parseInvitationDesignMode(
+      input.invitation_design_mode,
+    ),
+    invitation_card_path: optionalStoragePath(input.invitation_card_path),
   }
 }

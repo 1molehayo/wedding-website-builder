@@ -1,18 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import { parseUpdateWeddingInput } from './validation'
 
+const base = {
+  groom_name: 'Theo',
+  bride_name: 'Ada',
+  wedding_date: '2027-06-12',
+  status: 'date_confirmed' as const,
+  venue_name: 'Garden Hall',
+  venue_location: 'Chicago',
+  dress_code: 'Formal attire',
+  active_public_theme: 'botanica' as const,
+  public_slug: 'ada-theo-2027',
+  invitation_design_id: 'wreath',
+  invitation_design_mode: 'light' as const,
+  invitation_card_path: null,
+}
+
 describe('parseUpdateWeddingInput', () => {
   it('accepts a full valid payload and trims strings', () => {
     const result = parseUpdateWeddingInput({
+      ...base,
       groom_name: '  Theo ',
       bride_name: ' Ada ',
-      wedding_date: '2027-06-12',
-      status: 'date_confirmed',
       venue_name: '  Garden Hall ',
       venue_location: ' Chicago ',
       dress_code: ' Formal attire ',
-      active_public_theme: 'botanica',
-      public_slug: 'ada-theo-2027',
+      invitation_card_path: 'invitations/w1/card.png',
     })
 
     expect(result).toEqual({
@@ -25,13 +38,15 @@ describe('parseUpdateWeddingInput', () => {
       dress_code: 'Formal attire',
       active_public_theme: 'botanica',
       public_slug: 'ada-theo-2027',
+      invitation_design_id: 'wreath',
+      invitation_design_mode: 'light',
+      invitation_card_path: 'invitations/w1/card.png',
     })
   })
 
   it('allows a null wedding date and empty optional fields', () => {
     const result = parseUpdateWeddingInput({
-      groom_name: 'Theo',
-      bride_name: 'Ada',
+      ...base,
       wedding_date: '',
       status: 'planning',
       venue_name: '   ',
@@ -39,19 +54,22 @@ describe('parseUpdateWeddingInput', () => {
       dress_code: undefined,
       active_public_theme: 'celeste',
       public_slug: 'ada-theo-2026',
+      invitation_design_mode: 'dark',
+      invitation_card_path: '',
     })
 
     expect(result.wedding_date).toBeNull()
     expect(result.venue_name).toBeNull()
     expect(result.venue_location).toBeNull()
     expect(result.dress_code).toBeNull()
+    expect(result.invitation_design_mode).toBe('dark')
+    expect(result.invitation_card_path).toBeNull()
   })
 
   it('rejects an invented placeholder-like invalid date', () => {
     expect(() =>
       parseUpdateWeddingInput({
-        groom_name: 'Theo',
-        bride_name: 'Ada',
+        ...base,
         wedding_date: '2027-13-40',
         status: 'planning',
         venue_name: null,
@@ -63,11 +81,10 @@ describe('parseUpdateWeddingInput', () => {
     ).toThrow(/invalid|YYYY-MM-DD/i)
   })
 
-  it('rejects unknown themes and statuses', () => {
+  it('rejects unknown themes, statuses, and invitation designs', () => {
     expect(() =>
       parseUpdateWeddingInput({
-        groom_name: 'Theo',
-        bride_name: 'Ada',
+        ...base,
         wedding_date: null,
         status: 'draft',
         venue_name: null,
@@ -80,8 +97,7 @@ describe('parseUpdateWeddingInput', () => {
 
     expect(() =>
       parseUpdateWeddingInput({
-        groom_name: 'Theo',
-        bride_name: 'Ada',
+        ...base,
         wedding_date: null,
         status: 'planning',
         venue_name: null,
@@ -91,5 +107,12 @@ describe('parseUpdateWeddingInput', () => {
         public_slug: 'ada-theo-2026',
       }),
     ).toThrow(/theme/i)
+
+    expect(() =>
+      parseUpdateWeddingInput({
+        ...base,
+        invitation_design_id: 'not-a-design',
+      }),
+    ).toThrow(/invitation design/i)
   })
 })

@@ -15,9 +15,9 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 1. **Registry** — **decided Oct 10. Build the bank-transfer flow first.** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry).  
    Guests contribute by bank transfer toward a gift, or donate straight to the couple’s account. We do not take the payment. Amazon is the second way to pay for a gift, and it comes after this. Do not build an in-app card checkout.
 
-2. **E-invitation: boilerplate designs that follow the wedding theme** — **preview in admin (Sep 27). Email image still open.**  
-   Four layouts on Wedding settings, under the colour theme: Classic, Monogram, Frame, Editorial. They use the theme selected above, with a Light / Dark toggle. Names, date, and venue come from the form.  
-   The pick is for review only. It is not saved, and the guest email is still text without the card. Next: save the choice, then render that card to an image in the invite email.
+2. **E-invitation: boilerplate designs that follow the wedding theme** — **persisted + email image (Nov 3).**  
+   Catalog designs on Wedding settings, under the colour theme, with a Light / Dark toggle. Names, date, and venue come from the form.  
+   Design + mode save with wedding settings. Saving also captures the preview PNG into storage. Guest invite emails embed that card inline when `invitation_card_path` is set. Apply migration `20261103220000_invitation_design.sql`, then **Save settings** once so the card image is generated.
 
 3. **Nocturne dark hero overlay is too heavy** — **in code (Sep 27), needs a look in the browser.**  
    Only **Nocturne + dark mode**. Other themes stay as they are.  
@@ -36,10 +36,8 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 
 ### Next, after the three above are checked
 
-6. **E-invitation designs, then the email image**  
-   The invite email is text only. It needs the card image.  
-   Four boilerplate designs, like the theme picker, each in light and dark, using the selected theme’s colours. Real physical-invitation layouts, not a one-off couple-specific file. Preview in admin as the design is chosen. Email embeds the generated image.  
-   Designs still to pick (you could not find a file). Do this **after** items 3–5, **before** Amazon.
+6. **E-invitation designs, then the email image** — **done in item 2 (Nov 3).**  
+   Design persists; card PNG is generated on settings save and embedded in guest invite emails.
 
 7. **Amazon on a gift** — **after the bank-transfer registry, not before.**  
    A gift can then be paid on Amazon or by the bank transfer in the Oct 10 spec. Amazon owns that payment and shipping. Group gifting (contribute any amount, or buy the whole item) is an Amazon.com wedding registry, not Amazon.es. A test list was started on a personal Amazon.com account. Still to verify as a guest: button labels, contribute vs buy, and that a $1 contribution does not ship. A full purchase needs a real US shipping address on the registry first. The odd names on that test list are fine.

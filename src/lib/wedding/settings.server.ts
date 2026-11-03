@@ -12,6 +12,7 @@ import {
 import type { PublicWeddingSettings } from '@/lib/wedding/public-settings'
 import { isPublicSlugAvailable } from '@/lib/wedding/slug.server'
 import type { UpdateWeddingInput } from '@/lib/wedding/validation'
+import { createInvitationCardSignedUpload } from '@/lib/page-blocks/storage.server'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 export async function getPublicWeddingSettingsHandler(
@@ -59,6 +60,20 @@ export async function checkPublicSlugAvailableHandler(slug: string): Promise<{
     excludeWeddingId: session.wedding.id,
   })
   return { available, slug }
+}
+
+export async function createInvitationCardUploadHandler(input: {
+  name: string
+  type: string
+  byteSize: number
+}) {
+  const session = await requireWeddingSession()
+  return createInvitationCardSignedUpload({
+    weddingId: session.wedding.id,
+    name: input.name,
+    type: input.type,
+    byteSize: input.byteSize,
+  })
 }
 
 export async function updateWeddingHandler(
@@ -109,6 +124,9 @@ export async function updateWeddingHandler(
       dress_code: data.dress_code,
       active_public_theme: data.active_public_theme,
       public_slug: publicSlug,
+      invitation_design_id: data.invitation_design_id,
+      invitation_design_mode: data.invitation_design_mode,
+      invitation_card_path: data.invitation_card_path,
     })
     .eq('id', session.wedding.id)
     .select('*')

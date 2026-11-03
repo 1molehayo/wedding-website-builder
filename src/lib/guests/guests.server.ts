@@ -323,6 +323,7 @@ async function sendInviteForGuest(
     date_published_at?: string | null
     public_slug: string
     active_public_theme: PublicThemeId
+    invitation_card_path?: string | null
   },
   guest: Guest,
   options?: { replyTo?: string | null },
@@ -342,6 +343,25 @@ async function sendInviteForGuest(
   const replyTo = options?.replyTo?.trim() || undefined
   const publicDate = resolvePublicWeddingDate(wedding)
 
+  let invitationCard: {
+    bytes: Buffer
+    contentType: string
+    filename: string
+  } | null = null
+  if (wedding.invitation_card_path) {
+    const { downloadPhotoObject } = await import(
+      '@/lib/page-blocks/storage.server'
+    )
+    const downloaded = await downloadPhotoObject(wedding.invitation_card_path)
+    if (downloaded) {
+      invitationCard = {
+        bytes: downloaded.bytes,
+        contentType: downloaded.contentType,
+        filename: 'invitation-card.png',
+      }
+    }
+  }
+
   await sendGuestRsvpInviteEmail({
     to: email,
     guestName: guest.first_name,
@@ -352,6 +372,7 @@ async function sendInviteForGuest(
     photosUrl,
     theme: resolveEmailThemeId(wedding.active_public_theme),
     replyTo,
+    invitationCard,
   })
 
   const admin = createAdminSupabaseClient()

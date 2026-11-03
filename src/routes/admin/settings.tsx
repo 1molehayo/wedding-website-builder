@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AddressSearchField } from '@/components/address-search-field'
 import { PageActionBar } from '@/components/admin/page-action-bar'
 import { InvitationDesignPicker } from '@/components/admin/invitation-design-picker'
@@ -11,11 +11,16 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { clearClientAdminSession, readAdminSession } from '@/lib/auth/session'
+import { captureInvitationCardPng } from '@/lib/invitation/capture-card'
+import { isInvitationDesignId } from '@/lib/invitation/designs'
+import type { InvitationDesignId } from '@/lib/invitation/designs'
+import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import type { PublicThemeId } from '@/lib/site-settings'
 import type { Wedding, WeddingStatus } from '@/lib/supabase/types'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   checkPublicSlugAvailable,
+  createInvitationCardUpload,
   publishWeddingDate,
   unpublishWeddingDate,
   updateWedding,
@@ -29,6 +34,7 @@ import {
   WEDDING_STATUS_LABELS,
   WEDDING_STATUSES,
 } from '@/lib/wedding/validation'
+import type { InvitationDesignMode } from '@/lib/wedding/validation'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/settings')({
@@ -50,6 +56,8 @@ type FormState = {
   dress_code: string
   active_public_theme: PublicThemeId
   public_slug: string
+  invitation_design_id: InvitationDesignId
+  invitation_design_mode: InvitationDesignMode
 }
 
 function weddingToForm(wedding: Wedding): FormState {
@@ -63,6 +71,11 @@ function weddingToForm(wedding: Wedding): FormState {
     dress_code: wedding.dress_code ?? '',
     active_public_theme: wedding.active_public_theme,
     public_slug: wedding.public_slug,
+    invitation_design_id: isInvitationDesignId(wedding.invitation_design_id)
+      ? wedding.invitation_design_id
+      : 'wreath',
+    invitation_design_mode:
+      wedding.invitation_design_mode === 'dark' ? 'dark' : 'light',
   }
 }
 
@@ -103,6 +116,7 @@ function AdminWeddingSettingsPage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [isUnpublishing, setIsUnpublishing] = useState(false)
   const [updatedAt, setUpdatedAt] = useState(wedding?.updated_at ?? null)
+  const invitationCaptureRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!wedding) return
@@ -238,6 +252,29 @@ function AdminWeddingSettingsPage() {
     setIsSubmitting(true)
 
     try {
+      let invitationCardPath: string | null =
+        wedding.invitation_card_path ?? null
+      const captureNode = invitationCaptureRef.current
+      if (captureNode) {
+        try {
+          const file = await captureInvitationCardPng(captureNode)
+          const signed = await createInvitationCardUpload({
+            data: {
+              name: file.name,
+              type: file.type,
+              byteSize: file.size,
+            },
+          })
+          await uploadFileToSignedUrl(signed.signedUrl, file)
+          invitationCardPath = signed.path
+        } catch (captureError) {
+          console.error('[invitation card]', captureError)
+          toast.message(
+            'Settings will save, but the invitation card image could not be rendered for email. Try saving again.',
+          )
+        }
+      }
+
       const updated = await updateWedding({
         data: {
           groom_name: form.groom_name,
@@ -249,11 +286,18 @@ function AdminWeddingSettingsPage() {
           dress_code: form.dress_code || null,
           active_public_theme: form.active_public_theme,
           public_slug: publicSlug,
+          invitation_design_id: form.invitation_design_id,
+          invitation_design_mode: form.invitation_design_mode,
+          invitation_card_path: invitationCardPath,
         },
       })
       setForm(weddingToForm(updated))
       setUpdatedAt(updated.updated_at)
-      toast.success('Wedding settings saved.')
+      toast.success(
+        updated.invitation_card_path
+          ? 'Wedding settings saved. Invitation card ready for guest emails.'
+          : 'Wedding settings saved.',
+      )
       clearClientAdminSession()
       await readAdminSession()
       await router.invalidate()
@@ -478,6 +522,13 @@ function AdminWeddingSettingsPage() {
             weddingDate={form.wedding_date || null}
             venueName={form.venue_name}
             venueLocation={form.venue_location}
+            design={form.invitation_design_id}
+            mode={form.invitation_design_mode}
+            onDesignChange={(design) =>
+              setField('invitation_design_id', design)
+            }
+            onModeChange={(mode) => setField('invitation_design_mode', mode)}
+            captureRef={invitationCaptureRef}
           />
         </div>
 
