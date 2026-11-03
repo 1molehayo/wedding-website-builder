@@ -10,6 +10,7 @@ import {
   PencilSimpleIcon,
   PlusIcon,
   QuestionIcon,
+  TrashIcon,
   WhatsappLogoIcon,
 } from '@phosphor-icons/react'
 import {
@@ -213,7 +214,9 @@ function AdminGuestsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMode, setDrawerMode] = useState<GuestDrawerMode>('create')
   const [isCreating, setIsCreating] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [guestPendingDelete, setGuestPendingDelete] = useState<Guest | null>(
+    null,
+  )
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUnlocking, setIsUnlocking] = useState(false)
@@ -431,6 +434,14 @@ function AdminGuestsPage() {
     setSelectedId(guest.id)
     setAdminLabelDraft(guest.admin_label ?? '')
     setDrawerOpen(true)
+  }
+
+  const requestDeleteGuest = (guest: Guest) => {
+    setGuestPendingDelete(guest)
+    setDrawerOpen(false)
+    setSelectedId(null)
+    setIsCreating(false)
+    setDrawerMode('create')
   }
 
   const openView = (guest: Guest) => {
@@ -692,6 +703,13 @@ function AdminGuestsPage() {
               icon: <LinkSimpleIcon />,
               onSelect: () => void copyRsvpLink(guest),
             },
+            {
+              id: 'remove',
+              label: 'Remove',
+              tone: 'destructive',
+              icon: <TrashIcon />,
+              onSelect: () => requestDeleteGuest(guest),
+            },
           ]
           return (
             <div className="flex justify-end">
@@ -734,17 +752,14 @@ function AdminGuestsPage() {
   })
 
   const onDelete = async () => {
-    if (!selectedGuest) return
+    const guest = guestPendingDelete
+    if (!guest) return
     setIsDeleting(true)
     try {
-      await deleteGuest({ data: { guestId: selectedGuest.id } })
+      await deleteGuest({ data: { guestId: guest.id } })
       toast.success('Guest removed.')
-      setDeleteOpen(false)
-      setDrawerOpen(false)
-      setSelectedId(null)
-      setGuests((current) =>
-        current.filter((item) => item.id !== selectedGuest.id),
-      )
+      setGuestPendingDelete(null)
+      setGuests((current) => current.filter((item) => item.id !== guest.id))
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to remove guest.',
@@ -951,7 +966,7 @@ function AdminGuestsPage() {
                 type="button"
                 size="sm"
                 variant="destructive"
-                onClick={() => setDeleteOpen(true)}
+                onClick={() => requestDeleteGuest(selectedGuest)}
               >
                 Remove
               </Button>
@@ -1479,7 +1494,7 @@ function AdminGuestsPage() {
                         type="button"
                         size="sm"
                         variant="destructive"
-                        onClick={() => setDeleteOpen(true)}
+                        onClick={() => requestDeleteGuest(selectedGuest)}
                       >
                         Remove
                       </Button>
@@ -1498,13 +1513,19 @@ function AdminGuestsPage() {
       </SideDrawer>
 
       <ConfirmDialog
-        open={deleteOpen}
+        open={Boolean(guestPendingDelete) && !drawerOpen}
         title="Remove this guest?"
-        description="They will be removed from the guest list. This cannot be undone."
+        description={
+          guestPendingDelete
+            ? `${guestAdminDisplayName(guestPendingDelete)} will be removed from the guest list. This cannot be undone.`
+            : 'They will be removed from the guest list. This cannot be undone.'
+        }
         confirmLabel="Remove"
         tone="destructive"
         isConfirming={isDeleting}
-        onOpenChange={setDeleteOpen}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setGuestPendingDelete(null)
+        }}
         onConfirm={() => void onDelete()}
       />
 
