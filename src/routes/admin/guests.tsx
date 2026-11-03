@@ -9,6 +9,7 @@ import {
   LockOpenIcon,
   PencilSimpleIcon,
   PlusIcon,
+  QuestionIcon,
   WhatsappLogoIcon,
 } from '@phosphor-icons/react'
 import {
@@ -34,6 +35,7 @@ import { SideDrawer } from '@/components/ui/side-drawer'
 import { TableView } from '@/components/ui/table-view'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
+import { Tooltip } from '@/components/ui/tooltip'
 import { formatStoredPhone } from '@/lib/auth/phone'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
@@ -101,6 +103,20 @@ export const Route = createFileRoute('/admin/guests')({
 const emptyGuestForm: GuestFormValues = emptyGuestFormValues()
 
 type GuestDrawerMode = 'create' | 'edit' | 'view'
+
+function FieldHint({ label, children }: { label: string; children: string }) {
+  return (
+    <Tooltip>
+      <Tooltip.Trigger
+        aria-label={label}
+        className="text-foreground-secondary inline-flex"
+      >
+        <QuestionIcon className="size-3.5" />
+      </Tooltip.Trigger>
+      <Tooltip.Content>{children}</Tooltip.Content>
+    </Tooltip>
+  )
+}
 
 function ReadValue({ label, value }: { label: string; value: string }) {
   return (
@@ -1002,7 +1018,7 @@ function AdminGuestsPage() {
                   }}
                 >
                   <SideDrawer.Content>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
                       <form.Subscribe
                         selector={(state) => ({
                           submitted: state.submissionAttempts > 0,
@@ -1159,7 +1175,13 @@ function AdminGuestsPage() {
                               <form.Field name="inviteChannel">
                                 {(field) => (
                                   <Field>
-                                    <Field.Label>Invite preference</Field.Label>
+                                    <div className="flex items-center gap-1.5">
+                                      <Field.Label>Invite preference</Field.Label>
+                                      <FieldHint label="About invite preference">
+                                        Sends when you add this guest. You can
+                                        invite again from their page.
+                                      </FieldHint>
+                                    </div>
                                     <Field.Control>
                                       <Select
                                         value={field.state.value}
@@ -1181,10 +1203,6 @@ function AdminGuestsPage() {
                                         <option value="none">None</option>
                                       </Select>
                                     </Field.Control>
-                                    <Field.Description>
-                                      Sends when you add this guest. You can
-                                      invite again from their page.
-                                    </Field.Description>
                                   </Field>
                                 )}
                               </form.Field>
@@ -1200,7 +1218,12 @@ function AdminGuestsPage() {
                                   (field.state.meta.isTouched || submitted)
                                 return (
                                   <Field invalid={invalid}>
-                                    <Field.Label>Party / household</Field.Label>
+                                    <div className="flex items-center gap-1.5">
+                                      <Field.Label>Party / household</Field.Label>
+                                      <FieldHint label="About party / household">
+                                        Family or group this guest sits with.
+                                      </FieldHint>
+                                    </div>
                                     <Field.Control>
                                       <Input
                                         value={field.state.value}
@@ -1214,11 +1237,7 @@ function AdminGuestsPage() {
                                     </Field.Control>
                                     {invalid ? (
                                       <Field.Error>{error}</Field.Error>
-                                    ) : (
-                                      <Field.Description>
-                                        Family or group this guest sits with.
-                                      </Field.Description>
-                                    )}
+                                    ) : null}
                                   </Field>
                                 )
                               }}
@@ -1290,7 +1309,13 @@ function AdminGuestsPage() {
                             </form.Field>
 
                             <Field>
-                              <Field.Label>Admin label</Field.Label>
+                              <div className="flex items-center gap-1.5">
+                                <Field.Label>Admin label</Field.Label>
+                                <FieldHint label="About admin label">
+                                  Only needed when two guests share the same
+                                  name. Never shown to guests.
+                                </FieldHint>
+                              </div>
                               <Field.Control>
                                 <Input
                                   value={adminLabelDraft}
@@ -1300,10 +1325,6 @@ function AdminGuestsPage() {
                                   }
                                 />
                               </Field.Control>
-                              <Field.Description>
-                                Only needed when two guests share the same name.
-                                Never shown to guests.
-                              </Field.Description>
                             </Field>
                           </>
                         )}

@@ -82,7 +82,10 @@ function SideDrawerFooter({
   return (
     <div
       className={cn(
+        // Primary actions in drawers use the darkest admin ink so they read
+        // as solid CTAs without changing the rest of the admin accent.
         'border-border mt-auto flex flex-wrap items-center justify-end gap-2 border-t px-5 py-4',
+        '[--color-accent:var(--admin-ink)] [--color-accent-foreground:#ffffff] [--theme-accent:var(--admin-ink)] [--theme-accent-foreground:#ffffff]',
         className,
       )}
     >
