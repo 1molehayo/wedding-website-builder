@@ -15,7 +15,16 @@ const regionNames =
 export type CountryOption = {
   code: CountryCode
   callingCode: string
+  name: string
+  flag: string
   label: string
+}
+
+/** Regional-indicator flag for an ISO country code. */
+export function countryFlagEmoji(code: CountryCode): string {
+  return code
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
 }
 
 let cachedCountries: CountryOption[] | null = null
@@ -27,10 +36,13 @@ export function listPhoneCountries(): CountryOption[] {
     .map((code) => {
       const callingCode = getCountryCallingCode(code)
       const name = regionNames?.of(code) ?? code
+      const flag = countryFlagEmoji(code)
       return {
         code,
         callingCode,
-        label: `${name} (+${callingCode})`,
+        name,
+        flag,
+        label: `${flag} ${name} (+${callingCode})`,
       }
     })
     .sort((a, b) => a.label.localeCompare(b.label))
@@ -53,6 +65,11 @@ export function toE164Phone(
 ): string | null {
   const digits = sanitizeNationalNumber(nationalNumber)
   if (!digits) return null
+
+  const callingCode = getCountryCallingCode(country)
+  if (digits.startsWith(callingCode)) {
+    throw new Error('Enter the number without the country code.')
+  }
 
   const parsed = parsePhoneNumberFromString(digits, country)
   if (!parsed || !parsed.isValid()) {
@@ -90,6 +107,12 @@ export function isValidOptionalPhone(value: string): boolean {
     parsePhoneNumberFromString(trimmed) ??
     parsePhoneNumberFromString(trimmed, defaultPhoneCountry())
   return Boolean(parsed?.isValid())
+}
+
+export function formatStoredPhone(phone: string | null | undefined): string {
+  if (!phone) return ''
+  const parsed = parsePhoneNumberFromString(phone)
+  return parsed?.formatInternational() ?? phone
 }
 
 export function toStoredPhone(value: string): string | null {

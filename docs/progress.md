@@ -12,12 +12,8 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 
 ### Pending tasks
 
-1. **Registry: cash stays; store gifts must be a real retailer registry**  
-   Cash gifts are done: show the account and let guests send money.  
-   Gift listing / purchase is not. A normal Amazon product link does **not** ship to the couple or accept a partial payment in their name.  
-   **Wanted:** guest opens an item from our registry, the store already knows it is for this couple, it ships to the couple’s address, and the guest can pay **part or all** of the price. Anyone can also still send cash.  
-   **Do not build** our own card checkout that then buys on Amazon. The store has to own payment, address, and contributions.  
-   **Approach to confirm:** keep our list as links. Each physical gift points at a **registry item URL** (Amazon Wedding Registry, or Zola / The Knot / MyRegistry if Amazon group gifting is unavailable). Admin setup guide for creating that registry and pasting item links. Verify the US “contribute / group gift” path before locking a store.
+1. **Registry** — **decided Oct 10. Build the bank-transfer flow first.** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry).  
+   Guests contribute by bank transfer toward a gift, or donate straight to the couple’s account. We do not take the payment. Amazon is the second way to pay for a gift, and it comes after this. Do not build an in-app card checkout.
 
 2. **E-invitation: boilerplate designs that follow the wedding theme** — **preview in admin (Sep 27). Email image still open.**  
    Four layouts on Wedding settings, under the colour theme: Classic, Monogram, Frame, Editorial. They use the theme selected above, with a Light / Dark toggle. Names, date, and venue come from the form.  
@@ -45,8 +41,8 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
    Four boilerplate designs, like the theme picker, each in light and dark, using the selected theme’s colours. Real physical-invitation layouts, not a one-off couple-specific file. Preview in admin as the design is chosen. Email embeds the generated image.  
    Designs still to pick (you could not find a file). Do this **after** items 3–5, **before** Amazon.
 
-7. **Amazon wedding registry setup** — **last, step by step, with you.**  
-   Not an in-app checkout. After the invitation work, walk through creating the Amazon registry so guests can pay part or all and Amazon ships to you. Cash gifts stay as they are.
+7. **Amazon on a gift** — **after the bank-transfer registry, not before.**  
+   A gift can then be paid on Amazon or by the bank transfer in the Oct 10 spec. Amazon owns that payment and shipping. Group gifting (contribute any amount, or buy the whole item) is an Amazon.com wedding registry, not Amazon.es. A test list was started on a personal Amazon.com account. Still to verify as a guest: button labels, contribute vs buy, and that a $1 contribution does not ship. A full purchase needs a real US shipping address on the registry first. The odd names on that test list are fine.
 
 ### After touch-ups and the registry feature
 
@@ -70,6 +66,87 @@ Do not start these until the current UI touch-ups and the registry work are fini
 - Wedding settings `status`: what it should do (see Sep 10).
 - New text-content block (title + rich text content; TipTap; H4–H6 only).
 - Image block lightbox (`object-contain`, viewport max height).
+
+---
+
+## Oct 10, 2026 — bank-transfer gift registry
+
+Source of truth for the next registry build. Confirmed in chat. Implement this before Amazon.
+
+Today the registry is gift links, bank accounts, and a soft reserve. Cash is “show the account.” This replaces that guest path with a tracked transfer. Keep the couple’s bank accounts as the details we show. Do not take card payments in the app.
+
+A guest can give in two ways:
+
+- **Toward a gift.** Several people can contribute to the same gift. The same person can contribute to it more than once.
+- **Straight to the bank account**, with no gift chosen. That donation does not change any gift’s remaining amount.
+
+Both use the same transfer, confirmation, thank-you, and admin audit. Amazon is a later second option on a gift only: pay on Amazon, or send money this way.
+
+### Gift
+
+Fields: photo, title, an optional link to the product online, and prices by currency. The link is so guests can see the gift. It is not how they pay.
+
+The form starts with one currency and its price. Both are required. The admin can add more currencies with a repeatable list (a TanStack Form array field). Every added row must have a currency and a price. Saving is blocked until each row has both. There is no live exchange rate. The prices they enter are the rate. A payment in one currency reduces the others by that ratio. A direct donation still has a currency, and it does not change a gift.
+
+Example: the gift is listed at 100 USD and 90 EUR. A guest sends 45 EUR. That is half of the EUR price, so USD left becomes 50 and EUR left becomes 45. A later admin edit of the amount uses the corrected figure in the currency they paid. Past payments keep the reduction already applied. Changing a listed price affects later payments.
+
+The guest pays in one of the currencies on that gift, and we show the bank account for that currency. A direct donation (no gift) still has a currency, and it does not change any gift.
+
+On the public gift, show each original price with a line through it and the amount still left in that currency. Amount left changes only after the guest confirms they sent the money, and only for transfers that are not **Not received**. Use the admin-adjusted amount when the admin has changed it. **Not received** puts that share back. Marking it **Received** again takes it off again.
+
+The gift is still open while any amount left is above zero. When the money covers the price, the gift is complete. If the total runs over, that is fine. The page only needs to show that a gift is still short.
+
+### Transfer status
+
+Label every transfer with one of these:
+
+| Status | When |
+| --- | --- |
+| **Pending** | The guest has started the transfer. It stays pending until the admin settles it. |
+| **Received** | The admin confirms the money arrived. |
+| **Not received** | The admin confirms the money was not sent. Use this name on screen. “Failed” sounds like a system error. |
+
+Pending has two moments. Before the guest confirms they sent the money, it does not reduce the gift, and the reminders below still go out. After they confirm, it is still **Pending**, the gift amount drops, and the admin can audit it. Confirming again must not create a second transfer.
+
+If the guest sent less or more than they entered, only the admin edits the amount on that transfer, in the currency they paid. The guest cannot change it. The admin uses the name, email, and phone on the transfer to confirm with the sender when they need to. They do not mark it **Not received** and ask the guest to send it again. **Not received** is only for money that was not sent.
+
+### Transfer (cart → checkout)
+
+Each time a guest starts a donation, create one transfer with its own reference and ids. A later confirmation must update that same transfer.
+
+Guest enters, before any bank details. Name and email are required. Phone is optional. The form does not submit without a name and an email.
+
+- amount they intend to send
+- currency, one of the currencies on the gift (or, for a direct donation, a currency the couple accepts)
+- name (required)
+- email (required)
+- phone, optional (used for WhatsApp if the admin needs to reach them)
+
+Then show the couple’s bank account for that currency. The guest sends the money themselves.
+
+### Reminders and thank-you
+
+If they have not confirmed, email up to **three** reminders, on different days. Stop when they confirm. Each reminder links to confirm **that** transfer.
+
+Confirming from the email opens the website on a success screen with a thank-you note, and we send a thank-you email. This is required for every confirmed donation, including a direct bank donation that is not tied to a gift.
+
+The success screen plays confetti once, when it opens. Use [`canvas-confetti`](https://github.com/catdad/canvas-confetti): a short canvas burst (a few seconds), then remove the canvas. Do not use a DOM or WebGL particle engine. One burst per visit, not a loop. Skip it when `prefers-reduced-motion` is set. The thank-you note and email still show either way.
+
+### Admin audit
+
+Back office lists the transfers with the status above. For each one the admin can:
+
+- change the amount, in the currency the guest paid, when they sent less or more than they entered. Only the admin can do this. The gift’s amounts left update from that. Reach the sender with the contact details on the transfer when the amount needs confirming. Do not make them start again.
+- mark **Received**
+- mark **Not received**, which puts that share back on the gift
+- mark **Received** again later, if the transfer was only delayed
+- email them, or message them on WhatsApp when a phone number was given, when the status is **Not received**
+
+### Explicitly out of this build
+
+- Amazon pay-on-a-gift (next, after this). A test Amazon.com wedding list was started on a personal account so group gifting can be checked. Do not treat that list as the couple’s.
+- In-app card checkout.
+- Scraping or calling Amazon for registry items.
 
 ---
 
@@ -115,8 +192,7 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
 6. **Image block lightbox**  
    Clicking the image opens a full-screen preview: keep aspect ratio (`object-contain`, not `object-cover`), max height = viewport.
 
-7. **Registry — especially Amazon gift registry**  
-   Registry UI exists (gift links + bank accounts + soft reserve) but **Amazon gift registry was never successfully tested**. Finish/verify that path.
+7. **Registry — especially Amazon gift registry** — **superseded by the Oct 10 bank-transfer spec, then Amazon as a second pay option.** The old “paste a store link only” approach is not the first build.
 
 ### Bugs
 
@@ -221,7 +297,7 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 1. You check Nocturne dark, nav titles, and admin sidebar loading.
 2. Then e-invitation: four theme-coloured designs (light and dark), preview, and put that image in the invite email.
-3. Then Amazon registry setup, step by step.
+3. Then the Oct 10 bank-transfer gift registry. Amazon on a gift comes after that.
 4. Then footer, text block, lightbox, wedding status.
 5. Older smoke-test / UI bugs / announcement bar. Motion still last.
 

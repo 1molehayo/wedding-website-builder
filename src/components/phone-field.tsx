@@ -11,41 +11,45 @@ export function PhoneField({
   onChange,
   invalid,
   error,
+  label = 'Phone number',
+  required = false,
+  hint,
 }: {
   country: CountryCode
   nationalNumber: string
   onChange: (next: { country: CountryCode; nationalNumber: string }) => void
   invalid?: boolean
   error?: string
+  label?: string
+  required?: boolean
+  hint?: string
 }) {
   const countries = useMemo(() => listPhoneCountries(), [])
 
   return (
-    <div className="grid gap-3 sm:grid-cols-[minmax(0,14rem)_1fr]">
-      <Field>
-        <Field.Label>Country</Field.Label>
-        <Field.Control>
-          <Select
-            value={country}
-            onChange={(event) => {
-              onChange({
-                country: event.target.value as CountryCode,
-                nationalNumber,
-              })
-            }}
-          >
-            {countries.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.label}
-              </option>
-            ))}
-          </Select>
-        </Field.Control>
-      </Field>
-      <Field invalid={invalid}>
-        <Field.Label>Phone number</Field.Label>
+    <Field invalid={invalid}>
+      <Field.Label required={required}>{label}</Field.Label>
+      <div className="grid grid-cols-[minmax(9.5rem,12.5rem)_minmax(0,1fr)] gap-2">
+        <Select
+          aria-label="Country"
+          value={country}
+          invalid={invalid}
+          onChange={(event) => {
+            onChange({
+              country: event.target.value as CountryCode,
+              nationalNumber,
+            })
+          }}
+        >
+          {countries.map((item) => (
+            <option key={item.code} value={item.code}>
+              {item.flag} {item.name} (+{item.callingCode})
+            </option>
+          ))}
+        </Select>
         <Field.Control>
           <Input
+            aria-label="Phone number"
             inputMode="numeric"
             autoComplete="tel-national"
             placeholder="Phone number"
@@ -59,14 +63,9 @@ export function PhoneField({
             }}
           />
         </Field.Control>
-        {error ? (
-          <Field.Error>{error}</Field.Error>
-        ) : (
-          <Field.Description>
-            Optional. Digits only; country code comes from the dropdown.
-          </Field.Description>
-        )}
-      </Field>
-    </div>
+      </div>
+      <Field.Error>{error || null}</Field.Error>
+      {!error && hint ? <Field.Description>{hint}</Field.Description> : null}
+    </Field>
   )
 }

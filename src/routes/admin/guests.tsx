@@ -4,9 +4,12 @@ import { Route as AdminRoute } from './route'
 import {
   CopySimpleIcon,
   EnvelopeSimpleIcon,
+  EyeIcon,
   LinkSimpleIcon,
   LockOpenIcon,
+  PencilSimpleIcon,
   PlusIcon,
+  QuestionIcon,
   WhatsappLogoIcon,
 } from '@phosphor-icons/react'
 import {
@@ -19,6 +22,7 @@ import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { OverviewCard } from '@/components/admin/overview-card'
+import { PhoneField } from '@/components/phone-field'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -31,6 +35,8 @@ import { SideDrawer } from '@/components/ui/side-drawer'
 import { TableView } from '@/components/ui/table-view'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
+import { Tooltip } from '@/components/ui/tooltip'
+import { formatStoredPhone } from '@/lib/auth/phone'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import { formatCoupleNames } from '@/lib/constants'
@@ -45,11 +51,12 @@ import {
 } from '@/lib/guests/guests'
 import type { GuestConflictMatch } from '@/lib/guests/guests'
 import {
-  guestFormSchema,
+  emptyGuestFormValues,
+  guestFormSchemaFor,
   guestFullName,
   toGuestFormValues,
 } from '@/lib/guests/schema'
-import type { GuestFormValues } from '@/lib/guests/schema'
+import type { GuestFormValues, InviteChannel } from '@/lib/guests/schema'
 import { whatsappRsvpShareUrl } from '@/lib/guests/whatsapp'
 import { updateGuestRsvp } from '@/lib/rsvp/rsvp'
 import {
@@ -93,14 +100,44 @@ export const Route = createFileRoute('/admin/guests')({
   component: AdminGuestsPage,
 })
 
-const emptyGuestForm: GuestFormValues = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  partyName: '',
-  plusOnes: 0,
-  notes: '',
+const emptyGuestForm: GuestFormValues = emptyGuestFormValues()
+
+type GuestDrawerMode = 'create' | 'edit' | 'view'
+
+function NotesHint() {
+  return (
+    <Tooltip>
+      <Tooltip.Trigger
+        aria-label="About notes"
+        className="text-foreground-secondary inline-flex"
+      >
+        <QuestionIcon className="size-4" />
+      </Tooltip.Trigger>
+      <Tooltip.Content>
+        Private notes for you and other admins. Guests never see these.
+      </Tooltip.Content>
+    </Tooltip>
+  )
+}
+
+function ReadValue({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value: string
+  hint?: ReactNode
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1.5">
+        <p className="text-base font-medium">{label}</p>
+        {hint}
+      </div>
+      <p className="text-foreground-secondary text-sm">{value || '—'}</p>
+    </div>
+  )
 }
 
 const emptyRsvpForm: AdminRsvpFormValues = {
@@ -135,7 +172,9 @@ function useGuestDrawerForms(
     defaultValues: guest ? toGuestFormValues(guest) : emptyGuestForm,
     validators: {
       onSubmit: ({ value }) => {
-        const parsed = guestFormSchema.safeParse(value)
+        const parsed = guestFormSchemaFor(
+          isCreating ? 'create' : 'edit',
+        ).safeParse(value)
         if (parsed.success) return undefined
         return zodFormFieldErrors(parsed.error)
       },
@@ -185,6 +224,7 @@ function AdminGuestsPage() {
     null,
   )
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerMode, setDrawerMode] = useState<GuestDrawerMode>('create')
   const [isCreating, setIsCreating] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -204,6 +244,8 @@ function AdminGuestsPage() {
     string,
     unknown
   > | null>(null)
+  const [pendingInviteChannel, setPendingInviteChannel] =
+    useState<InviteChannel>('none')
 
   const selectedGuest = useMemo(
     () => guests.find((guest) => guest.id === selectedId) ?? null,
@@ -229,8 +271,13 @@ function AdminGuestsPage() {
   const saveGuestRecord = async (
     value: GuestFormValues,
     rsvpValues: AdminRsvpFormValues,
-  ): Promise<{ status: 'saved'; guest: Guest } | { status: 'conflict' }> => {
-    const parsed = guestFormSchema.parse(value)
+  ): Promise<
+    | { status: 'saved'; guest: Guest; inviteChannel: InviteChannel }
+    | { status: 'conflict' }
+  > => {
+    const parsed = guestFormSchemaFor(isCreating ? 'create' : 'edit').parse(
+      value,
+    )
     const payload = {
       first_name: parsed.firstName,
       last_name: parsed.lastName,
@@ -243,12 +290,17 @@ function AdminGuestsPage() {
     }
 
     if (isCreating) {
+      setPendingInviteChannel(parsed.inviteChannel)
       const result = await createGuest({ data: payload })
       if (result.status === 'conflict') {
         openNameConflict(payload, result.matches)
         return { status: 'conflict' }
       }
-      return { status: 'saved', guest: result.guest }
+      return {
+        status: 'saved',
+        guest: result.guest,
+        inviteChannel: parsed.inviteChannel,
+      }
     }
 
     if (!selectedGuest) {
@@ -297,10 +349,17 @@ function AdminGuestsPage() {
       },
     })
 
-    return { status: 'saved', guest: updatedRsvp }
+    return {
+      status: 'saved',
+      guest: updatedRsvp,
+      inviteChannel: parsed.inviteChannel,
+    }
   }
 
-  const applySavedGuest = (guest: Guest) => {
+  const applySavedGuest = (
+    guest: Guest,
+    nextMode: Exclude<GuestDrawerMode, 'create'> = 'edit',
+  ) => {
     setGuests((current) => {
       const index = current.findIndex((item) => item.id === guest.id)
       if (index === -1) return [...current, guest]
@@ -308,6 +367,7 @@ function AdminGuestsPage() {
     })
     setSelectedId(guest.id)
     setIsCreating(false)
+    setDrawerMode(nextMode)
     setAdminLabelDraft(guest.admin_label ?? '')
     setDrawerOpen(true)
   }
@@ -342,8 +402,9 @@ function AdminGuestsPage() {
           toast.error('Still conflicting. Check labels and try again.')
           return
         }
-        applySavedGuest(result.guest)
+        applySavedGuest(result.guest, 'view')
         toast.success('Guest added with distinguishing labels.')
+        await sendPreferredInvite(result.guest, pendingInviteChannel)
       } else {
         const guestId = String(pendingPayload.guestId ?? '')
         const result = await updateGuest({
@@ -371,6 +432,7 @@ function AdminGuestsPage() {
 
   const openCreate = () => {
     setIsCreating(true)
+    setDrawerMode('create')
     setSelectedId(null)
     setAdminLabelDraft('')
     setDrawerOpen(true)
@@ -378,6 +440,15 @@ function AdminGuestsPage() {
 
   const openEdit = (guest: Guest) => {
     setIsCreating(false)
+    setDrawerMode('edit')
+    setSelectedId(guest.id)
+    setAdminLabelDraft(guest.admin_label ?? '')
+    setDrawerOpen(true)
+  }
+
+  const openView = (guest: Guest) => {
+    setIsCreating(false)
+    setDrawerMode('view')
     setSelectedId(guest.id)
     setAdminLabelDraft(guest.admin_label ?? '')
     setDrawerOpen(true)
@@ -404,7 +475,21 @@ function AdminGuestsPage() {
       toast.error('Add a valid phone number before sharing on WhatsApp.')
       return
     }
-    window.open(url, '_blank', 'noopener,noreferrer')
+    const opened = window.open(url, '_blank', 'noopener,noreferrer')
+    if (!opened) {
+      toast.message(
+        'WhatsApp did not open. Use the WhatsApp button on this guest.',
+      )
+    }
+  }
+
+  const sendPreferredInvite = async (guest: Guest, channel: InviteChannel) => {
+    if (channel === 'email' || channel === 'both') {
+      await emailGuestInvite(guest)
+    }
+    if (channel === 'whatsapp' || channel === 'both') {
+      shareWhatsApp(guest)
+    }
   }
 
   const unlockGuestForUpdate = async (guest: Guest) => {
@@ -523,30 +608,6 @@ function AdminGuestsPage() {
     void emailGuestInvite(guest)
   }
 
-  const emailInviteFromDrawer = async (
-    values: GuestFormValues,
-    submit: () => Promise<void>,
-    rsvpValues: AdminRsvpFormValues,
-  ) => {
-    const parsed = guestFormSchema.safeParse(values)
-    if (!parsed.success) {
-      await submit()
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      const result = await saveGuestRecord(values, rsvpValues)
-      if (result.status === 'conflict') return
-      applySavedGuest(result.guest)
-      requestEmailGuestInvite(result.guest)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Unable to save guest.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   const columns = useMemo<ColumnDef<Guest>[]>(
     () => [
       {
@@ -617,6 +678,13 @@ function AdminGuestsPage() {
             {
               id: 'view',
               label: 'View',
+              icon: <EyeIcon />,
+              onSelect: () => openView(guest),
+            },
+            {
+              id: 'edit',
+              label: 'Edit',
+              icon: <PencilSimpleIcon />,
               onSelect: () => openEdit(guest),
             },
             {
@@ -758,7 +826,7 @@ function AdminGuestsPage() {
         <TableView
           table={table}
           emptyMessage="No guests yet. Add your first guest to get started."
-          onRowClick={openEdit}
+          onRowClick={openView}
         />
       </div>
 
@@ -769,21 +837,168 @@ function AdminGuestsPage() {
           if (!open) {
             setSelectedId(null)
             setIsCreating(false)
+            setDrawerMode('create')
           }
         }}
       >
-        {drawerOpen ? (
+        {drawerOpen && drawerMode === 'view' && selectedGuest ? (
+          <>
+            <SideDrawer.Header
+              title={guestAdminDisplayName(selectedGuest)}
+              drawerDescription="Guest details"
+            />
+            <SideDrawer.Content>
+              <div className="flex flex-col gap-4">
+                <div className="grid items-start gap-4 sm:grid-cols-2">
+                  <ReadValue label="First name" value={selectedGuest.first_name} />
+                  <ReadValue label="Last name" value={selectedGuest.last_name} />
+                </div>
+                <ReadValue label="Email" value={selectedGuest.email ?? ''} />
+                <ReadValue
+                  label="Phone"
+                  value={formatStoredPhone(selectedGuest.phone)}
+                />
+                <ReadValue
+                  label="Party / household"
+                  value={selectedGuest.party_name ?? ''}
+                />
+                <ReadValue
+                  label="Plus-ones"
+                  value={String(selectedGuest.plus_ones)}
+                />
+                <ReadValue
+                  label="Notes"
+                  value={selectedGuest.notes ?? ''}
+                  hint={<NotesHint />}
+                />
+                <ReadValue
+                  label="Admin label"
+                  value={selectedGuest.admin_label ?? ''}
+                />
+
+                <div className="border-border space-y-3 border-t pt-4">
+                  <div>
+                    <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                      Invite
+                    </p>
+                    <p className="text-foreground-secondary mt-1 text-xs">
+                      {selectedGuest.invite_emailed_at
+                        ? `Last emailed ${new Date(selectedGuest.invite_emailed_at).toLocaleString()}`
+                        : 'Invite not emailed yet'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      isLoading={isEmailing}
+                      onClick={() => requestEmailGuestInvite(selectedGuest)}
+                    >
+                      <EnvelopeSimpleIcon />
+                      {selectedGuest.invite_emailed_at
+                        ? 'Email again'
+                        : 'Email invite'}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => shareWhatsApp(selectedGuest)}
+                    >
+                      <WhatsappLogoIcon />
+                      WhatsApp
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void copyRsvpLink(selectedGuest)}
+                    >
+                      <CopySimpleIcon />
+                      Copy link
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-border space-y-3 border-t pt-4">
+                  <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+                    RSVP
+                  </p>
+                  <ReadValue
+                    label="Status"
+                    value={RSVP_STATUS_LABELS[selectedGuest.rsvp_status]}
+                  />
+                  <ReadValue
+                    label="Attending"
+                    value={String(selectedGuest.attending_count ?? 0)}
+                  />
+                  <ReadValue
+                    label="Dietary notes"
+                    value={selectedGuest.dietary_notes ?? ''}
+                  />
+                  <ReadValue
+                    label="Guest message"
+                    value={selectedGuest.rsvp_message ?? ''}
+                  />
+                  {!selectedGuest.allow_rsvp_update &&
+                  selectedGuest.rsvp_status !== 'pending' ? (
+                    <div className="border-border bg-background flex flex-wrap items-center justify-between gap-3 rounded-xl border px-3 py-3">
+                      <p className="text-foreground-secondary text-sm">
+                        This guest already responded. Their RSVP page is locked
+                        until you unlock it.
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        isLoading={isUnlocking}
+                        onClick={() => void unlockGuestForUpdate(selectedGuest)}
+                      >
+                        <LockOpenIcon />
+                        Unlock for update
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </SideDrawer.Content>
+            <SideDrawer.Footer className="justify-between">
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Remove
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => openEdit(selectedGuest)}
+              >
+                Edit
+              </Button>
+            </SideDrawer.Footer>
+          </>
+        ) : drawerOpen ? (
           <GuestDrawerForms
             key={isCreating ? 'new' : (selectedId ?? 'edit')}
             guest={isCreating ? null : selectedGuest}
             isCreating={isCreating}
             onSubmit={async (value, rsvpValues) => {
+              const creating = isCreating
               setIsSaving(true)
               try {
                 const result = await saveGuestRecord(value, rsvpValues)
                 if (result.status === 'conflict') return
-                applySavedGuest(result.guest)
-                toast.success(isCreating ? 'Guest added.' : 'Guest updated.')
+                applySavedGuest(result.guest, creating ? 'view' : 'edit')
+                if (creating) {
+                  toast.success('Guest added.')
+                  await sendPreferredInvite(result.guest, result.inviteChannel)
+                } else {
+                  toast.success('Guest updated.')
+                }
               } catch (err) {
                 toast.error(
                   err instanceof Error ? err.message : 'Unable to save guest.',
@@ -816,11 +1031,14 @@ function AdminGuestsPage() {
                   }}
                 >
                   <SideDrawer.Content>
-                    <div className="space-y-4">
+                    <div className="flex flex-col gap-4">
                       <form.Subscribe
-                        selector={(state) => state.submissionAttempts > 0}
+                        selector={(state) => ({
+                          submitted: state.submissionAttempts > 0,
+                          channel: state.values.inviteChannel,
+                        })}
                       >
-                        {(submitted) => (
+                        {({ submitted, channel }) => (
                           <>
                             <div className="grid items-start gap-4 sm:grid-cols-2">
                               <form.Field name="firstName">
@@ -899,7 +1117,15 @@ function AdminGuestsPage() {
                                   (field.state.meta.isTouched || submitted)
                                 return (
                                   <Field invalid={invalid}>
-                                    <Field.Label required>Email</Field.Label>
+                                    <Field.Label
+                                      required={
+                                        isCreating &&
+                                        (channel === 'email' ||
+                                          channel === 'both')
+                                      }
+                                    >
+                                      Email
+                                    </Field.Label>
                                     <Field.Control>
                                       <Input
                                         type="email"
@@ -919,7 +1145,82 @@ function AdminGuestsPage() {
                               }}
                             </form.Field>
 
-                            <form.Field name="phone">
+                            <form.Field name="phoneCountry">
+                              {(countryField) => (
+                                <form.Field name="phoneNational">
+                                  {(phoneField) => {
+                                    const error = fieldErrorMessage(
+                                      phoneField.state.meta.errors,
+                                    )
+                                    const invalid =
+                                      !!error &&
+                                      (phoneField.state.meta.isTouched ||
+                                        submitted)
+                                    return (
+                                      <PhoneField
+                                        label="Phone"
+                                        required={
+                                          isCreating &&
+                                          (channel === 'whatsapp' ||
+                                            channel === 'both')
+                                        }
+                                        country={countryField.state.value}
+                                        nationalNumber={phoneField.state.value}
+                                        invalid={invalid}
+                                        error={invalid ? error : undefined}
+                                        onChange={({
+                                          country,
+                                          nationalNumber,
+                                        }) => {
+                                          countryField.handleChange(country)
+                                          phoneField.handleChange(
+                                            nationalNumber,
+                                          )
+                                        }}
+                                      />
+                                    )
+                                  }}
+                                </form.Field>
+                              )}
+                            </form.Field>
+
+                            {isCreating ? (
+                              <form.Field name="inviteChannel">
+                                {(field) => (
+                                  <Field>
+                                    <Field.Label>Invite preference</Field.Label>
+                                    <Field.Control>
+                                      <Select
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) =>
+                                          field.handleChange(
+                                            event.target
+                                              .value as InviteChannel,
+                                          )
+                                        }
+                                      >
+                                        <option value="email">Email</option>
+                                        <option value="whatsapp">
+                                          WhatsApp
+                                        </option>
+                                        <option value="both">
+                                          Email and WhatsApp
+                                        </option>
+                                        <option value="none">None</option>
+                                      </Select>
+                                    </Field.Control>
+                                    <Field.Description>
+                                      Sends when you add this guest. You can
+                                      invite again from their page.
+                                    </Field.Description>
+                                    <Field.Error>{null}</Field.Error>
+                                  </Field>
+                                )}
+                              </form.Field>
+                            ) : null}
+
+                            <form.Field name="partyName">
                               {(field) => {
                                 const error = fieldErrorMessage(
                                   field.state.meta.errors,
@@ -929,7 +1230,7 @@ function AdminGuestsPage() {
                                   (field.state.meta.isTouched || submitted)
                                 return (
                                   <Field invalid={invalid}>
-                                    <Field.Label>Phone</Field.Label>
+                                    <Field.Label>Party / household</Field.Label>
                                     <Field.Control>
                                       <Input
                                         value={field.state.value}
@@ -938,6 +1239,7 @@ function AdminGuestsPage() {
                                         onChange={(event) =>
                                           field.handleChange(event.target.value)
                                         }
+                                        placeholder="Optional group label"
                                       />
                                     </Field.Control>
                                     <Field.Error>
@@ -946,24 +1248,6 @@ function AdminGuestsPage() {
                                   </Field>
                                 )
                               }}
-                            </form.Field>
-
-                            <form.Field name="partyName">
-                              {(field) => (
-                                <Field>
-                                  <Field.Label>Party / household</Field.Label>
-                                  <Field.Control>
-                                    <Input
-                                      value={field.state.value}
-                                      onBlur={field.handleBlur}
-                                      onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                      }
-                                      placeholder="Optional group label"
-                                    />
-                                  </Field.Control>
-                                </Field>
-                              )}
                             </form.Field>
 
                             <form.Field name="plusOnes">
@@ -992,30 +1276,45 @@ function AdminGuestsPage() {
                                         }
                                       />
                                     </Field.Control>
-                                    {invalid ? (
-                                      <Field.Error>{error}</Field.Error>
-                                    ) : null}
+                                    <Field.Error>
+                                      {invalid ? error : null}
+                                    </Field.Error>
                                   </Field>
                                 )
                               }}
                             </form.Field>
 
                             <form.Field name="notes">
-                              {(field) => (
-                                <Field>
-                                  <Field.Label>Notes</Field.Label>
-                                  <Field.Control>
-                                    <Textarea
-                                      rows={4}
-                                      value={field.state.value}
-                                      onBlur={field.handleBlur}
-                                      onChange={(event) =>
-                                        field.handleChange(event.target.value)
-                                      }
-                                    />
-                                  </Field.Control>
-                                </Field>
-                              )}
+                              {(field) => {
+                                const error = fieldErrorMessage(
+                                  field.state.meta.errors,
+                                )
+                                const invalid =
+                                  !!error &&
+                                  (field.state.meta.isTouched || submitted)
+                                return (
+                                  <Field invalid={invalid}>
+                                    <div className="flex items-center gap-1.5">
+                                      <Field.Label>Notes</Field.Label>
+                                      <NotesHint />
+                                    </div>
+                                    <Field.Control>
+                                      <Textarea
+                                        rows={4}
+                                        invalid={invalid}
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) =>
+                                          field.handleChange(event.target.value)
+                                        }
+                                      />
+                                    </Field.Control>
+                                    <Field.Error>
+                                      {invalid ? error : null}
+                                    </Field.Error>
+                                  </Field>
+                                )
+                              }}
                             </form.Field>
 
                             <Field>
@@ -1029,7 +1328,8 @@ function AdminGuestsPage() {
                                   }
                                 />
                               </Field.Control>
-                              <p className="text-foreground-secondary mt-1 text-xs">
+                              <Field.Error>{null}</Field.Error>
+                              <p className="text-foreground-secondary text-xs">
                                 Helps tell apart guests with the same name.
                                 Never shown to guests.
                               </p>
@@ -1037,84 +1337,6 @@ function AdminGuestsPage() {
                           </>
                         )}
                       </form.Subscribe>
-
-                      <div className="border-border space-y-4 border-t pt-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
-                              Invite
-                            </p>
-                            {selectedGuest?.invite_emailed_at ? (
-                              <p className="text-foreground-secondary mt-1 text-xs">
-                                Last emailed{' '}
-                                {new Date(
-                                  selectedGuest.invite_emailed_at,
-                                ).toLocaleString()}
-                              </p>
-                            ) : (
-                              <p className="text-foreground-secondary mt-1 text-xs">
-                                Invite not emailed yet
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              isLoading={isEmailing || isSaving}
-                              onClick={() =>
-                                void emailInviteFromDrawer(
-                                  form.state.values,
-                                  async () => {
-                                    await form.handleSubmit()
-                                  },
-                                  rsvpForm.state.values,
-                                )
-                              }
-                            >
-                              <EnvelopeSimpleIcon />
-                              {selectedGuest?.invite_emailed_at
-                                ? 'Email again'
-                                : 'Email invite'}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                if (!selectedGuest) {
-                                  toast.error(
-                                    'Save the guest before sharing on WhatsApp.',
-                                  )
-                                  return
-                                }
-                                shareWhatsApp(selectedGuest)
-                              }}
-                            >
-                              <WhatsappLogoIcon />
-                              WhatsApp
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                if (!selectedGuest) {
-                                  toast.error(
-                                    'Save the guest before copying the RSVP link.',
-                                  )
-                                  return
-                                }
-                                void copyRsvpLink(selectedGuest)
-                              }}
-                            >
-                              <CopySimpleIcon />
-                              Copy link
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
 
                       {!isCreating && selectedGuest ? (
                         <div className="border-border space-y-4 border-t pt-4">

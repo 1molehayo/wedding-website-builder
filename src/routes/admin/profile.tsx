@@ -238,6 +238,7 @@ function AdminProfilePage() {
                           nationalNumber={phoneField.state.value}
                           invalid={invalid}
                           error={invalid ? error : undefined}
+                          hint="Optional. Digits only; country code comes from the dropdown."
                           onChange={({ country, nationalNumber }) => {
                             countryField.handleChange(country)
                             phoneField.handleChange(nationalNumber)

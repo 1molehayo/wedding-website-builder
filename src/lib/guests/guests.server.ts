@@ -136,6 +136,10 @@ export async function createGuestHandler(
   const existing = await listWeddingGuests(session.wedding.id)
   const matches = findConflicts(existing, input)
   const { admin_label: inputAdminLabel, ...guestFields } = input
+  const fields = {
+    ...guestFields,
+    email: guestFields.email.trim() || null,
+  }
 
   if (matches.length > 0 && !resolution) {
     return { status: 'conflict', matches }
@@ -160,7 +164,7 @@ export async function createGuestHandler(
       .from('guests')
       .insert({
         wedding_id: session.wedding.id,
-        ...guestFields,
+        ...fields,
         admin_label: newLabel,
       })
       .select(GUEST_SELECT)
@@ -173,7 +177,7 @@ export async function createGuestHandler(
     .from('guests')
     .insert({
       wedding_id: session.wedding.id,
-      ...guestFields,
+      ...fields,
       admin_label: inputAdminLabel?.trim() || null,
     })
     .select(GUEST_SELECT)
@@ -215,7 +219,7 @@ export async function updateGuestHandler(
     .update({
       first_name: input.first_name,
       last_name: input.last_name,
-      email: input.email,
+      email: input.email.trim() || null,
       phone: input.phone,
       party_name: input.party_name,
       plus_ones: input.plus_ones,
