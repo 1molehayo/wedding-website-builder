@@ -27,8 +27,8 @@ export function pageContentSchemaUserMessage(input: {
   apiHost: string
 }): string {
   const hint = input.isLocal
-    ? `This app is using local Supabase (${input.apiHost}), not the cloud project. pnpm db:push only updates cloud. Apply local migrations with \`npx supabase migration up\`, then reload.`
-    : `The API at ${input.apiHost} cannot see the page content draft columns yet. If you already ran pnpm db:push, reload the API schema in the Supabase dashboard, then reload this page.`
+    ? `This app is using local Supabase (${input.apiHost}), not the cloud project. Apply local migrations with \`pnpm db:migrate\`, then reload.`
+    : `The API at ${input.apiHost} cannot see the page content draft columns yet. Apply cloud migrations with \`pnpm db:push\` (uses --remote), reload the API schema in the Supabase dashboard if needed, then reload this page.`
 
   const original = input.original.trim()
   return original ? `${hint} ${original}` : hint

@@ -110,7 +110,7 @@ const pushArgs = [
   'push',
   '--workdir',
   workdir,
-  '--linked',
+  '--remote',
   ...extraArgs,
 ]
 
