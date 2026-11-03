@@ -7,6 +7,7 @@ const isValidSlottableElement = (
   children?: React.ReactNode
   className?: string
   style?: React.CSSProperties
+  ref?: React.Ref<unknown>
 }> => {
   return (
     isValidElement(value) &&
@@ -14,6 +15,21 @@ const isValidSlottableElement = (
     typeof value.props === 'object' &&
     'key' in value
   )
+}
+
+function composeRefs<T>(
+  ...refs: Array<React.Ref<T> | undefined>
+): React.RefCallback<T> {
+  return (node) => {
+    for (const ref of refs) {
+      if (!ref) continue
+      if (typeof ref === 'function') {
+        ref(node)
+      } else {
+        ref.current = node
+      }
+    }
+  }
 }
 
 export const Slot = ({
@@ -35,7 +51,8 @@ export const Slot = ({
       ...props,
       ...element.props,
       ...typeDefault,
-      ref,
+      // Keep both the Slot consumer ref and the child's ref (e.g. Floating UI).
+      ref: composeRefs(element.props.ref, ref),
       style: {
         ...props.style,
         ...element.props.style,

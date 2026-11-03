@@ -58,7 +58,10 @@ import {
   toGuestFormValues,
 } from '@/lib/guests/schema'
 import type { GuestFormValues, InviteChannel } from '@/lib/guests/schema'
-import { whatsappRsvpShareUrl } from '@/lib/guests/whatsapp'
+import {
+  invitationCardShareUrl,
+  whatsappRsvpShareUrl,
+} from '@/lib/guests/whatsapp'
 import { updateGuestRsvp } from '@/lib/rsvp/rsvp'
 import {
   RSVP_STATUS_LABELS,
@@ -463,12 +466,29 @@ function AdminGuestsPage() {
     }
   }
 
-  const shareWhatsApp = (guest: Guest) => {
+  const shareWhatsApp = async (guest: Guest) => {
+    if (!(guest.phone ?? '').replace(/\D/g, '').length) {
+      toast.error('Add a valid phone number before sharing on WhatsApp.')
+      return
+    }
+
+    let invitationImageUrl: string | null = null
+    try {
+      const path = await prepareInvitationCard()
+      invitationImageUrl = invitationCardShareUrl(window.location.origin, path)
+    } catch (err) {
+      console.error('[whatsapp invitation card]', err)
+      toast.message(
+        'Opening WhatsApp without the invitation image. You can try again in a moment.',
+      )
+    }
+
     const url = whatsappRsvpShareUrl({
       phone: guest.phone ?? '',
       guestFirstName: guest.first_name,
       coupleLabel,
       rsvpUrl: `${window.location.origin}${guestRsvpPath(guest.rsvp_token)}`,
+      invitationImageUrl,
     })
     if (!url) {
       toast.error('Add a valid phone number before sharing on WhatsApp.')
@@ -487,7 +507,7 @@ function AdminGuestsPage() {
       await emailGuestInvite(guest)
     }
     if (channel === 'whatsapp' || channel === 'both') {
-      shareWhatsApp(guest)
+      await shareWhatsApp(guest)
     }
   }
 
@@ -525,12 +545,12 @@ function AdminGuestsPage() {
     setIsCreating(false)
   }
 
-  const prepareInvitationCardForEmail = async () => {
+  const prepareInvitationCard = async () => {
     const wedding = session?.wedding
     if (!wedding) {
       throw new Error('Wedding settings are required before sending invites.')
     }
-    await regenerateInvitationCardForEmail(wedding)
+    return regenerateInvitationCardForEmail(wedding)
   }
 
   const emailGuestInvite = async (guest: Guest) => {
@@ -540,7 +560,7 @@ function AdminGuestsPage() {
     }
     setIsEmailing(true)
     try {
-      await prepareInvitationCardForEmail()
+      await prepareInvitationCard()
       const result = await sendGuestInvite({ data: { guestId: guest.id } })
       toast.success(
         result.includedPhotos
@@ -567,7 +587,7 @@ function AdminGuestsPage() {
   const emailPendingInvites = async () => {
     setIsBulkEmailing(true)
     try {
-      await prepareInvitationCardForEmail()
+      await prepareInvitationCard()
       const result = await sendGuestInvitesBulk({
         data: { onlyPending: true },
       })
@@ -706,7 +726,7 @@ function AdminGuestsPage() {
               id: 'whatsapp',
               label: 'WhatsApp',
               icon: <WhatsappLogoIcon />,
-              onSelect: () => shareWhatsApp(guest),
+              onSelect: () => void shareWhatsApp(guest),
             },
             {
               id: 'link',
@@ -913,7 +933,7 @@ function AdminGuestsPage() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => shareWhatsApp(selectedGuest)}
+                      onClick={() => void shareWhatsApp(selectedGuest)}
                     >
                       <WhatsappLogoIcon />
                       WhatsApp

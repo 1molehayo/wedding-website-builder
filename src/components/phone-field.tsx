@@ -131,7 +131,7 @@ export function PhoneField({
             <div
               ref={refs.setFloating}
               style={floatingStyles}
-              className="border-border bg-background z-50 min-w-64 overflow-y-auto rounded-xl border py-1 shadow-md outline-none"
+              className="border-border bg-background z-[100] min-w-64 overflow-y-auto rounded-xl border py-1 shadow-md outline-none"
               {...getFloatingProps()}
             >
               {countries.map((item) => {
