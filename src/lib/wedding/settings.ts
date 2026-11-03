@@ -83,6 +83,23 @@ export const createInvitationCardUpload = createServerFn({ method: 'POST' })
     return createInvitationCardUploadHandler(data)
   })
 
+export const setInvitationCardPath = createServerFn({ method: 'POST' })
+  .validator((data: { path: string }) => {
+    const path = String(data.path).trim()
+    if (!path) throw new Error('Invitation card path is required.')
+    if (path.includes('..') || path.startsWith('/')) {
+      throw new Error('Invitation card path is invalid.')
+    }
+    if (!path.startsWith('invitations/')) {
+      throw new Error('Invitation card path is invalid.')
+    }
+    return { path }
+  })
+  .handler(async ({ data }) => {
+    const { setInvitationCardPathHandler } = await import('./settings.server')
+    return setInvitationCardPathHandler(data.path)
+  })
+
 export type { PublishWeddingDateResult } from './settings.server'
 
 export const publishWeddingDate = createServerFn({ method: 'POST' })

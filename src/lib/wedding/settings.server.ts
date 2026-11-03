@@ -76,6 +76,30 @@ export async function createInvitationCardUploadHandler(input: {
   })
 }
 
+export async function setInvitationCardPathHandler(
+  path: string,
+): Promise<{ path: string }> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+
+  const updated = await admin
+    .from('weddings')
+    .update({ invitation_card_path: path })
+    .eq('id', session.wedding.id)
+    .select('invitation_card_path')
+    .single()
+
+  if (updated.error) {
+    throw new Error(updated.error.message)
+  }
+  const savedPath = updated.data.invitation_card_path
+  if (!savedPath) {
+    throw new Error('Invitation card path could not be saved.')
+  }
+
+  return { path: savedPath }
+}
+
 export async function updateWeddingHandler(
   data: UpdateWeddingInput,
 ): Promise<Wedding> {

@@ -75,6 +75,7 @@ import {
   raiseRouteError,
   shouldRethrowRouteFailure,
 } from '@/lib/errors/route-error'
+import { regenerateInvitationCardForEmail } from '@/lib/invitation/regenerate-card-client'
 
 export const Route = createFileRoute('/admin/guests')({
   beforeLoad: ({ context }) => {
@@ -524,6 +525,14 @@ function AdminGuestsPage() {
     setIsCreating(false)
   }
 
+  const prepareInvitationCardForEmail = async () => {
+    const wedding = session?.wedding
+    if (!wedding) {
+      throw new Error('Wedding settings are required before sending invites.')
+    }
+    await regenerateInvitationCardForEmail(wedding)
+  }
+
   const emailGuestInvite = async (guest: Guest) => {
     if (!guest.email?.trim()) {
       toast.error('Add an email address before sending an invite.')
@@ -531,6 +540,7 @@ function AdminGuestsPage() {
     }
     setIsEmailing(true)
     try {
+      await prepareInvitationCardForEmail()
       const result = await sendGuestInvite({ data: { guestId: guest.id } })
       toast.success(
         result.includedPhotos
@@ -557,6 +567,7 @@ function AdminGuestsPage() {
   const emailPendingInvites = async () => {
     setIsBulkEmailing(true)
     try {
+      await prepareInvitationCardForEmail()
       const result = await sendGuestInvitesBulk({
         data: { onlyPending: true },
       })

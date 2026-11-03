@@ -149,7 +149,7 @@ export function InvitationDesignPicker({
         </p>
         <p className="text-foreground-secondary mt-1 max-w-xl text-sm">
           Filter by category, or search by name and tag. Preview uses the colour
-          theme above. Saving settings embeds this card in guest invite emails.
+          theme above. Guest invite emails regenerate this card when you send.
         </p>
       </div>
 

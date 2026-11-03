@@ -314,6 +314,21 @@ async function loadGuestPhotoShareUrl(
   return `${getAppUrl()}/photos/${group.data.share_token}?g=${encodeURIComponent(rsvpToken)}`
 }
 
+async function loadInvitationCardPath(
+  weddingId: string,
+): Promise<string | null> {
+  const admin = createAdminSupabaseClient()
+  const result = await admin
+    .from('weddings')
+    .select('invitation_card_path')
+    .eq('id', weddingId)
+    .maybeSingle()
+
+  if (result.error) throw new Error(result.error.message)
+  const path = result.data?.invitation_card_path?.trim()
+  return path || null
+}
+
 async function sendInviteForGuest(
   wedding: {
     id: string
@@ -343,16 +358,20 @@ async function sendInviteForGuest(
   const replyTo = options?.replyTo?.trim() || undefined
   const publicDate = resolvePublicWeddingDate(wedding)
 
+  // Always read the latest path so email-time regeneration is picked up
+  // even if the admin session still has a stale wedding snapshot.
+  const invitationCardPath = await loadInvitationCardPath(wedding.id)
+
   let invitationCard: {
     bytes: Buffer
     contentType: string
     filename: string
   } | null = null
-  if (wedding.invitation_card_path) {
+  if (invitationCardPath) {
     const { downloadPhotoObject } = await import(
       '@/lib/page-blocks/storage.server'
     )
-    const downloaded = await downloadPhotoObject(wedding.invitation_card_path)
+    const downloaded = await downloadPhotoObject(invitationCardPath)
     if (downloaded) {
       invitationCard = {
         bytes: downloaded.bytes,
