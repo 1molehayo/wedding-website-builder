@@ -12,7 +12,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
-import { CaretDownIcon } from '@phosphor-icons/react'
+import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,21 @@ import {
 } from '@/lib/auth/phone'
 import type { CountryCode } from '@/lib/auth/phone'
 import { cn } from '@/lib/utils'
+
+function matchesCountryQuery(
+  item: { code: string; name: string; callingCode: string },
+  query: string,
+) {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const dial = q.replace(/^\+/, '')
+  return (
+    item.name.toLowerCase().includes(q) ||
+    item.code.toLowerCase().includes(q) ||
+    item.callingCode.includes(dial) ||
+    `+${item.callingCode}`.includes(q)
+  )
+}
 
 export function PhoneField({
   country,
@@ -52,14 +67,22 @@ export function PhoneField({
     label: country,
   }
   const [open, setOpen] = useState(false)
-  const placeholder = useMemo(
-    () => exampleNationalNumber(country),
-    [country],
+  const [query, setQuery] = useState('')
+  const placeholder = useMemo(() => exampleNationalNumber(country), [country])
+
+  const filtered = useMemo(
+    () => countries.filter((item) => matchesCountryQuery(item, query)),
+    [countries, query],
   )
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+    if (!next) setQuery('')
+  }
 
   const { refs, floatingStyles, context } = useFloating({
     open,
-    onOpenChange: setOpen,
+    onOpenChange: handleOpenChange,
     placement: 'bottom-start',
     strategy: 'fixed',
     middleware: [
@@ -69,7 +92,7 @@ export function PhoneField({
       size({
         apply({ availableHeight, elements }) {
           Object.assign(elements.floating.style, {
-            maxHeight: `${Math.min(320, availableHeight)}px`,
+            maxHeight: `${Math.max(160, Math.min(320, availableHeight))}px`,
           })
         },
       }),
@@ -127,41 +150,78 @@ export function PhoneField({
 
       {open ? (
         <FloatingPortal>
-          <FloatingFocusManager context={context} modal={false} initialFocus={-1}>
+          <FloatingFocusManager context={context} modal={false}>
             <div
               ref={refs.setFloating}
               style={floatingStyles}
-              className="border-border bg-background z-[100] min-w-64 overflow-y-auto rounded-xl border py-1 shadow-md outline-none"
+              className="border-border bg-background z-100 flex min-w-72 max-w-[min(100vw-1rem,20rem)] flex-col overflow-hidden rounded-xl border shadow-md outline-none"
               {...getFloatingProps()}
             >
-              {countries.map((item) => {
-                const isActive = item.code === country
-                return (
-                  <button
-                    key={item.code}
-                    type="button"
-                    role="option"
-                    aria-selected={isActive}
-                    className={cn(
-                      'hover:bg-foreground/5 flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
-                      isActive && 'bg-foreground/5',
-                    )}
-                    onPointerDown={(event) => {
-                      event.preventDefault()
-                      onChange({ country: item.code, nationalNumber })
-                      setOpen(false)
+              <div className="border-border bg-background sticky top-0 z-10 shrink-0 border-b p-2">
+                <div className="relative">
+                  <MagnifyingGlassIcon
+                    className="text-foreground-secondary pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+                    aria-hidden
+                  />
+                  <Input
+                    type="search"
+                    size="sm"
+                    value={query}
+                    placeholder="Search country or code"
+                    autoComplete="off"
+                    aria-label="Search countries"
+                    className="pl-8"
+                    onChange={(event) => setQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.stopPropagation()
+                        handleOpenChange(false)
+                      }
                     }}
-                  >
-                    <span className="text-base leading-none" aria-hidden>
-                      {item.flag}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{item.name}</span>
-                    <span className="text-foreground-secondary shrink-0 text-sm">
-                      +{item.callingCode}
-                    </span>
-                  </button>
-                )
-              })}
+                  />
+                </div>
+              </div>
+              <div
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1"
+                role="presentation"
+              >
+                {filtered.length === 0 ? (
+                  <p className="text-foreground-secondary px-3 py-2 text-sm">
+                    No countries match “{query.trim()}”.
+                  </p>
+                ) : (
+                  filtered.map((item) => {
+                    const isActive = item.code === country
+                    return (
+                      <button
+                        key={item.code}
+                        type="button"
+                        role="option"
+                        aria-selected={isActive}
+                        className={cn(
+                          'hover:bg-foreground/5 flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
+                          isActive && 'bg-foreground/5',
+                        )}
+                        onPointerDown={(event) => {
+                          event.preventDefault()
+                          onChange({ country: item.code, nationalNumber })
+                          handleOpenChange(false)
+                        }}
+                      >
+                        <span className="text-base leading-none" aria-hidden>
+                          {item.flag}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {item.name}
+                        </span>
+                        <span className="text-foreground-secondary shrink-0 text-sm">
+                          +{item.callingCode}
+                        </span>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
             </div>
           </FloatingFocusManager>
         </FloatingPortal>
