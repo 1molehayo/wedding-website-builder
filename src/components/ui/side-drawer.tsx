@@ -9,6 +9,13 @@ type SideDrawerProps = {
   children: React.ReactNode
 }
 
+function isPortaledOverlayTarget(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest('[data-phone-country-picker]'))
+  )
+}
+
 function SideDrawerRoot({ open, onOpenChange, children }: SideDrawerProps) {
   return (
     <Drawer.Root direction="right" open={open} onOpenChange={onOpenChange}>
@@ -17,6 +24,23 @@ function SideDrawerRoot({ open, onOpenChange, children }: SideDrawerProps) {
         <Drawer.Content
           className="bg-surface border-border fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l outline-none"
           data-vaul-no-drag="true"
+          // Country picker (and similar) portals to document.body; treat those
+          // presses as inside the drawer so focus/search does not dismiss UI.
+          onPointerDownOutside={(event) => {
+            if (isPortaledOverlayTarget(event.target)) {
+              event.preventDefault()
+            }
+          }}
+          onInteractOutside={(event) => {
+            if (isPortaledOverlayTarget(event.target)) {
+              event.preventDefault()
+            }
+          }}
+          onFocusOutside={(event) => {
+            if (isPortaledOverlayTarget(event.target)) {
+              event.preventDefault()
+            }
+          }}
         >
           {children}
         </Drawer.Content>
