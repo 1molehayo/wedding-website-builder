@@ -9,10 +9,23 @@ type SideDrawerProps = {
   children: React.ReactNode
 }
 
-function isPortaledOverlayTarget(target: EventTarget | null) {
-  return (
-    target instanceof Element &&
-    Boolean(target.closest('[data-phone-country-picker]'))
+function isPhoneCountryPickerEvent(event: {
+  target: EventTarget | null
+  detail?: { originalEvent?: Event }
+}) {
+  const candidates: EventTarget[] = []
+  if (event.target) candidates.push(event.target)
+  const original = event.detail?.originalEvent
+  if (original?.target) candidates.push(original.target)
+  if (original && 'relatedTarget' in original) {
+    const related = (original as FocusEvent).relatedTarget
+    if (related) candidates.push(related)
+  }
+
+  return candidates.some(
+    (node) =>
+      node instanceof Element &&
+      Boolean(node.closest('[data-phone-country-picker]')),
   )
 }
 
@@ -24,22 +37,15 @@ function SideDrawerRoot({ open, onOpenChange, children }: SideDrawerProps) {
         <Drawer.Content
           className="bg-surface border-border fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l outline-none"
           data-vaul-no-drag="true"
-          // Country picker (and similar) portals to document.body; treat those
-          // presses as inside the drawer so focus/search does not dismiss UI.
+          // Country picker portals to document.body; do not treat it as outside.
           onPointerDownOutside={(event) => {
-            if (isPortaledOverlayTarget(event.target)) {
-              event.preventDefault()
-            }
+            if (isPhoneCountryPickerEvent(event)) event.preventDefault()
           }}
           onInteractOutside={(event) => {
-            if (isPortaledOverlayTarget(event.target)) {
-              event.preventDefault()
-            }
+            if (isPhoneCountryPickerEvent(event)) event.preventDefault()
           }}
           onFocusOutside={(event) => {
-            if (isPortaledOverlayTarget(event.target)) {
-              event.preventDefault()
-            }
+            if (isPhoneCountryPickerEvent(event)) event.preventDefault()
           }}
         >
           {children}
