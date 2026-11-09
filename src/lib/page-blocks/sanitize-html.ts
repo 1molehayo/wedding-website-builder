@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify'
+import sanitizeHtml from 'sanitize-html'
 
 /** Allowed tags for the text-content block (H4–H6, no H1–H3 or media). */
 const ALLOWED_TAGS = [
@@ -17,17 +17,25 @@ const ALLOWED_TAGS = [
   'a',
 ]
 
-const ALLOWED_ATTR = ['href', 'target', 'rel', 'class', 'style']
-
 /**
  * Strip disallowed markup from TipTap HTML before save and before public render.
+ * Uses `sanitize-html` (no jsdom) so Nitro/Vercel serverless can boot.
  * Alignment may use inline text-align styles only.
  */
 export function sanitizeTextBlockHtml(html: string): string {
-  const cleaned = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    ALLOW_DATA_ATTR: false,
+  const cleaned = sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {
+      a: ['href', 'name', 'target', 'rel'],
+      '*': ['class', 'style'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
+    allowProtocolRelative: false,
+    transformTags: {
+      a: sanitizeHtml.simpleTransform('a', {
+        rel: 'noopener noreferrer',
+      }),
+    },
   })
 
   return cleaned

@@ -10,7 +10,7 @@ describe('sanitizeTextBlockHtml', () => {
       sanitizeTextBlockHtml(
         '<p style="text-align: center">Hello <strong>world</strong></p>',
       ),
-    ).toBe('<p style="text-align: center">Hello <strong>world</strong></p>')
+    ).toBe('<p style="text-align:center">Hello <strong>world</strong></p>')
   })
 
   it('strips scripts and event handlers', () => {
@@ -26,9 +26,11 @@ describe('sanitizeTextBlockHtml', () => {
       sanitizeTextBlockHtml(
         '<a href="https://example.com" target="_blank">x</a>',
       ),
-    ).toBe('<a href="https://example.com" target="_blank">x</a>')
+    ).toBe(
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">x</a>',
+    )
     expect(sanitizeTextBlockHtml('<a href="javascript:alert(1)">x</a>')).toBe(
-      '<a>x</a>',
+      '<a rel="noopener noreferrer">x</a>',
     )
   })
 
