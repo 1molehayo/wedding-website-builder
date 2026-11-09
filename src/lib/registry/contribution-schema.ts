@@ -1,8 +1,5 @@
 import { z } from 'zod'
-import {
-  defaultPhoneCountry,
-  toE164Phone,
-} from '@/lib/auth/phone'
+import { defaultPhoneCountry, toE164Phone } from '@/lib/auth/phone'
 import type { CountryCode } from '@/lib/auth/phone'
 import type { RegistryContributionStatus } from '@/lib/supabase/types'
 

@@ -55,9 +55,7 @@ function whatsappFollowUpUrl(row: AdminContribution) {
 function mailtoFollowUpUrl(row: AdminContribution) {
   const amount = `${row.amount} ${row.currency}`
   const gift = row.gift_title ? ` toward ${row.gift_title}` : ''
-  const reference = row.bank?.reference
-    ? ` (ref ${row.bank.reference})`
-    : ''
+  const reference = row.bank?.reference ? ` (ref ${row.bank.reference})` : ''
   const subject = encodeURIComponent(`About your ${amount} gift${gift}`)
   const body = encodeURIComponent(
     [
@@ -83,9 +81,8 @@ export function ContributionAuditDrawer({
   onClose,
   onSaved,
 }: ContributionAuditDrawerProps) {
-  const [statusBusy, setStatusBusy] = useState<RegistryContributionStatus | null>(
-    null,
-  )
+  const [statusBusy, setStatusBusy] =
+    useState<RegistryContributionStatus | null>(null)
   const form = useForm({
     defaultValues: { amount: String(contribution.amount) },
     validators: {
@@ -126,7 +123,9 @@ export function ContributionAuditDrawer({
       const row = await setContributionStatus({
         data: { contributionId: contribution.id, status },
       })
-      toast.success(`Marked ${CONTRIBUTION_STATUS_LABELS[status].toLowerCase()}.`)
+      toast.success(
+        `Marked ${CONTRIBUTION_STATUS_LABELS[status].toLowerCase()}.`,
+      )
       await onSaved(row)
     } catch (error) {
       toast.error(

@@ -283,9 +283,7 @@ export function RecordAmazonPurchaseDrawer({
                   <Input
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) =>
-                      field.handleChange(event.target.value)
-                    }
+                    onChange={(event) => field.handleChange(event.target.value)}
                   />
                 </Field.Control>
               </Field>
@@ -300,9 +298,7 @@ export function RecordAmazonPurchaseDrawer({
                   <Input
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) =>
-                      field.handleChange(event.target.value)
-                    }
+                    onChange={(event) => field.handleChange(event.target.value)}
                   />
                 </Field.Control>
               </Field>

@@ -1,3 +1,7 @@
+import type {
+  ListActivityLogsInput,
+  ListActivityLogsResult,
+} from '@/lib/activity/areas'
 import {
   assertActivityAction,
   redactActivityMetadata,
@@ -6,6 +10,14 @@ import type { AdminSession } from '@/lib/auth/types'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import type { ActivityActorRole } from '@/lib/supabase/types'
+
+export type {
+  ActivityArea,
+  ActivityLogListItem,
+  ListActivityLogsInput,
+  ListActivityLogsResult,
+} from '@/lib/activity/areas'
+export { ACTIVITY_AREAS } from '@/lib/activity/areas'
 
 export type RecordActivityInput = {
   weddingId: string | null
@@ -19,60 +31,17 @@ export type RecordActivityInput = {
   metadata?: Record<string, unknown>
 }
 
-export const ACTIVITY_AREAS = [
-  'guest',
-  'registry',
-  'pages',
-  'media',
-  'settings',
-  'profile',
-  'admins',
-  'feedback',
-  'auth',
-  'system',
-] as const
-
-export type ActivityArea = (typeof ACTIVITY_AREAS)[number]
-
-export type ListActivityLogsInput = {
-  area: ActivityArea | null
-  actorRole: ActivityActorRole | null
-  query: string | null
-  from: string | null
-  to: string | null
-  limit: number
-  offset: number
-}
-
-/** JSON-safe activity row for server-fn responses. */
-export type ActivityLogListItem = {
-  id: string
-  wedding_id: string | null
-  actor_id: string | null
-  actor_email: string | null
-  actor_role: ActivityActorRole
-  action: string
-  entity_type: string
-  entity_id: string | null
-  summary: string
-  metadata: Record<string, string | number | boolean | null>
-  created_at: string
-}
-
-export type ListActivityLogsResult = {
-  items: ActivityLogListItem[]
-  total: number
-  limit: number
-  offset: number
-}
-
 function toSerializableMetadata(
   value: unknown,
 ): Record<string, string | number | boolean | null> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   const output: Record<string, string | number | boolean | null> = {}
   for (const [key, child] of Object.entries(value)) {
-    if (typeof child === 'string' || typeof child === 'boolean' || child === null) {
+    if (
+      typeof child === 'string' ||
+      typeof child === 'boolean' ||
+      child === null
+    ) {
       output[key] = child
       continue
     }

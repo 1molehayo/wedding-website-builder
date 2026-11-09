@@ -66,10 +66,7 @@ export function isLikelyAmazonRegistryUrl(url: string): boolean {
     }
 
     // Item deep links sometimes keep registryId in the query
-    if (
-      /[?&]registryId=/i.test(parsed.search) &&
-      /^\/wedding\b/i.test(path)
-    ) {
+    if (/[?&]registryId=/i.test(parsed.search) && /^\/wedding\b/i.test(path)) {
       return true
     }
 

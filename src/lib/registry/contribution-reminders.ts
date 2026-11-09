@@ -24,8 +24,7 @@ export function isContributionReminderDue(
   if (candidate.reminderCount >= MAX_CONTRIBUTION_REMINDERS) return false
   if (candidate.reminderCount < 0) return false
 
-  const anchorIso =
-    candidate.lastReminderAt ?? candidate.contributionCreatedAt
+  const anchorIso = candidate.lastReminderAt ?? candidate.contributionCreatedAt
   const anchorMs = Date.parse(anchorIso)
   if (!Number.isFinite(anchorMs)) return false
 

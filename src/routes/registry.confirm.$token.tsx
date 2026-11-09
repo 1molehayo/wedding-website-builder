@@ -7,8 +7,7 @@ import { confirmBankContribution } from '@/lib/registry/registry'
 import type { ConfirmedContribution } from '@/lib/registry/registry'
 
 type ConfirmLoaderResult =
-  | { ok: true; data: ConfirmedContribution }
-  | { ok: false; message: string }
+  { ok: true; data: ConfirmedContribution } | { ok: false; message: string }
 
 function playThankYouConfetti() {
   if (typeof window === 'undefined') return
@@ -54,7 +53,12 @@ export const Route = createFileRoute('/registry/confirm/$token')({
   },
   head: ({ loaderData }) => {
     if (!loaderData || !loaderData.ok) {
-      return { meta: [{ title: 'Thank you' }, { name: 'robots', content: 'noindex,nofollow' }] }
+      return {
+        meta: [
+          { title: 'Thank you' },
+          { name: 'robots', content: 'noindex,nofollow' },
+        ],
+      }
     }
     return {
       meta: [

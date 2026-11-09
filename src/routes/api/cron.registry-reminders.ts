@@ -21,10 +21,7 @@ async function handleCron(request: Request): Promise<Response> {
     return Response.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Reminder run failed.',
+        error: error instanceof Error ? error.message : 'Reminder run failed.',
       },
       { status: 500 },
     )

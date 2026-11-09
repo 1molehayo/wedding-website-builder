@@ -112,9 +112,9 @@ function AdminRegistryPage() {
         <div>
           <h1 className="admin-page-title">Registry</h1>
           <p className="text-foreground-secondary mt-2 max-w-2xl text-sm leading-relaxed">
-            Add gifts with one price, share bank accounts in the currencies
-            you accept, and audit guest transfers. Guests convert with a live
-            rate locked per payment. No card payments.
+            Add gifts with one price, share bank accounts in the currencies you
+            accept, and audit guest transfers. Guests convert with a live rate
+            locked per payment. No card payments.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

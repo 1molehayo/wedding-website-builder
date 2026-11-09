@@ -513,9 +513,7 @@ export function GiftItemForm({
                                 }
                               />
                             </Field.Control>
-                            <Field.Error>
-                              {invalid ? error : null}
-                            </Field.Error>
+                            <Field.Error>{invalid ? error : null}</Field.Error>
                           </Field>
                         )
                       }}
@@ -543,9 +541,7 @@ export function GiftItemForm({
                                 }
                               />
                             </Field.Control>
-                            <Field.Error>
-                              {invalid ? error : null}
-                            </Field.Error>
+                            <Field.Error>{invalid ? error : null}</Field.Error>
                           </Field>
                         )
                       }}

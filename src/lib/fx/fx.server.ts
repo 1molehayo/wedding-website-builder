@@ -30,9 +30,7 @@ function normalizeCurrency(code: string): string {
   return code.trim().toUpperCase()
 }
 
-async function fetchFrankfurterRates(
-  base: string,
-): Promise<CacheEntry | null> {
+async function fetchFrankfurterRates(base: string): Promise<CacheEntry | null> {
   const url = `https://api.frankfurter.dev/v2/rates?base=${encodeURIComponent(base.toLowerCase())}`
   const response = await fetch(url, {
     headers: { Accept: 'application/json' },

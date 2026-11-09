@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import {
-  ACTIVITY_AREAS,
-  listActivityLogs,
-} from '@/lib/activity/activity'
+import { ACTIVITY_AREAS, listActivityLogs } from '@/lib/activity/activity'
 import type { ListActivityLogsResult } from '@/lib/activity/activity'
 
 const ACTOR_ROLES = [
@@ -88,9 +85,7 @@ export const Route = createFileRoute('/admin/activity')({
         from: deps.from
           ? new Date(`${deps.from}T00:00:00.000Z`).toISOString()
           : null,
-        to: deps.to
-          ? new Date(`${deps.to}T23:59:59.999Z`).toISOString()
-          : null,
+        to: deps.to ? new Date(`${deps.to}T23:59:59.999Z`).toISOString() : null,
         limit,
         offset: (deps.page - 1) * limit,
       },

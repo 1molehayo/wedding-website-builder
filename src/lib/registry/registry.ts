@@ -165,9 +165,8 @@ export const quoteContributionFx = createServerFn({ method: 'POST' })
 export const startBankContribution = createServerFn({ method: 'POST' })
   .validator((data: unknown) => parseStartContributionInput(data))
   .handler(async ({ data }): Promise<StartedContribution> => {
-    const { startBankContributionHandler } = await import(
-      './contribution.server'
-    )
+    const { startBankContributionHandler } =
+      await import('./contribution.server')
     return startBankContributionHandler(data)
   })
 
@@ -178,36 +177,32 @@ export const confirmBankContribution = createServerFn({ method: 'POST' })
     return { token }
   })
   .handler(async ({ data }): Promise<ConfirmedContribution> => {
-    const { confirmBankContributionHandler } = await import(
-      './contribution.server'
-    )
+    const { confirmBankContributionHandler } =
+      await import('./contribution.server')
     return confirmBankContributionHandler(data.token)
   })
 
 export const updateContributionAmount = createServerFn({ method: 'POST' })
   .validator((data: unknown) => parseUpdateContributionAmount(data))
   .handler(async ({ data }): Promise<AdminContribution> => {
-    const { updateContributionAmountHandler } = await import(
-      './contribution.server'
-    )
+    const { updateContributionAmountHandler } =
+      await import('./contribution.server')
     return updateContributionAmountHandler(data)
   })
 
 export const setContributionStatus = createServerFn({ method: 'POST' })
   .validator((data: unknown) => parseSetContributionStatus(data))
   .handler(async ({ data }): Promise<AdminContribution> => {
-    const { setContributionStatusHandler } = await import(
-      './contribution.server'
-    )
+    const { setContributionStatusHandler } =
+      await import('./contribution.server')
     return setContributionStatusHandler(data)
   })
 
 export const recordExternalContribution = createServerFn({ method: 'POST' })
   .validator((data: unknown) => parseRecordExternalContribution(data))
   .handler(async ({ data }): Promise<AdminContribution> => {
-    const { recordExternalContributionHandler } = await import(
-      './contribution.server'
-    )
+    const { recordExternalContributionHandler } =
+      await import('./contribution.server')
     return recordExternalContributionHandler(data)
   })
 

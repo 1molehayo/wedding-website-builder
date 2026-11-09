@@ -53,7 +53,9 @@ describe('isContributionReminderDue', () => {
 
   it('waits a day after the last reminder', () => {
     const lastReminderAt = '2026-11-08T12:00:00.000Z'
-    const almost = new Date(Date.parse(lastReminderAt) + REMINDER_INTERVAL_MS - 1)
+    const almost = new Date(
+      Date.parse(lastReminderAt) + REMINDER_INTERVAL_MS - 1,
+    )
     const ready = new Date(Date.parse(lastReminderAt) + REMINDER_INTERVAL_MS)
 
     expect(

@@ -1,4 +1,7 @@
-import { recordAdminActivity, recordActivity } from '@/lib/activity/activity.server'
+import {
+  recordAdminActivity,
+  recordActivity,
+} from '@/lib/activity/activity.server'
 import {
   isReservedSuperAdminEmail,
   isSuperAdminProfile,

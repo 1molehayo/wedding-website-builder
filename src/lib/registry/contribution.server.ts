@@ -256,9 +256,7 @@ export async function startBankContributionHandler(
   const admin = createAdminSupabaseClient()
   const weddingResult = await admin
     .from('weddings')
-    .select(
-      'id, groom_name, bride_name, public_slug, active_public_theme',
-    )
+    .select('id, groom_name, bride_name, public_slug, active_public_theme')
     .eq('public_slug', input.weddingSlug)
     .maybeSingle()
 
@@ -304,7 +302,9 @@ export async function startBankContributionHandler(
     fxLockedAt = locked.lockedAt
     amountBase = payAmountToBase(input.amount, locked.rate)
     if (amountBase <= 0) {
-      throw new Error('Amount is too small after conversion. Enter a larger amount.')
+      throw new Error(
+        'Amount is too small after conversion. Enter a larger amount.',
+      )
     }
 
     giftTitle = giftResult.data.title
@@ -372,10 +372,7 @@ export async function startBankContributionHandler(
     throw new Error(bank.error.message)
   }
 
-  const coupleLabel = formatCoupleNames(
-    wedding.groom_name,
-    wedding.bride_name,
-  )
+  const coupleLabel = formatCoupleNames(wedding.groom_name, wedding.bride_name)
   const confirmUrl = `${getAppUrl()}/registry/confirm/${encodeURIComponent(confirmToken)}`
 
   try {
@@ -462,15 +459,14 @@ export async function confirmBankContributionHandler(
     .eq('id', bankResult.data.contribution_id)
     .maybeSingle()
 
-  if (contributionResult.error) throw new Error(contributionResult.error.message)
+  if (contributionResult.error)
+    throw new Error(contributionResult.error.message)
   if (!contributionResult.data) throw new Error('Contribution not found.')
 
   const contribution = contributionResult.data
   const weddingResult = await admin
     .from('weddings')
-    .select(
-      'id, groom_name, bride_name, public_slug, active_public_theme',
-    )
+    .select('id, groom_name, bride_name, public_slug, active_public_theme')
     .eq('id', contribution.wedding_id)
     .maybeSingle()
 
@@ -478,10 +474,7 @@ export async function confirmBankContributionHandler(
   if (!weddingResult.data) throw new Error('Wedding not found.')
 
   const wedding = weddingResult.data
-  const coupleLabel = formatCoupleNames(
-    wedding.groom_name,
-    wedding.bride_name,
-  )
+  const coupleLabel = formatCoupleNames(wedding.groom_name, wedding.bride_name)
 
   let giftTitle: string | null = null
   if (contribution.gift_id) {
@@ -623,9 +616,7 @@ export async function listAdminContributionsHandler(
     return {
       id: row.id,
       gift_id: row.gift_id,
-      gift_title: row.gift_id
-        ? (giftTitleById.get(row.gift_id) ?? null)
-        : null,
+      gift_title: row.gift_id ? (giftTitleById.get(row.gift_id) ?? null) : null,
       channel: row.channel,
       provider: row.provider,
       amount: Number(row.amount),

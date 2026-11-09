@@ -117,9 +117,7 @@ export async function runContributionRemindersHandler(
   if (weddingsResult.error) throw new Error(weddingsResult.error.message)
   if (giftsResult.error) throw new Error(giftsResult.error.message)
 
-  const weddingById = new Map(
-    weddingsResult.data.map((row) => [row.id, row]),
-  )
+  const weddingById = new Map(weddingsResult.data.map((row) => [row.id, row]))
   const giftTitleById = new Map(
     giftsResult.data.map((row) => [row.id, row.title]),
   )

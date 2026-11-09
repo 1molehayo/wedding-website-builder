@@ -160,10 +160,7 @@ function WeddingPublicPage() {
               imageUrl={home.imageUrls[block.id]}
             />
           ))}
-          <RegistrySection
-            initial={home.registry}
-            weddingSlug={weddingSlug}
-          />
+          <RegistrySection initial={home.registry} weddingSlug={weddingSlug} />
         </main>
       </PublicShell>
     </>

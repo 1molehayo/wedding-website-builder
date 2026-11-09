@@ -42,14 +42,10 @@ describe('amazon.com wedding registry URL checks', () => {
 
   it('rejects non-amazon.com domains including other Amazon countries', () => {
     expect(
-      amazonRegistryUrlError(
-        'https://www.amazon.es/wedding/registry/ABC123',
-      ),
+      amazonRegistryUrlError('https://www.amazon.es/wedding/registry/ABC123'),
     ).toMatch(/Only amazon\.com links are allowed/i)
     expect(
-      amazonRegistryUrlError(
-        'https://www.amazon.co.uk/wedding/share/couple',
-      ),
+      amazonRegistryUrlError('https://www.amazon.co.uk/wedding/share/couple'),
     ).toMatch(/Only amazon\.com links are allowed/i)
     expect(
       amazonRegistryUrlError('https://example.com/wedding/registry/x'),
