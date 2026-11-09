@@ -511,8 +511,7 @@ export function GiftItemForm({
                           )
                           const invalid =
                             currencyState.invalid || amountState.invalid
-                          const error =
-                            amountState.error || currencyState.error
+                          const error = amountState.error || currencyState.error
                           return (
                             <CurrencyAmountField
                               currency={currencyField.state.value}

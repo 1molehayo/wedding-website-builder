@@ -2,7 +2,10 @@ import { useEffect, useRef } from 'react'
 import { XIcon } from '@phosphor-icons/react'
 import { Drawer } from 'vaul'
 import { Button } from '@/components/ui/button'
-import { registerDrawerLayerHost } from '@/lib/ui/drawer-layer-host'
+import {
+  registerDrawerLayerHost,
+  useDrawerBlockingOverlayActive,
+} from '@/lib/ui/drawer-layer-host'
 import { cn } from '@/lib/utils'
 
 type SideDrawerProps = {
@@ -13,22 +16,61 @@ type SideDrawerProps = {
 
 function SideDrawerRoot({ open, onOpenChange, children }: SideDrawerProps) {
   const contentRef = useRef<HTMLDivElement | null>(null)
+  const unregisterHostRef = useRef<(() => void) | null>(null)
+  const blockingOverlay = useDrawerBlockingOverlayActive()
 
   useEffect(() => {
-    if (!open) return
+    return () => {
+      unregisterHostRef.current?.()
+      unregisterHostRef.current = null
+    }
+  }, [])
+
+  const setContentRef = (node: HTMLDivElement | null) => {
+    contentRef.current = node
+    unregisterHostRef.current?.()
+    unregisterHostRef.current = null
+    if (node && open) {
+      unregisterHostRef.current = registerDrawerLayerHost(node)
+    }
+  }
+
+  useEffect(() => {
     const node = contentRef.current
-    if (!node) return
-    return registerDrawerLayerHost(node)
+    unregisterHostRef.current?.()
+    unregisterHostRef.current = null
+    if (open && node) {
+      unregisterHostRef.current = registerDrawerLayerHost(node)
+    }
   }, [open])
 
   return (
-    <Drawer.Root direction="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root
+      direction="right"
+      open={open}
+      // While FeedbackModal (etc.) is open, ignore outside clicks / Esc dismiss
+      // so Cancel/Send on the modal do not wipe the drawer form.
+      dismissible={!blockingOverlay}
+      onOpenChange={(next) => {
+        if (!next && blockingOverlay) return
+        onOpenChange(next)
+      }}
+    >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/30" />
         <Drawer.Content
-          ref={contentRef}
+          ref={setContentRef}
           className="bg-surface border-border fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l outline-none"
           data-vaul-no-drag="true"
+          onPointerDownOutside={(event) => {
+            if (blockingOverlay) event.preventDefault()
+          }}
+          onInteractOutside={(event) => {
+            if (blockingOverlay) event.preventDefault()
+          }}
+          onFocusOutside={(event) => {
+            if (blockingOverlay) event.preventDefault()
+          }}
         >
           {children}
         </Drawer.Content>

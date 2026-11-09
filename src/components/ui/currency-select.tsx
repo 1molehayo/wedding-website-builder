@@ -155,7 +155,7 @@ export function CurrencySelect({
         aria-controls={listId}
         className={cn(
           'border-border bg-background text-foreground hover:border-[color-mix(in_oklab,var(--color-border),var(--color-foreground)_8%)] flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border px-4 text-left shadow-xs transition',
-          '[:focus-visible]:ring-ring [:focus-visible]:border-accent [:focus-visible]:ring-(length:--ring-width)',
+          'focus-visible:ring-ring focus-visible:border-accent focus-visible:ring-(length:--ring-width)',
           invalid && 'border-error!',
         )}
         onBlur={onBlur}

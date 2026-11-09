@@ -2,7 +2,10 @@ import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { XIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
-import { useActiveDrawerLayerHost } from '@/lib/ui/drawer-layer-host'
+import {
+  registerDrawerBlockingOverlay,
+  useActiveDrawerLayerHost,
+} from '@/lib/ui/drawer-layer-host'
 import { cn } from '@/lib/utils'
 
 type ModalProps = {
@@ -31,6 +34,11 @@ export function Modal({
   const descriptionId = useId()
   const drawerHost = useActiveDrawerLayerHost()
   const nestedInDrawer = Boolean(drawerHost)
+
+  useEffect(() => {
+    if (!open) return
+    return registerDrawerBlockingOverlay()
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -64,10 +72,12 @@ export function Modal({
     <div
       className={cn(
         'flex items-center justify-center p-4',
-        // Portal into the open drawer when present so Vaul keeps us inside its
-        // dialog tree (interactive). Otherwise full-viewport on document.body.
-        nestedInDrawer ? 'absolute inset-0 z-[100]' : 'fixed inset-0 z-[100]',
+        nestedInDrawer ? 'absolute inset-0 z-100' : 'fixed inset-0 z-100',
       )}
+      // Keep Vaul from treating modal clicks as "outside the drawer".
+      onPointerDown={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
     >
       <button
         type="button"

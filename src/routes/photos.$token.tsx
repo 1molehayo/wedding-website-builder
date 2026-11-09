@@ -127,7 +127,7 @@ function PhotoShareViewerPage() {
                 onClick={() =>
                   setLightbox({ url: photo.url, alt: photo.filename })
                 }
-                className="border-border bg-background-secondary public-reveal aspect-[4/5] cursor-zoom-in overflow-hidden rounded-sm border text-left"
+                className="border-border bg-background-secondary public-reveal aspect-4/5 cursor-zoom-in overflow-hidden rounded-sm border text-left"
                 aria-label={`Open larger view of ${photo.filename}`}
               >
                 <img
