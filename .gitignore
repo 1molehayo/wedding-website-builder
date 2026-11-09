@@ -33,6 +33,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+*.code-workspace
 
 # Supabase local (regular + demo workdir)
 supabase/.branches
