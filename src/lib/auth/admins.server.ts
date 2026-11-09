@@ -1,3 +1,4 @@
+import { recordAdminActivity, recordActivity } from '@/lib/activity/activity.server'
 import {
   isReservedSuperAdminEmail,
   isSuperAdminProfile,
@@ -193,13 +194,21 @@ export async function inviteAdminHandler(input: {
       : new Error('Unable to send invite email.')
   }
 
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? null,
+    action: 'admins.invited',
+    entityType: 'admin_profile',
+    entityId: inserted.data.id,
+    summary: `Invited admin ${email}.`,
+  })
+
   return (await withAuthSignInTimes([inserted.data]))[0]
 }
 
 export async function resendAdminInviteHandler(
   adminId: string,
 ): Promise<AdminListItem> {
-  await requireSuperAdminSession()
+  const session = await requireSuperAdminSession()
   const admin = createAdminSupabaseClient()
 
   const existing = await admin
@@ -234,13 +243,20 @@ export async function resendAdminInviteHandler(
   if (updated.error) throw new Error(updated.error.message)
 
   await sendInviteForProfile(updated.data)
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? updated.data.wedding_id ?? null,
+    action: 'admins.invite_resent',
+    entityType: 'admin_profile',
+    entityId: updated.data.id,
+    summary: `Resent invite to ${updated.data.email ?? 'admin'}.`,
+  })
   return (await withAuthSignInTimes([updated.data]))[0]
 }
 
 export async function cancelAdminInviteHandler(
   adminId: string,
 ): Promise<AdminListItem> {
-  await requireSuperAdminSession()
+  const session = await requireSuperAdminSession()
   const admin = createAdminSupabaseClient()
 
   const existing = await admin
@@ -271,6 +287,13 @@ export async function cancelAdminInviteHandler(
     .single()
 
   if (updated.error) throw new Error(updated.error.message)
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? updated.data.wedding_id ?? null,
+    action: 'admins.invite_cancelled',
+    entityType: 'admin_profile',
+    entityId: updated.data.id,
+    summary: `Cancelled invite for ${updated.data.email ?? 'admin'}.`,
+  })
   return (await withAuthSignInTimes([updated.data]))[0]
 }
 
@@ -278,7 +301,7 @@ export async function reinviteAdminHandler(
   adminId: string,
   names?: { firstName: string; lastName: string },
 ): Promise<AdminListItem> {
-  await requireSuperAdminSession()
+  const session = await requireSuperAdminSession()
   const admin = createAdminSupabaseClient()
 
   const existing = await admin
@@ -318,6 +341,13 @@ export async function reinviteAdminHandler(
   if (updated.error) throw new Error(updated.error.message)
 
   await sendInviteForProfile(updated.data)
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? updated.data.wedding_id ?? null,
+    action: 'admins.invited',
+    entityType: 'admin_profile',
+    entityId: updated.data.id,
+    summary: `Re-invited admin ${updated.data.email ?? 'admin'}.`,
+  })
   return (await withAuthSignInTimes([updated.data]))[0]
 }
 
@@ -450,6 +480,14 @@ export async function removeAdminHandler(adminId: string) {
     console.error('[AdminRemove] notification email failed', error)
   }
 
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? profile.wedding_id ?? null,
+    action: 'admins.removed',
+    entityType: 'admin_profile',
+    entityId: adminId,
+    summary: `Removed admin ${adminEmail ?? adminName}.`,
+  })
+
   return { ok: true as const }
 }
 
@@ -522,6 +560,20 @@ export async function acceptAdminInviteHandler(token: string): Promise<{
   if (verified.error) throw new Error(verified.error.message)
 
   const session = await requireAdminSession()
+
+  if (!alreadyAccepted) {
+    await recordActivity({
+      weddingId: session.wedding?.id ?? profile.wedding_id ?? null,
+      actorId: session.user.id,
+      actorEmail: session.profile.email ?? session.user.email ?? null,
+      actorRole: session.profile.role,
+      action: 'admins.invite_accepted',
+      entityType: 'admin_profile',
+      entityId: session.user.id,
+      summary: 'Accepted an admin invitation.',
+    })
+  }
+
   const hasName =
     Boolean(session.profile.first_name?.trim()) &&
     Boolean(session.profile.last_name?.trim())

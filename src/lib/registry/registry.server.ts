@@ -9,11 +9,19 @@ import type {
   RegistryAccountFormValues,
   RegistryItemFormValues,
 } from '@/lib/registry/schema'
+import {
+  listAdminContributionsHandler,
+  remainingForGift,
+} from '@/lib/registry/contribution.server'
+import type { AdminContribution } from '@/lib/registry/contribution.server'
+import { giftStillOpen } from '@/lib/registry/remaining'
 import { formatRegistryPriceLabel } from '@/lib/registry/schema'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
+import { REGISTRY_PROVIDER_LABELS } from '@/lib/registry/providers'
 import type {
   RegistryAccount,
   RegistryItem,
+  RegistryItemListing,
   RegistryItemPrice,
   RegistryReservation,
 } from '@/lib/supabase/types'
@@ -24,6 +32,12 @@ const ITEM_SELECT =
 const ACCOUNT_SELECT =
   'id, wedding_id, label, bank_name, currency, account_name, account_number, routing_number, notes, sort_order, is_enabled, created_at, updated_at'
 
+export type PublicRegistryListing = {
+  provider: string
+  label: string
+  url: string
+}
+
 export type PublicRegistryItem = {
   id: string
   title: string
@@ -31,7 +45,14 @@ export type PublicRegistryItem = {
   store_url: string | null
   photo_path: string | null
   price_label: string | null
-  prices: Array<{ currency: string; amount: number }>
+  prices: Array<{
+    currency: string
+    original: number
+    remaining: number
+  }>
+  listings: PublicRegistryListing[]
+  /** True while the base-currency remaining is above zero. */
+  is_open: boolean
   desired_qty: number
   claimed_qty: number
   remaining_qty: number
@@ -57,12 +78,14 @@ export type PublicRegistryData = {
 
 export type RegistryAdminItem = RegistryItem & {
   prices: RegistryItemPrice[]
+  listings: RegistryItemListing[]
 }
 
 export type RegistryAdminData = {
   items: RegistryAdminItem[]
   accounts: RegistryAccount[]
   reservations: RegistryReservation[]
+  contributions: AdminContribution[]
 }
 
 function deriveItemStatus(
@@ -94,6 +117,9 @@ function mapPriceRow(row: {
   }
 }
 
+const LISTING_SELECT =
+  'id, item_id, wedding_id, provider, url, label, sort_order, created_at, updated_at'
+
 async function loadPricesForWedding(
   weddingId: string,
 ): Promise<RegistryItemPrice[]> {
@@ -108,6 +134,21 @@ async function loadPricesForWedding(
   return result.data.map((row) => mapPriceRow(row))
 }
 
+async function loadListingsForWedding(
+  weddingId: string,
+): Promise<RegistryItemListing[]> {
+  const admin = createAdminSupabaseClient()
+  const result = await admin
+    .from('registry_item_listings')
+    .select(LISTING_SELECT)
+    .eq('wedding_id', weddingId)
+    .order('sort_order', { ascending: true })
+    .order('provider', { ascending: true })
+
+  if (result.error) throw new Error(result.error.message)
+  return result.data
+}
+
 function pricesByItem(
   prices: RegistryItemPrice[],
 ): Map<string, RegistryItemPrice[]> {
@@ -118,6 +159,46 @@ function pricesByItem(
     grouped.set(price.item_id, list)
   }
   return grouped
+}
+
+function listingsByItem(
+  listings: RegistryItemListing[],
+): Map<string, RegistryItemListing[]> {
+  const grouped = new Map<string, RegistryItemListing[]>()
+  for (const listing of listings) {
+    const list = grouped.get(listing.item_id) ?? []
+    list.push(listing)
+    grouped.set(listing.item_id, list)
+  }
+  return grouped
+}
+
+async function replaceAmazonListing(
+  weddingId: string,
+  itemId: string,
+  amazonUrl: string | null,
+): Promise<void> {
+  const admin = createAdminSupabaseClient()
+  const removed = await admin
+    .from('registry_item_listings')
+    .delete()
+    .eq('wedding_id', weddingId)
+    .eq('item_id', itemId)
+    .eq('provider', 'amazon')
+
+  if (removed.error) throw new Error(removed.error.message)
+  if (!amazonUrl) return
+
+  const inserted = await admin.from('registry_item_listings').insert({
+    wedding_id: weddingId,
+    item_id: itemId,
+    provider: 'amazon',
+    url: amazonUrl,
+    label: REGISTRY_PROVIDER_LABELS.amazon,
+    sort_order: 0,
+  })
+
+  if (inserted.error) throw new Error(inserted.error.message)
 }
 
 async function replaceItemPrices(
@@ -177,27 +258,35 @@ export async function listRegistryAdminHandler(): Promise<RegistryAdminData> {
   const admin = createAdminSupabaseClient()
   const weddingId = session.wedding.id
 
-  const [itemsResult, accountsResult, reservationsResult, prices] =
-    await Promise.all([
-      admin
-        .from('registry_items')
-        .select(ITEM_SELECT)
-        .eq('wedding_id', weddingId)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true }),
-      admin
-        .from('registry_accounts')
-        .select(ACCOUNT_SELECT)
-        .eq('wedding_id', weddingId)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true }),
-      admin
-        .from('registry_reservations')
-        .select('id, wedding_id, item_id, guest_name, quantity, created_at')
-        .eq('wedding_id', weddingId)
-        .order('created_at', { ascending: false }),
-      loadPricesForWedding(weddingId),
-    ])
+  const [
+    itemsResult,
+    accountsResult,
+    reservationsResult,
+    prices,
+    listings,
+    contributions,
+  ] = await Promise.all([
+    admin
+      .from('registry_items')
+      .select(ITEM_SELECT)
+      .eq('wedding_id', weddingId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+    admin
+      .from('registry_accounts')
+      .select(ACCOUNT_SELECT)
+      .eq('wedding_id', weddingId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+    admin
+      .from('registry_reservations')
+      .select('id, wedding_id, item_id, guest_name, quantity, created_at')
+      .eq('wedding_id', weddingId)
+      .order('created_at', { ascending: false }),
+    loadPricesForWedding(weddingId),
+    loadListingsForWedding(weddingId),
+    listAdminContributionsHandler(weddingId),
+  ])
 
   if (itemsResult.error) throw new Error(itemsResult.error.message)
   if (accountsResult.error) throw new Error(accountsResult.error.message)
@@ -205,14 +294,17 @@ export async function listRegistryAdminHandler(): Promise<RegistryAdminData> {
     throw new Error(reservationsResult.error.message)
 
   const grouped = pricesByItem(prices)
+  const listingsGrouped = listingsByItem(listings)
 
   return {
     items: itemsResult.data.map((item) => ({
       ...item,
       prices: grouped.get(item.id) ?? [],
+      listings: listingsGrouped.get(item.id) ?? [],
     })),
     accounts: accountsResult.data,
     reservations: reservationsResult.data,
+    contributions,
   }
 }
 
@@ -259,6 +351,11 @@ export async function createRegistryItemHandler(
 
   try {
     await replaceItemPrices(session.wedding.id, inserted.data.id, input.prices)
+    await replaceAmazonListing(
+      session.wedding.id,
+      inserted.data.id,
+      input.amazon_url,
+    )
   } catch (error) {
     await admin.from('registry_items').delete().eq('id', inserted.data.id)
     throw error
@@ -269,7 +366,11 @@ export async function createRegistryItemHandler(
     'registry.gift_created',
     inserted.data.id,
     `Added gift “${input.title}”.`,
-    { title: input.title, prices: input.prices },
+    {
+      title: input.title,
+      prices: input.prices,
+      hasAmazon: Boolean(input.amazon_url),
+    },
   )
 
   return inserted.data
@@ -318,6 +419,7 @@ export async function updateRegistryItemHandler(
   if (updated.error) throw new Error(updated.error.message)
 
   await replaceItemPrices(session.wedding.id, itemId, input.prices)
+  await replaceAmazonListing(session.wedding.id, itemId, input.amazon_url)
   if (existing.data.photo_path !== input.photo_path) {
     await removeGiftPhoto(existing.data.photo_path)
   }
@@ -523,7 +625,7 @@ export async function getPublicRegistryForWeddingId(
 ): Promise<PublicRegistryData> {
   const admin = createAdminSupabaseClient()
 
-  const [itemsResult, accountsResult, prices] = await Promise.all([
+  const [itemsResult, accountsResult, prices, listings] = await Promise.all([
     admin
       .from('registry_items')
       .select(
@@ -543,33 +645,48 @@ export async function getPublicRegistryForWeddingId(
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true }),
     loadPricesForWedding(weddingId),
+    loadListingsForWedding(weddingId),
   ])
 
   if (itemsResult.error) throw new Error(itemsResult.error.message)
   if (accountsResult.error) throw new Error(accountsResult.error.message)
 
   const grouped = pricesByItem(prices)
+  const listingsGrouped = listingsByItem(listings)
 
-  const items: PublicRegistryItem[] = itemsResult.data.map((row) => {
-    const desired = Number(row.desired_qty)
-    const claimed = Number(row.claimed_qty)
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      store_url: row.store_url,
-      photo_path: row.photo_path,
-      price_label: row.price_label,
-      prices: (grouped.get(row.id) ?? []).map((price) => ({
+  const items: PublicRegistryItem[] = await Promise.all(
+    itemsResult.data.map(async (row) => {
+      const desired = Number(row.desired_qty)
+      const claimed = Number(row.claimed_qty)
+      const listed = (grouped.get(row.id) ?? []).map((price) => ({
         currency: price.currency,
         amount: price.amount,
-      })),
-      desired_qty: desired,
-      claimed_qty: claimed,
-      remaining_qty: Math.max(0, desired - claimed),
-      status: row.status,
-    }
-  })
+      }))
+      const remaining =
+        listed.length > 0
+          ? await remainingForGift(weddingId, row.id, listed)
+          : []
+      return {
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        store_url: row.store_url,
+        photo_path: row.photo_path,
+        price_label: row.price_label,
+        prices: remaining,
+        listings: (listingsGrouped.get(row.id) ?? []).map((listing) => ({
+          provider: listing.provider,
+          label: listing.label,
+          url: listing.url,
+        })),
+        is_open: giftStillOpen(remaining),
+        desired_qty: desired,
+        claimed_qty: claimed,
+        remaining_qty: Math.max(0, desired - claimed),
+        status: row.status,
+      }
+    }),
+  )
 
   const accounts: PublicRegistryAccount[] = accountsResult.data
 
@@ -607,15 +724,15 @@ export async function reserveRegistryItemHandler(input: {
     throw new Error('This gift is already marked purchased.')
   }
 
-  const remaining = item.desired_qty - item.claimed_qty
-  if (remaining <= 0) {
+  const remainingQty = item.desired_qty - item.claimed_qty
+  if (remainingQty <= 0) {
     throw new Error('This gift is fully reserved.')
   }
-  if (quantity > remaining) {
+  if (quantity > remainingQty) {
     throw new Error(
-      remaining === 1
+      remainingQty === 1
         ? 'Only 1 left to reserve.'
-        : `Only ${remaining} left to reserve.`,
+        : `Only ${remainingQty} left to reserve.`,
     )
   }
 
@@ -655,9 +772,23 @@ export async function reserveRegistryItemHandler(input: {
   }
 
   const row = updated.data
-  const prices = (await loadPricesForWedding(row.wedding_id)).filter(
-    (price) => price.item_id === row.id,
-  )
+  const listed = (await loadPricesForWedding(row.wedding_id))
+    .filter((price) => price.item_id === row.id)
+    .map((price) => ({
+      currency: price.currency,
+      amount: price.amount,
+    }))
+  const remainingPriceRows =
+    listed.length > 0
+      ? await remainingForGift(row.wedding_id, row.id, listed)
+      : []
+  const listings = (await loadListingsForWedding(row.wedding_id))
+    .filter((listing) => listing.item_id === row.id)
+    .map((listing) => ({
+      provider: listing.provider,
+      label: listing.label,
+      url: listing.url,
+    }))
   return {
     id: row.id,
     title: row.title,
@@ -665,10 +796,9 @@ export async function reserveRegistryItemHandler(input: {
     store_url: row.store_url,
     photo_path: row.photo_path,
     price_label: row.price_label,
-    prices: prices.map((price) => ({
-      currency: price.currency,
-      amount: price.amount,
-    })),
+    prices: remainingPriceRows,
+    listings,
+    is_open: giftStillOpen(remainingPriceRows),
     desired_qty: row.desired_qty,
     claimed_qty: row.claimed_qty,
     remaining_qty: Math.max(0, row.desired_qty - row.claimed_qty),

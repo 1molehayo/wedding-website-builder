@@ -14,6 +14,7 @@ import { Route as WeddingSlugRouteImport } from './routes/$weddingSlug'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as DesignRouteImport } from './routes/design'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 import { Route as AdminAdminsRouteImport } from './routes/admin/admins'
 import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
 import { Route as AdminGuestsRouteImport } from './routes/admin/guests'
@@ -29,6 +30,8 @@ import { Route as ApiPhotoRouteImport } from './routes/api/photo'
 import { Route as PhotosTokenRouteImport } from './routes/photos.$token'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
+import { Route as ApiCronRegistryRemindersRouteImport } from './routes/api/cron.registry-reminders'
+import { Route as RegistryConfirmTokenRouteImport } from './routes/registry.confirm.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,6 +56,11 @@ const DesignRoute = DesignRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAdminsRoute = AdminAdminsRouteImport.update({
@@ -130,12 +138,24 @@ const AdminInviteTokenRoute = AdminInviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiCronRegistryRemindersRoute =
+  ApiCronRegistryRemindersRouteImport.update({
+    id: '/api/cron/registry-reminders',
+    path: '/api/cron/registry-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const RegistryConfirmTokenRoute = RegistryConfirmTokenRouteImport.update({
+  id: '/registry/confirm/$token',
+  path: '/registry/confirm/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/guests': typeof AdminGuestsRoute
@@ -152,11 +172,14 @@ export interface FileRoutesByFullPath {
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/registry-reminders': typeof ApiCronRegistryRemindersRoute
+  '/registry/confirm/$token': typeof RegistryConfirmTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/guests': typeof AdminGuestsRoute
@@ -173,6 +196,8 @@ export interface FileRoutesByTo {
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/registry-reminders': typeof ApiCronRegistryRemindersRoute
+  '/registry/confirm/$token': typeof RegistryConfirmTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -180,6 +205,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/$weddingSlug': typeof WeddingSlugRoute
   '/design': typeof DesignRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/guests': typeof AdminGuestsRoute
@@ -196,6 +222,8 @@ export interface FileRoutesById {
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/registry-reminders': typeof ApiCronRegistryRemindersRoute
+  '/registry/confirm/$token': typeof RegistryConfirmTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -204,6 +232,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/$weddingSlug'
     | '/design'
+    | '/admin/activity'
     | '/admin/admins'
     | '/admin/feedback'
     | '/admin/guests'
@@ -220,11 +249,14 @@ export interface FileRouteTypes {
     | '/rsvp/$token'
     | '/admin/'
     | '/admin/invite/$token'
+    | '/api/cron/registry-reminders'
+    | '/registry/confirm/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$weddingSlug'
     | '/design'
+    | '/admin/activity'
     | '/admin/admins'
     | '/admin/feedback'
     | '/admin/guests'
@@ -241,12 +273,15 @@ export interface FileRouteTypes {
     | '/rsvp/$token'
     | '/admin'
     | '/admin/invite/$token'
+    | '/api/cron/registry-reminders'
+    | '/registry/confirm/$token'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/$weddingSlug'
     | '/design'
+    | '/admin/activity'
     | '/admin/admins'
     | '/admin/feedback'
     | '/admin/guests'
@@ -263,6 +298,8 @@ export interface FileRouteTypes {
     | '/rsvp/$token'
     | '/admin/'
     | '/admin/invite/$token'
+    | '/api/cron/registry-reminders'
+    | '/registry/confirm/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -273,6 +310,8 @@ export interface RootRouteChildren {
   ApiPhotoRoute: typeof ApiPhotoRoute
   PhotosTokenRoute: typeof PhotosTokenRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
+  ApiCronRegistryRemindersRoute: typeof ApiCronRegistryRemindersRoute
+  RegistryConfirmTokenRoute: typeof RegistryConfirmTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -310,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/admins': {
@@ -417,10 +463,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInviteTokenRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/cron/registry-reminders': {
+      id: '/api/cron/registry-reminders'
+      path: '/api/cron/registry-reminders'
+      fullPath: '/api/cron/registry-reminders'
+      preLoaderRoute: typeof ApiCronRegistryRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registry/confirm/$token': {
+      id: '/registry/confirm/$token'
+      path: '/registry/confirm/$token'
+      fullPath: '/registry/confirm/$token'
+      preLoaderRoute: typeof RegistryConfirmTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteRouteChildren {
+  AdminActivityRoute: typeof AdminActivityRoute
   AdminAdminsRoute: typeof AdminAdminsRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
@@ -437,6 +498,7 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminActivityRoute: AdminActivityRoute,
   AdminAdminsRoute: AdminAdminsRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminGuestsRoute: AdminGuestsRoute,
@@ -464,16 +526,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPhotoRoute: ApiPhotoRoute,
   PhotosTokenRoute: PhotosTokenRoute,
   RsvpTokenRoute: RsvpTokenRoute,
+  ApiCronRegistryRemindersRoute: ApiCronRegistryRemindersRoute,
+  RegistryConfirmTokenRoute: RegistryConfirmTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { amazonRegistryUrlError } from '@/lib/registry/amazon-url'
 
 const optionalText = (label: string, max: number) =>
   z
@@ -54,6 +55,8 @@ export const registryItemFormSchema = z
     title: z.string().trim().min(1, 'Title is required.').max(120),
     description: optionalText('Description', 2000),
     store_url: optionalUrl,
+    /** Amazon wedding-registry / product URL. Saved as a listing, not store_url. */
+    amazon_url: optionalUrl.optional().transform((value) => value ?? null),
     photo_path: z
       .union([z.string(), z.null(), z.undefined()])
       .transform((value) => {
@@ -70,7 +73,7 @@ export const registryItemFormSchema = z
     prices: z
       .array(priceRowSchema)
       .min(1, 'Add a currency and price.')
-      .max(8, 'Eight currencies is the maximum.'),
+      .max(1, 'List one price. Guests convert with live rates when they pay.'),
     desired_qty: z.coerce.number().int().min(1).max(100),
     claimed_qty: z.coerce.number().int().min(0).max(100),
     status: z.enum(['available', 'reserved', 'purchased']),
@@ -93,6 +96,14 @@ export const registryItemFormSchema = z
         code: 'custom',
         path: ['claimed_qty'],
         message: 'Claimed quantity cannot exceed desired quantity.',
+      })
+    }
+    const amazonError = amazonRegistryUrlError(value.amazon_url ?? null)
+    if (amazonError) {
+      context.addIssue({
+        code: 'custom',
+        path: ['amazon_url'],
+        message: amazonError,
       })
     }
   })

@@ -1,17 +1,23 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { InfoIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
+import { ContributionAuditDrawer } from '@/components/admin/contribution-audit'
+import { RecordAmazonPurchaseDrawer } from '@/components/admin/record-amazon-purchase'
 import { AccountForm, GiftItemForm } from '@/components/admin/registry-forms'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
+import { CONTRIBUTION_STATUS_LABELS } from '@/lib/registry/contribution-schema'
 import {
   deleteRegistryAccount,
   deleteRegistryItem,
   listRegistryAdmin,
 } from '@/lib/registry/registry'
-import type { RegistryAdminData } from '@/lib/registry/registry'
+import type {
+  AdminContribution,
+  RegistryAdminData,
+} from '@/lib/registry/registry'
 import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
 import type { RegistryAccount } from '@/lib/supabase/types'
 import { cn } from '@/lib/utils'
@@ -26,7 +32,7 @@ export const Route = createFileRoute('/admin/registry')({
   component: AdminRegistryPage,
 })
 
-type TabId = 'gifts' | 'accounts'
+type TabId = 'gifts' | 'accounts' | 'transfers'
 
 type AdminGift = RegistryAdminData['items'][number]
 
@@ -37,6 +43,7 @@ function AdminRegistryPage() {
   const [items, setItems] = useState(initial.items)
   const [accounts, setAccounts] = useState(initial.accounts)
   const [reservations, setReservations] = useState(initial.reservations)
+  const [contributions, setContributions] = useState(initial.contributions)
 
   const [itemDrawerOpen, setItemDrawerOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<AdminGift | null>(null)
@@ -50,10 +57,16 @@ function AdminRegistryPage() {
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
+  const [transferDrawerOpen, setTransferDrawerOpen] = useState(false)
+  const [editingTransfer, setEditingTransfer] =
+    useState<AdminContribution | null>(null)
+  const [amazonDrawerOpen, setAmazonDrawerOpen] = useState(false)
+
   useEffect(() => {
     setItems(initial.items)
     setAccounts(initial.accounts)
     setReservations(initial.reservations)
+    setContributions(initial.contributions)
   }, [initial])
 
   const reservationCountByItem = useMemo(() => {
@@ -88,14 +101,20 @@ function AdminRegistryPage() {
     setAccountDrawerOpen(true)
   }
 
+  const openTransfer = (row: AdminContribution) => {
+    setEditingTransfer(row)
+    setTransferDrawerOpen(true)
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="admin-page-title">Registry</h1>
           <p className="text-foreground-secondary mt-2 max-w-2xl text-sm leading-relaxed">
-            Add gifts with a price in each currency you accept, and share bank
-            details for cash gifts. No card payments.
+            Add gifts with one price, share bank accounts in the currencies
+            you accept, and audit guest transfers. Guests convert with a live
+            rate locked per payment. No card payments.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -104,29 +123,41 @@ function AdminRegistryPage() {
               <PlusIcon />
               Add gift
             </Button>
-          ) : (
+          ) : null}
+          {tab === 'accounts' ? (
             <Button type="button" size="sm" onClick={openCreateAccount}>
               <PlusIcon />
               Add account
             </Button>
-          )}
+          ) : null}
+          {tab === 'transfers' ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setAmazonDrawerOpen(true)}
+            >
+              <PlusIcon />
+              Record Amazon
+            </Button>
+          ) : null}
         </div>
       </div>
 
       <div className="bg-surface border-border flex w-full items-start gap-3 rounded-xl border p-4 text-sm">
         <InfoIcon className="text-foreground-secondary mt-0.5 size-4 shrink-0" />
         <p className="text-foreground-secondary leading-relaxed">
-          A gift needs a price in at least one currency. The product link and
-          photo are optional. After someone reserves a gift, update the claimed
-          quantity here.
+          Guests contribute by bank transfer. After they confirm they sent the
+          money, audit it here: edit the amount if needed, then mark Received or
+          Not received.
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(
           [
             ['gifts', 'Gift items'],
             ['accounts', 'Cash accounts'],
+            ['transfers', 'Transfers'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -141,6 +172,9 @@ function AdminRegistryPage() {
             )}
           >
             {label}
+            {id === 'transfers' && contributions.length > 0
+              ? ` (${contributions.length})`
+              : ''}
           </button>
         ))}
       </div>
@@ -148,7 +182,7 @@ function AdminRegistryPage() {
       {tab === 'gifts' ? (
         items.length === 0 ? (
           <p className="text-foreground-secondary text-sm">
-            No gifts yet. Add one with a price in at least one currency.
+            No gifts yet. Add one with a single price.
           </p>
         ) : (
           <ul className="space-y-3">
@@ -208,52 +242,107 @@ function AdminRegistryPage() {
             ))}
           </ul>
         )
-      ) : accounts.length === 0 ? (
-        <p className="text-foreground-secondary text-sm">
-          No cash accounts yet. Add one or more bank details for guests.
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {accounts.map((account) => (
-            <li
-              key={account.id}
-              className="bg-surface border-border flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4"
-            >
-              <div className="min-w-0">
-                <p className="font-medium">{account.label}</p>
-                <p className="text-foreground-secondary mt-1 text-sm">
-                  {account.currency}
-                  {account.bank_name ? ` · ${account.bank_name}` : ''} ·{' '}
-                  {account.account_name}
-                  {account.is_enabled ? '' : ' · hidden'}
-                </p>
-                <p className="mt-1 font-mono text-sm">
-                  {account.account_number}
-                </p>
-              </div>
-              <div className="flex gap-2">
+      ) : null}
+
+      {tab === 'accounts' ? (
+        accounts.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            No cash accounts yet. Add one or more bank details for guests.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {accounts.map((account) => (
+              <li
+                key={account.id}
+                className="bg-surface border-border flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">{account.label}</p>
+                  <p className="text-foreground-secondary mt-1 text-sm">
+                    {account.currency}
+                    {account.bank_name ? ` · ${account.bank_name}` : ''} ·{' '}
+                    {account.account_name}
+                    {account.is_enabled ? '' : ' · hidden'}
+                  </p>
+                  <p className="mt-1 font-mono text-sm">
+                    {account.account_number}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openEditAccount(account)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDeleteAccountId(account.id)}
+                  >
+                    <TrashIcon />
+                    Delete
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
+
+      {tab === 'transfers' ? (
+        contributions.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            No transfers yet. They appear when a guest starts a contribution on
+            the public registry.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {contributions.map((row) => (
+              <li
+                key={row.id}
+                className="bg-surface border-border flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {row.amount} {row.currency}
+                    {row.currency !== row.base_currency
+                      ? ` (${row.amount_base} ${row.base_currency})`
+                      : ''}{' '}
+                    · {row.payer_name}
+                  </p>
+                  <p className="text-foreground-secondary mt-1 text-sm">
+                    {CONTRIBUTION_STATUS_LABELS[row.status]}
+                    {row.channel === 'external_store'
+                      ? ` · ${row.provider ?? 'store'}`
+                      : row.applied_at
+                        ? ' · guest confirmed'
+                        : ' · awaiting confirm'}
+                    {' · '}
+                    {row.gift_title ?? 'Direct donation'}
+                    {row.bank?.reference ? ` · ${row.bank.reference}` : ''}
+                  </p>
+                  <p className="text-foreground-secondary mt-1 text-xs">
+                    {row.payer_email}
+                    {row.payer_phone ? ` · ${row.payer_phone}` : ''}
+                  </p>
+                </div>
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => openEditAccount(account)}
+                  onClick={() => openTransfer(row)}
                 >
-                  Edit
+                  Audit
                 </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setDeleteAccountId(account.id)}
-                >
-                  <TrashIcon />
-                  Delete
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
 
       <SideDrawer open={itemDrawerOpen} onOpenChange={setItemDrawerOpen}>
         {itemDrawerOpen ? (
@@ -277,6 +366,46 @@ function AdminRegistryPage() {
             onClose={() => setAccountDrawerOpen(false)}
             onSaved={async () => {
               setAccountDrawerOpen(false)
+              await refresh()
+            }}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <SideDrawer
+        open={transferDrawerOpen}
+        onOpenChange={(open) => {
+          setTransferDrawerOpen(open)
+          if (!open) setEditingTransfer(null)
+        }}
+      >
+        {transferDrawerOpen && editingTransfer ? (
+          <ContributionAuditDrawer
+            key={editingTransfer.id}
+            contribution={editingTransfer}
+            onClose={() => {
+              setTransferDrawerOpen(false)
+              setEditingTransfer(null)
+            }}
+            onSaved={async (row) => {
+              setEditingTransfer(row)
+              setContributions((current) =>
+                current.map((item) => (item.id === row.id ? row : item)),
+              )
+              await refresh()
+            }}
+          />
+        ) : null}
+      </SideDrawer>
+
+      <SideDrawer open={amazonDrawerOpen} onOpenChange={setAmazonDrawerOpen}>
+        {amazonDrawerOpen ? (
+          <RecordAmazonPurchaseDrawer
+            gifts={items}
+            onClose={() => setAmazonDrawerOpen(false)}
+            onSaved={async (row) => {
+              setAmazonDrawerOpen(false)
+              setContributions((current) => [row, ...current])
               await refresh()
             }}
           />

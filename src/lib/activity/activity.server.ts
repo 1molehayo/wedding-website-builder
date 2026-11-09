@@ -2,6 +2,8 @@ import {
   assertActivityAction,
   redactActivityMetadata,
 } from '@/lib/activity/redact'
+import type { AdminSession } from '@/lib/auth/types'
+import { isSuperAdminProfile } from '@/lib/auth/roles'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import type { ActivityActorRole } from '@/lib/supabase/types'
 
@@ -15,6 +17,70 @@ export type RecordActivityInput = {
   entityId: string | null
   summary: string
   metadata?: Record<string, unknown>
+}
+
+export const ACTIVITY_AREAS = [
+  'guest',
+  'registry',
+  'pages',
+  'media',
+  'settings',
+  'profile',
+  'admins',
+  'feedback',
+  'auth',
+  'system',
+] as const
+
+export type ActivityArea = (typeof ACTIVITY_AREAS)[number]
+
+export type ListActivityLogsInput = {
+  area: ActivityArea | null
+  actorRole: ActivityActorRole | null
+  query: string | null
+  from: string | null
+  to: string | null
+  limit: number
+  offset: number
+}
+
+/** JSON-safe activity row for server-fn responses. */
+export type ActivityLogListItem = {
+  id: string
+  wedding_id: string | null
+  actor_id: string | null
+  actor_email: string | null
+  actor_role: ActivityActorRole
+  action: string
+  entity_type: string
+  entity_id: string | null
+  summary: string
+  metadata: Record<string, string | number | boolean | null>
+  created_at: string
+}
+
+export type ListActivityLogsResult = {
+  items: ActivityLogListItem[]
+  total: number
+  limit: number
+  offset: number
+}
+
+function toSerializableMetadata(
+  value: unknown,
+): Record<string, string | number | boolean | null> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const output: Record<string, string | number | boolean | null> = {}
+  for (const [key, child] of Object.entries(value)) {
+    if (typeof child === 'string' || typeof child === 'boolean' || child === null) {
+      output[key] = child
+      continue
+    }
+    if (typeof child === 'number' && Number.isFinite(child)) {
+      output[key] = child
+    }
+  }
+  return output
 }
 
 /**
@@ -51,5 +117,99 @@ export async function recordActivity(
 
   if (error) {
     throw new Error(error.message)
+  }
+}
+
+/** Record a mutation by the signed-in admin. */
+export async function recordAdminActivity(
+  session: AdminSession,
+  input: {
+    weddingId?: string | null
+    action: string
+    entityType: string
+    entityId?: string | null
+    summary: string
+    metadata?: Record<string, unknown>
+  },
+): Promise<void> {
+  const weddingId =
+    input.weddingId === undefined
+      ? (session.wedding?.id ?? null)
+      : input.weddingId
+
+  await recordActivity({
+    weddingId,
+    actorId: session.user.id,
+    actorEmail: session.profile.email ?? session.user.email ?? null,
+    actorRole: session.profile.role,
+    action: input.action,
+    entityType: input.entityType,
+    entityId: input.entityId ?? null,
+    summary: input.summary,
+    metadata: input.metadata,
+  })
+}
+
+export async function listActivityLogsHandler(
+  input: ListActivityLogsInput,
+): Promise<ListActivityLogsResult> {
+  const { requireAdminSession } = await import('@/lib/auth/session.server')
+  const session = await requireAdminSession()
+  const admin = createAdminSupabaseClient()
+  const isSuper = isSuperAdminProfile(session.profile)
+
+  let query = admin
+    .from('activity_logs')
+    .select(
+      'id, wedding_id, actor_id, actor_email, actor_role, action, entity_type, entity_id, summary, metadata, created_at',
+      { count: 'exact' },
+    )
+    .order('created_at', { ascending: false })
+    .range(input.offset, input.offset + input.limit - 1)
+
+  if (!isSuper) {
+    const weddingId = session.wedding?.id
+    if (!weddingId) {
+      return { items: [], total: 0, limit: input.limit, offset: input.offset }
+    }
+    query = query.eq('wedding_id', weddingId)
+  }
+
+  if (input.area) {
+    query = query.like('action', `${input.area}.%`)
+  }
+  if (input.actorRole) {
+    query = query.eq('actor_role', input.actorRole)
+  }
+  if (input.query) {
+    query = query.ilike('actor_email', `%${input.query}%`)
+  }
+  if (input.from) {
+    query = query.gte('created_at', input.from)
+  }
+  if (input.to) {
+    query = query.lte('created_at', input.to)
+  }
+
+  const result = await query
+  if (result.error) throw new Error(result.error.message)
+
+  return {
+    items: result.data.map((row) => ({
+      id: row.id,
+      wedding_id: row.wedding_id,
+      actor_id: row.actor_id,
+      actor_email: row.actor_email,
+      actor_role: row.actor_role,
+      action: row.action,
+      entity_type: row.entity_type,
+      entity_id: row.entity_id,
+      summary: row.summary,
+      metadata: toSerializableMetadata(row.metadata),
+      created_at: row.created_at,
+    })),
+    total: result.count ?? 0,
+    limit: input.limit,
+    offset: input.offset,
   }
 }

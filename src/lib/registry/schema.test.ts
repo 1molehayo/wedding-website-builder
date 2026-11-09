@@ -5,6 +5,7 @@ const base = {
   title: 'Dinner set',
   description: '',
   store_url: '',
+  amazon_url: '',
   photo_path: null,
   prices: [{ currency: 'usd', amount: '100' }],
   desired_qty: 1,
@@ -20,16 +21,16 @@ describe('parseRegistryItemInput', () => {
     expect(parsed.prices).toEqual([{ currency: 'USD', amount: 100 }])
   })
 
-  it('rejects a second row in the same currency', () => {
+  it('rejects a second price row', () => {
     expect(() =>
       parseRegistryItemInput({
         ...base,
         prices: [
           { currency: 'USD', amount: '100' },
-          { currency: 'usd', amount: '90' },
+          { currency: 'EUR', amount: '90' },
         ],
       }),
-    ).toThrow(/only be listed once/)
+    ).toThrow(/one price/i)
   })
 
   it('rejects a gift with no price', () => {

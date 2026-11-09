@@ -45,6 +45,7 @@ import {
   createGuest,
   deleteGuest,
   listGuests,
+  logGuestWhatsappShare,
   sendGuestInvite,
   sendGuestInvitesBulk,
   unlockGuestRsvp,
@@ -499,6 +500,12 @@ function AdminGuestsPage() {
       toast.message(
         'WhatsApp did not open. Use the WhatsApp button on this guest.',
       )
+      return
+    }
+    try {
+      await logGuestWhatsappShare({ data: { guestId: guest.id } })
+    } catch (err) {
+      console.error('[whatsapp activity]', err)
     }
   }
 

@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import { getAppUrl } from '@/lib/app-url'
 import { formatCoupleNames } from '@/lib/constants'
@@ -170,6 +171,12 @@ export async function createGuestHandler(
       .select(GUEST_SELECT)
       .single()
     if (result.error) throw new Error(result.error.message)
+    await recordAdminActivity(session, {
+      action: 'guest.created',
+      entityType: 'guest',
+      entityId: result.data.id,
+      summary: `Added guest ${result.data.first_name} ${result.data.last_name}.`,
+    })
     return { status: 'created', guest: result.data }
   }
 
@@ -187,6 +194,12 @@ export async function createGuestHandler(
     throw new Error(result.error.message)
   }
 
+  await recordAdminActivity(session, {
+    action: 'guest.created',
+    entityType: 'guest',
+    entityId: result.data.id,
+    summary: `Added guest ${result.data.first_name} ${result.data.last_name}.`,
+  })
   return { status: 'created', guest: result.data }
 }
 
@@ -235,6 +248,12 @@ export async function updateGuestHandler(
     throw new Error(result.error.message)
   }
 
+  await recordAdminActivity(session, {
+    action: 'guest.updated',
+    entityType: 'guest',
+    entityId: result.data.id,
+    summary: `Updated guest ${result.data.first_name} ${result.data.last_name}.`,
+  })
   return { status: 'updated', guest: result.data }
 }
 
@@ -243,6 +262,16 @@ export async function deleteGuestHandler(
 ): Promise<{ ok: true }> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
+
+  const existing = await admin
+    .from('guests')
+    .select('id, first_name, last_name')
+    .eq('id', guestId)
+    .eq('wedding_id', session.wedding.id)
+    .maybeSingle()
+
+  if (existing.error) throw new Error(existing.error.message)
+  if (!existing.data) throw new Error('Guest not found.')
 
   const result = await admin
     .from('guests')
@@ -254,6 +283,12 @@ export async function deleteGuestHandler(
     throw new Error(result.error.message)
   }
 
+  await recordAdminActivity(session, {
+    action: 'guest.deleted',
+    entityType: 'guest',
+    entityId: guestId,
+    summary: `Deleted guest ${existing.data.first_name} ${existing.data.last_name}.`,
+  })
   return { ok: true as const }
 }
 
@@ -428,9 +463,40 @@ export async function sendGuestInviteHandler(
   if (result.error) throw new Error(result.error.message)
   if (!result.data) throw new Error('Guest not found.')
 
-  return sendInviteForGuest(session.wedding, result.data, {
+  const sent = await sendInviteForGuest(session.wedding, result.data, {
     replyTo: session.user.email,
   })
+  await recordAdminActivity(session, {
+    action: 'guest.invited',
+    entityType: 'guest',
+    entityId: sent.guestId,
+    summary: `Sent invite email to ${sent.email}.`,
+  })
+  return sent
+}
+
+export async function logGuestWhatsappShareHandler(
+  guestId: string,
+): Promise<{ ok: true }> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+  const result = await admin
+    .from('guests')
+    .select('id, first_name, last_name')
+    .eq('id', guestId)
+    .eq('wedding_id', session.wedding.id)
+    .maybeSingle()
+
+  if (result.error) throw new Error(result.error.message)
+  if (!result.data) throw new Error('Guest not found.')
+
+  await recordAdminActivity(session, {
+    action: 'guest.whatsapp_shared',
+    entityType: 'guest',
+    entityId: result.data.id,
+    summary: `Shared WhatsApp invite for ${result.data.first_name} ${result.data.last_name}.`,
+  })
+  return { ok: true as const }
 }
 
 export async function sendGuestInvitesBulkHandler(input: {
@@ -466,7 +532,15 @@ export async function sendGuestInvitesBulkHandler(input: {
       continue
     }
     try {
-      await sendInviteForGuest(session.wedding, guest, { replyTo })
+      const invite = await sendInviteForGuest(session.wedding, guest, {
+        replyTo,
+      })
+      await recordAdminActivity(session, {
+        action: 'guest.invited',
+        entityType: 'guest',
+        entityId: invite.guestId,
+        summary: `Sent invite email to ${invite.email}.`,
+      })
       sent += 1
     } catch (err) {
       failed.push({

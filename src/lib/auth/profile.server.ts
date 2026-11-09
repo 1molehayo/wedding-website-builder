@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import { isSuperAdminProfile, normalizeAdminEmail } from '@/lib/auth/roles'
 import { requireAdminSession } from '@/lib/auth/session.server'
 import type { AdminProfile } from '@/lib/supabase/types'
@@ -75,6 +76,14 @@ export async function updateProfileHandler(input: {
     throw new Error(updated.error.message)
   }
 
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? null,
+    action: 'profile.updated',
+    entityType: 'admin_profile',
+    entityId: session.user.id,
+    summary: 'Updated profile details.',
+  })
+
   return updated.data
 }
 
@@ -132,6 +141,14 @@ export async function requestAccountDeletionHandler(input: {
       error,
     })
   }
+
+  await recordAdminActivity(session, {
+    weddingId: session.wedding?.id ?? null,
+    action: 'profile.deletion_requested',
+    entityType: 'admin_profile',
+    entityId: session.user.id,
+    summary: 'Requested account deletion.',
+  })
 
   return updated.data
 }

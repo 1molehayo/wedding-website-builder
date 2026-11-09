@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import { requireAdminSession } from '@/lib/auth/session.server'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
@@ -60,17 +61,29 @@ export async function submitProductFeedbackHandler(input: {
       : null
 
   const admin = createAdminSupabaseClient()
-  const result = await admin.from('product_feedback').insert({
-    admin_profile_id: session.profile.id,
-    wedding_id: session.wedding?.id ?? null,
-    category,
-    message,
-    page_path: pagePath || null,
-  })
+  const result = await admin
+    .from('product_feedback')
+    .insert({
+      admin_profile_id: session.profile.id,
+      wedding_id: session.wedding?.id ?? null,
+      category,
+      message,
+      page_path: pagePath || null,
+    })
+    .select('id')
+    .single()
 
   if (result.error) {
     throw new Error(result.error.message)
   }
+
+  await recordAdminActivity(session, {
+    weddingId: null,
+    action: 'feedback.submitted',
+    entityType: 'product_feedback',
+    entityId: result.data.id,
+    summary: `Submitted ${category} feedback.`,
+  })
 
   return { ok: true as const }
 }

@@ -1,54 +1,60 @@
-import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { useEffect, useEffectEvent, useMemo, useState } from 'react'
+import { PhoneField } from '@/components/phone-field'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
-import { reserveRegistryItem } from '@/lib/registry/registry'
+import { fieldErrorMessage } from '@/lib/forms/field-error'
+import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
+import {
+  emptyStartContributionForm,
+  startContributionFormSchema,
+} from '@/lib/registry/contribution-schema'
+import {
+  quoteContributionFx,
+  startBankContribution,
+} from '@/lib/registry/registry'
 import type {
+  ContributionFxQuote,
   PublicRegistryAccount,
   PublicRegistryData,
   PublicRegistryItem,
+  StartedContribution,
 } from '@/lib/registry/registry'
-import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
 import { cn } from '@/lib/utils'
+
+type ContributeTarget =
+  { kind: 'gift'; item: PublicRegistryItem } | { kind: 'direct' }
+
+function priceLine(
+  prices: PublicRegistryItem['prices'],
+  priceLabel: string | null,
+) {
+  if (prices.length > 0) {
+    return prices
+      .map((price) => {
+        if (price.remaining < price.original) {
+          return `${price.remaining} ${price.currency} left of ${price.original}`
+        }
+        return `${price.original} ${price.currency}`
+      })
+      .join(' · ')
+  }
+  return priceLabel
+}
 
 function GiftItemCard({
   item,
-  onUpdated,
+  onContribute,
 }: {
   item: PublicRegistryItem
-  onUpdated: (next: PublicRegistryItem) => void
+  onContribute: () => void
 }) {
-  const [guestName, setGuestName] = useState('')
-  const [quantity, setQuantity] = useState(1)
-  const [isReserving, setIsReserving] = useState(false)
-  const canReserve = item.status !== 'purchased' && item.remaining_qty > 0
-
-  const onReserve = async () => {
-    setIsReserving(true)
-    try {
-      const next = await reserveRegistryItem({
-        data: {
-          itemId: item.id,
-          guestName: guestName.trim() || null,
-          quantity,
-        },
-      })
-      onUpdated(next)
-      toast.success(
-        next.remaining_qty === 0
-          ? 'Reserved. Thank you — this gift is now fully claimed.'
-          : 'Reserved. Thank you!',
-      )
-      setGuestName('')
-      setQuantity(1)
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Unable to reserve this gift.',
-      )
-    } finally {
-      setIsReserving(false)
-    }
-  }
+  const canContribute = item.is_open && item.prices.length > 0
+  const line = priceLine(item.prices, item.price_label)
 
   return (
     <article className="border-border space-y-4 border-b py-8 last:border-b-0">
@@ -69,17 +75,11 @@ function GiftItemCard({
               {item.description}
             </p>
           ) : null}
-          <p className="text-foreground-secondary mt-3 text-xs tracking-[0.14em] uppercase">
-            {REGISTRY_ITEM_STATUS_LABELS[item.status]}
-            {item.prices.length > 0
-              ? ` · ${item.prices
-                  .map((price) => `${price.amount} ${price.currency}`)
-                  .join(' · ')}`
-              : item.price_label
-                ? ` · ${item.price_label}`
-                : ''}
-            {` · ${item.claimed_qty}/${item.desired_qty} claimed`}
-          </p>
+          {line ? (
+            <p className="text-foreground-secondary mt-3 text-xs tracking-[0.14em] uppercase">
+              {line}
+            </p>
+          ) : null}
         </div>
         {item.store_url ? (
           <a
@@ -88,60 +88,42 @@ function GiftItemCard({
             rel="noopener noreferrer"
             className="text-foreground text-xs tracking-[0.14em] uppercase underline-offset-4 transition hover:underline"
           >
-            Open gift link
+            View product
           </a>
         ) : null}
       </div>
 
-      {canReserve ? (
-        <div className="flex max-w-lg flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="min-w-0 flex-1 text-left text-sm">
-            <span className="text-foreground-secondary mb-1.5 block text-xs tracking-[0.12em] uppercase">
-              Your name (optional)
-            </span>
-            <Input
-              value={guestName}
-              onChange={(event) => setGuestName(event.target.value)}
-              placeholder="So we know who reserved it"
-            />
-          </label>
-          <label className="w-24 text-left text-sm">
-            <span className="text-foreground-secondary mb-1.5 block text-xs tracking-[0.12em] uppercase">
-              Qty
-            </span>
-            <Input
-              type="number"
-              min={1}
-              max={item.remaining_qty}
-              value={quantity}
-              onChange={(event) =>
-                setQuantity(
-                  Math.max(
-                    1,
-                    Math.min(
-                      item.remaining_qty,
-                      Number(event.target.value) || 1,
-                    ),
-                  ),
-                )
-              }
-            />
-          </label>
+      <div className="flex flex-wrap gap-2">
+        {item.listings.map((listing) => (
+          <Button key={listing.provider} type="button" size="sm" asChild>
+            <a href={listing.url} target="_blank" rel="noopener noreferrer">
+              {listing.provider === 'amazon' ? 'Buy on Amazon' : listing.label}
+            </a>
+          </Button>
+        ))}
+        {canContribute ? (
           <Button
             type="button"
             size="sm"
-            isLoading={isReserving}
-            onClick={() => void onReserve()}
+            variant={item.listings.length > 0 ? 'outline' : undefined}
+            onClick={onContribute}
           >
-            Reserve
+            Send money
           </Button>
-        </div>
-      ) : (
+        ) : null}
+      </div>
+      {!canContribute && item.prices.length > 0 ? (
         <p className="text-foreground-secondary text-sm">
-          This gift is fully reserved or marked purchased. You can still open
-          the gift link if the couple shared a store wishlist.
+          This gift is fully funded. Thank you.
         </p>
-      )}
+      ) : null}
+      {!canContribute &&
+      item.prices.length === 0 &&
+      item.listings.length === 0 ? (
+        <p className="text-foreground-secondary text-sm">
+          This gift is not open for contributions yet.
+        </p>
+      ) : null}
     </article>
   )
 }
@@ -173,11 +155,437 @@ function AccountCard({ account }: { account: PublicRegistryAccount }) {
   )
 }
 
-export function RegistrySection({ initial }: { initial: PublicRegistryData }) {
-  const [items, setItems] = useState(initial.items)
+function ContributeDrawer({
+  open,
+  onOpenChange,
+  weddingSlug,
+  target,
+  accounts,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  weddingSlug: string
+  target: ContributeTarget | null
+  accounts: PublicRegistryAccount[]
+}) {
+  const [started, setStarted] = useState<StartedContribution | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [fxQuote, setFxQuote] = useState<ContributionFxQuote | null>(null)
+  const [fxLoading, setFxLoading] = useState(false)
+
+  const currencies = useMemo(() => {
+    return [
+      ...new Set(accounts.map((account) => account.currency.toUpperCase())),
+    ]
+  }, [accounts])
+
+  const defaultCurrency = currencies[0] ?? 'USD'
+  const giftId = target?.kind === 'gift' ? target.item.id : null
+  const basePrice =
+    target?.kind === 'gift' ? (target.item.prices[0] ?? null) : null
+
+  const form = useForm({
+    defaultValues: {
+      ...emptyStartContributionForm(defaultCurrency),
+      weddingSlug,
+      giftId: giftId ?? '',
+    },
+    validators: {
+      onSubmit: ({ value }) => {
+        const parsed = startContributionFormSchema.safeParse({
+          ...value,
+          weddingSlug,
+          giftId,
+        })
+        if (parsed.success) return undefined
+        return zodFormFieldErrors(parsed.error)
+      },
+    },
+    onSubmit: async ({ value }) => {
+      setIsSaving(true)
+      try {
+        const result = await startBankContribution({
+          data: {
+            ...value,
+            weddingSlug,
+            giftId,
+          },
+        })
+        setStarted(result)
+      } catch (err) {
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : 'Unable to start this contribution.',
+        )
+      } finally {
+        setIsSaving(false)
+      }
+    },
+  })
+
+  const applyFxQuote = useEffectEvent((quote: ContributionFxQuote) => {
+    setFxQuote(quote)
+    if (quote.suggestedAmount != null && quote.suggestedAmount > 0) {
+      form.setFieldValue('amount', String(quote.suggestedAmount))
+    }
+  })
+
+  useEffect(() => {
+    if (!open || !target || started) return
+    const currency = form.state.values.currency || defaultCurrency
+    if (!currency) return
+
+    let cancelled = false
+    setFxLoading(true)
+    void quoteContributionFx({
+      data: {
+        weddingSlug,
+        giftId,
+        currency,
+      },
+    })
+      .then((quote) => {
+        if (cancelled) return
+        applyFxQuote(quote)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setFxQuote(null)
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : 'Unable to load the exchange rate.',
+        )
+      })
+      .finally(() => {
+        if (!cancelled) setFxLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    open,
+    target,
+    started,
+    weddingSlug,
+    giftId,
+    defaultCurrency,
+    form.state.values.currency,
+  ])
+
+  const title =
+    target?.kind === 'gift'
+      ? `Contribute to ${target.item.title}`
+      : 'Send a cash gift'
+
+  return (
+    <SideDrawer
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          setStarted(null)
+          setFxQuote(null)
+          form.reset()
+        }
+        onOpenChange(next)
+      }}
+    >
+      <SideDrawer.Header
+        title={started ? 'Bank details' : title}
+        drawerDescription="Registry contribution"
+      />
+      {started ? (
+        <>
+          <SideDrawer.Content>
+            <div className="flex flex-col gap-4">
+              <p className="text-foreground-secondary text-sm leading-relaxed">
+                Send{' '}
+                <strong className="text-foreground">
+                  {started.amount} {started.currency}
+                </strong>
+                {started.giftTitle ? (
+                  <>
+                    {' '}
+                    toward{' '}
+                    <strong className="text-foreground">
+                      {started.giftTitle}
+                    </strong>
+                  </>
+                ) : null}
+                {started.currency !== started.baseCurrency ? (
+                  <>
+                    {' '}
+                    (counts as {started.amountBase} {started.baseCurrency} at
+                    the locked rate)
+                  </>
+                ) : null}
+                . Use this reference so the couple can match it:
+              </p>
+              <p className="font-mono text-lg tracking-wide">
+                {started.reference}
+              </p>
+              <div className="border-border space-y-2 rounded-xl border p-4">
+                <p className="public-kicker">{started.account.label}</p>
+                {started.account.bank_name ? (
+                  <p className="font-serif text-xl italic">
+                    {started.account.bank_name}
+                  </p>
+                ) : null}
+                <p className="text-foreground-secondary text-sm">
+                  {started.account.currency} · {started.account.account_name}
+                </p>
+                <p className="font-mono text-sm tracking-wide">
+                  {started.account.account_number}
+                </p>
+                {started.account.routing_number ? (
+                  <p className="text-foreground-secondary text-sm">
+                    Routing / sort code: {started.account.routing_number}
+                  </p>
+                ) : null}
+                {started.account.notes ? (
+                  <p className="text-foreground-secondary text-sm leading-relaxed">
+                    {started.account.notes}
+                  </p>
+                ) : null}
+              </div>
+              <p className="text-foreground-secondary text-sm leading-relaxed">
+                We emailed you a confirm link. After you send the money, open
+                that email and confirm so the gift amount updates.
+              </p>
+              <Button type="button" size="sm" asChild>
+                <a href={started.confirmUrl}>I’ve sent the money</a>
+              </Button>
+            </div>
+          </SideDrawer.Content>
+          <SideDrawer.Footer>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Close
+            </Button>
+          </SideDrawer.Footer>
+        </>
+      ) : (
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            void form.handleSubmit()
+          }}
+        >
+          <SideDrawer.Content>
+            <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
+              {(submitted) => (
+                <div className="flex flex-col gap-4">
+                  {basePrice ? (
+                    <p className="text-foreground-secondary text-sm leading-relaxed">
+                      Gift price {basePrice.original} {basePrice.currency}
+                      {basePrice.remaining < basePrice.original
+                        ? ` · ${basePrice.remaining} left`
+                        : null}
+                      . Pick the currency you will send; we convert with a live
+                      rate and lock it when you continue.
+                    </p>
+                  ) : null}
+
+                  <div className="grid items-start gap-4 sm:grid-cols-2">
+                    <form.Field name="amount">
+                      {(field) => {
+                        const error = fieldErrorMessage(field.state.meta.errors)
+                        const invalid =
+                          !!error && (field.state.meta.isTouched || submitted)
+                        return (
+                          <Field invalid={invalid}>
+                            <Field.Label required>Amount</Field.Label>
+                            <Field.Control>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={field.state.value}
+                                invalid={invalid}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                              />
+                            </Field.Control>
+                            <Field.Error>{invalid ? error : null}</Field.Error>
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                    <form.Field name="currency">
+                      {(field) => {
+                        const error = fieldErrorMessage(field.state.meta.errors)
+                        const invalid =
+                          !!error && (field.state.meta.isTouched || submitted)
+                        return (
+                          <Field invalid={invalid}>
+                            <Field.Label required>Currency</Field.Label>
+                            <Field.Control>
+                              <Select
+                                value={field.state.value}
+                                invalid={invalid}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                              >
+                                {currencies.map((currency) => (
+                                  <option key={currency} value={currency}>
+                                    {currency}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field.Control>
+                            <Field.Error>{invalid ? error : null}</Field.Error>
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                  </div>
+
+                  {fxLoading ? (
+                    <p className="text-foreground-secondary text-sm">
+                      Loading exchange rate…
+                    </p>
+                  ) : fxQuote &&
+                    fxQuote.baseCurrency !== fxQuote.payCurrency ? (
+                    <p className="text-foreground-secondary text-sm leading-relaxed">
+                      About 1 {fxQuote.baseCurrency} = {fxQuote.fxRate}{' '}
+                      {fxQuote.payCurrency}
+                      {fxQuote.suggestedAmount != null
+                        ? ` · suggested ${fxQuote.suggestedAmount} ${fxQuote.payCurrency} to cover what is left`
+                        : null}
+                      . Exact rate locks when you continue.
+                    </p>
+                  ) : null}
+
+                  <form.Field name="payerName">
+                    {(field) => {
+                      const error = fieldErrorMessage(field.state.meta.errors)
+                      const invalid =
+                        !!error && (field.state.meta.isTouched || submitted)
+                      return (
+                        <Field invalid={invalid}>
+                          <Field.Label required>Your name</Field.Label>
+                          <Field.Control>
+                            <Input
+                              value={field.state.value}
+                              invalid={invalid}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                            />
+                          </Field.Control>
+                          <Field.Error>{invalid ? error : null}</Field.Error>
+                        </Field>
+                      )
+                    }}
+                  </form.Field>
+
+                  <form.Field name="payerEmail">
+                    {(field) => {
+                      const error = fieldErrorMessage(field.state.meta.errors)
+                      const invalid =
+                        !!error && (field.state.meta.isTouched || submitted)
+                      return (
+                        <Field invalid={invalid}>
+                          <Field.Label required>Email</Field.Label>
+                          <Field.Control>
+                            <Input
+                              type="email"
+                              value={field.state.value}
+                              invalid={invalid}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                            />
+                          </Field.Control>
+                          <Field.Error>{invalid ? error : null}</Field.Error>
+                        </Field>
+                      )
+                    }}
+                  </form.Field>
+
+                  <form.Field name="phoneCountry">
+                    {(countryField) => (
+                      <form.Field name="phoneNational">
+                        {(phoneField) => {
+                          const error = fieldErrorMessage(
+                            phoneField.state.meta.errors,
+                          )
+                          const invalid =
+                            !!error &&
+                            (phoneField.state.meta.isTouched || submitted)
+                          return (
+                            <PhoneField
+                              label="Phone"
+                              country={countryField.state.value}
+                              nationalNumber={phoneField.state.value}
+                              invalid={invalid}
+                              error={invalid ? error : undefined}
+                              onChange={({ country, nationalNumber }) => {
+                                countryField.handleChange(country)
+                                phoneField.handleChange(nationalNumber)
+                              }}
+                            />
+                          )
+                        }}
+                      </form.Field>
+                    )}
+                  </form.Field>
+                </div>
+              )}
+            </form.Subscribe>
+          </SideDrawer.Content>
+          <SideDrawer.Footer>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" isLoading={isSaving}>
+              Continue
+            </Button>
+          </SideDrawer.Footer>
+        </form>
+      )}
+    </SideDrawer>
+  )
+}
+
+export function RegistrySection({
+  initial,
+  weddingSlug,
+}: {
+  initial: PublicRegistryData
+  weddingSlug: string
+}) {
+  const [items] = useState(initial.items)
   const accounts = initial.accounts
+  const [target, setTarget] = useState<ContributeTarget | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   if (!initial.hasContent) return null
+
+  const openContribute = (next: ContributeTarget) => {
+    setTarget(next)
+    setDrawerOpen(true)
+  }
 
   return (
     <section
@@ -190,9 +598,7 @@ export function RegistrySection({ initial }: { initial: PublicRegistryData }) {
           <h2 className="public-section-title">With love</h2>
           <p className="text-foreground-secondary mx-auto mt-5 max-w-xl text-base leading-relaxed">
             Your presence is the gift. If you would like to contribute, you can
-            reserve a gift idea or send a cash gift using the details below.
-            Store links should be buy-as-gift or gift-card links whenever
-            possible.
+            chip in toward a gift or send a cash gift by bank transfer.
           </p>
         </div>
 
@@ -203,11 +609,7 @@ export function RegistrySection({ initial }: { initial: PublicRegistryData }) {
               <GiftItemCard
                 key={item.id}
                 item={item}
-                onUpdated={(next) => {
-                  setItems((current) =>
-                    current.map((row) => (row.id === next.id ? next : row)),
-                  )
-                }}
+                onContribute={() => openContribute({ kind: 'gift', item })}
               />
             ))}
           </div>
@@ -215,13 +617,38 @@ export function RegistrySection({ initial }: { initial: PublicRegistryData }) {
 
         {accounts.length > 0 ? (
           <div>
-            <p className="public-kicker mb-2">Cash gifts</p>
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <p className="public-kicker mb-0">Cash gifts</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => openContribute({ kind: 'direct' })}
+              >
+                Send a cash gift
+              </Button>
+            </div>
             {accounts.map((account) => (
               <AccountCard key={account.id} account={account} />
             ))}
           </div>
         ) : null}
       </div>
+
+      <ContributeDrawer
+        key={
+          target
+            ? target.kind === 'gift'
+              ? target.item.id
+              : 'direct'
+            : 'closed'
+        }
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        weddingSlug={weddingSlug}
+        target={target}
+        accounts={accounts}
+      />
     </section>
   )
 }

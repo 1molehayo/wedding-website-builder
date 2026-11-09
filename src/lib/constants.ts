@@ -39,6 +39,7 @@ export type AdminNavItem = {
     | '/admin/media'
     | '/admin/guests'
     | '/admin/registry'
+    | '/admin/activity'
     | '/admin/admins'
     | '/admin/onboarding'
     | '/admin/profile'
@@ -55,6 +56,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { to: '/admin/media', label: 'Media', exact: false },
   { to: '/admin/guests', label: 'Guests', exact: false },
   { to: '/admin/registry', label: 'Registry', exact: false },
+  { to: '/admin/activity', label: 'Activity', exact: false },
 ]
 
 export const ADMIN_SUPER_NAV_ITEMS: readonly AdminNavItem[] = [

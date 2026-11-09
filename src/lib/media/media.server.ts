@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import {
   ALLOWED_MEDIA_MIME_TYPES,
@@ -158,6 +159,13 @@ export async function finalizeMediaUploadHandler(input: {
     throw new Error(created.error.message)
   }
 
+  await recordAdminActivity(session, {
+    action: 'media.uploaded',
+    entityType: 'media_asset',
+    entityId: created.data.id,
+    summary: `Uploaded photo “${created.data.filename}”.`,
+  })
+
   return {
     ...created.data,
     signedUrl: await createPhotoSignedUrl(input.path),
@@ -210,6 +218,13 @@ export async function uploadMediaAssetHandler(input: {
     throw new Error(created.error.message)
   }
 
+  await recordAdminActivity(session, {
+    action: 'media.uploaded',
+    entityType: 'media_asset',
+    entityId: created.data.id,
+    summary: `Uploaded photo “${created.data.filename}”.`,
+  })
+
   return {
     ...created.data,
     signedUrl: await createPhotoSignedUrl(path),
@@ -243,6 +258,13 @@ export async function deleteMediaAssetHandler(
   if (isAllowedPhotoStoragePath(existing.data.storage_path)) {
     await admin.storage.from(PHOTOS_BUCKET).remove([existing.data.storage_path])
   }
+
+  await recordAdminActivity(session, {
+    action: 'media.deleted',
+    entityType: 'media_asset',
+    entityId: assetId,
+    summary: `Deleted photo “${existing.data.filename}”.`,
+  })
 
   return { ok: true }
 }

@@ -99,6 +99,18 @@ export type RegistryItemPrice = {
   updated_at: string
 }
 
+export type RegistryItemListing = {
+  id: string
+  item_id: string
+  wedding_id: string
+  provider: string
+  url: string
+  label: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
 export type RegistryContribution = {
   id: string
   wedding_id: string
@@ -107,6 +119,13 @@ export type RegistryContribution = {
   provider: string | null
   amount: number
   currency: string
+  /** Amount in base_currency using the locked fx_rate. */
+  amount_base: number
+  base_currency: string
+  /** Pay-currency units per 1 base unit at lock time. */
+  fx_rate: number
+  fx_locked_at: string
+  fx_source: string
   payer_name: string
   payer_email: string
   payer_phone: string | null

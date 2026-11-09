@@ -1,4 +1,4 @@
-import { QuestionIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
+import { QuestionIcon, TrashIcon } from '@phosphor-icons/react'
 import { useForm } from '@tanstack/react-form'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -45,6 +45,7 @@ type GiftFormValues = {
   title: string
   description: string
   store_url: string
+  amazon_url: string
   photo_path: string
   prices: PriceDraft[]
   desired_qty: string
@@ -71,6 +72,7 @@ function emptyGiftForm(): GiftFormValues {
     title: '',
     description: '',
     store_url: '',
+    amazon_url: '',
     photo_path: '',
     prices: [emptyPrice()],
     desired_qty: '1',
@@ -81,18 +83,21 @@ function emptyGiftForm(): GiftFormValues {
 }
 
 function giftToForm(item: AdminGift): GiftFormValues {
+  const amazon = item.listings.find((listing) => listing.provider === 'amazon')
   return {
     title: item.title,
     description: item.description ?? '',
     store_url: item.store_url ?? '',
+    amazon_url: amazon?.url ?? '',
     photo_path: item.photo_path ?? '',
-    prices:
-      item.prices.length > 0
-        ? item.prices.map((price) => ({
-            currency: price.currency,
-            amount: String(price.amount),
-          }))
-        : [emptyPrice()],
+    prices: [
+      item.prices[0]
+        ? {
+            currency: item.prices[0].currency,
+            amount: String(item.prices[0].amount),
+          }
+        : emptyPrice(),
+    ],
     desired_qty: String(item.desired_qty),
     claimed_qty: String(item.claimed_qty),
     status: item.status,
@@ -126,7 +131,15 @@ function accountToForm(account: RegistryAccount): AccountFormValues {
   }
 }
 
-function FieldHint({ label, children }: { label: string; children: string }) {
+function FieldHint({
+  label,
+  children,
+  contentClassName,
+}: {
+  label: string
+  children: React.ReactNode
+  contentClassName?: string
+}) {
   return (
     <Tooltip>
       <Tooltip.Trigger
@@ -135,7 +148,7 @@ function FieldHint({ label, children }: { label: string; children: string }) {
       >
         <QuestionIcon className="size-3.5" />
       </Tooltip.Trigger>
-      <Tooltip.Content>{children}</Tooltip.Content>
+      <Tooltip.Content className={contentClassName}>{children}</Tooltip.Content>
     </Tooltip>
   )
 }
@@ -325,8 +338,8 @@ export function GiftItemForm({
                         <div className="flex items-center gap-1.5">
                           <Field.Label>Product link</Field.Label>
                           <FieldHint label="About the product link">
-                            Optional. Guests can open the product page. This is
-                            not how they pay.
+                            Optional browse link. Guests can open the product
+                            page. This is not how they pay.
                           </FieldHint>
                         </div>
                         <Field.Control>
@@ -341,6 +354,81 @@ export function GiftItemForm({
                           />
                         </Field.Control>
                         <Field.Error>{invalid ? error : null}</Field.Error>
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+
+                <form.Field name="amazon_url">
+                  {(field) => {
+                    const { error, invalid } = fieldState(
+                      field.state.meta.errors,
+                      field.state.meta.isTouched,
+                      submitted,
+                    )
+                    return (
+                      <Field invalid={invalid}>
+                        <div className="flex items-center gap-1.5">
+                          <Field.Label>Amazon link</Field.Label>
+                          <FieldHint
+                            label="How to add an Amazon wedding registry link"
+                            contentClassName="max-w-sm space-y-2 py-2.5"
+                          >
+                            <p className="font-medium">
+                              Use a link from your amazon.com wedding registry.
+                              Do not use a regular product page. Do not use
+                              amazon.es, amazon.co.uk, or any other Amazon site.
+                            </p>
+                            <ol className="list-decimal space-y-1.5 pl-4 text-left leading-relaxed">
+                              <li>
+                                On <strong>amazon.com</strong>, open your
+                                wedding registry and set the shipping address
+                                there once. Guests never see it.
+                              </li>
+                              <li>
+                                Open this gift from that wedding list, not from
+                                Amazon search and not from a normal product
+                                page.
+                              </li>
+                              <li>
+                                Click Share on the registry, or copy the link
+                                from the address bar while you are on the
+                                wedding list or that registry gift.
+                              </li>
+                              <li>
+                                Paste that amazon.com link here. Guests click
+                                Buy on Amazon, pay on Amazon, and shipping goes
+                                to your registry address.
+                              </li>
+                              <li>
+                                After someone buys or contributes, record it
+                                under Registry, Transfers, Record Amazon.
+                              </li>
+                            </ol>
+                            <p className="text-background/80">
+                              Regular product links such as amazon.com/dp/… are
+                              rejected. They do not use your wedding list
+                              address.
+                            </p>
+                          </FieldHint>
+                        </div>
+                        <Field.Control>
+                          <Input
+                            value={field.state.value}
+                            invalid={invalid}
+                            placeholder="https://www.amazon.com/wedding/share/AlexAndSam"
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                          />
+                        </Field.Control>
+                        <Field.Error>{invalid ? error : null}</Field.Error>
+                        <Field.Description>
+                          Optional. Paste an amazon.com wedding registry link
+                          only. Regular product links and other Amazon country
+                          sites are not accepted.
+                        </Field.Description>
                       </Field>
                     )
                   }}
@@ -379,29 +467,13 @@ export function GiftItemForm({
                 </form.Subscribe>
 
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-medium">Prices</p>
-                      <FieldHint label="About prices">
-                        Add one price per currency. Those amounts are the rate
-                        between currencies.
-                      </FieldHint>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        form.setFieldValue('prices', [
-                          ...form.state.values.prices,
-                          emptyPrice(),
-                        ])
-                      }
-                      disabled={form.state.values.prices.length >= 8}
-                    >
-                      <PlusIcon />
-                      Add currency
-                    </Button>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium">Price</p>
+                    <FieldHint label="About price">
+                      List one amount in one currency. Guests pick a bank
+                      account currency (including NGN) and we convert with a
+                      live rate locked when they start the transfer.
+                    </FieldHint>
                   </div>
                   <form.Field name="prices">
                     {(field) => {
@@ -417,97 +489,68 @@ export function GiftItemForm({
                       ) : null
                     }}
                   </form.Field>
-                  <form.Subscribe selector={(state) => state.values.prices}>
-                    {(prices) => (
-                      <div className="flex flex-col gap-4">
-                        {prices.map((_, index) => (
-                          <div
-                            key={index}
-                            className="grid items-start gap-4 sm:grid-cols-[8rem_1fr_auto]"
-                          >
-                            <form.Field name={`prices[${index}].currency`}>
-                              {(field) => {
-                                const { error, invalid } = fieldState(
-                                  field.state.meta.errors,
-                                  field.state.meta.isTouched,
-                                  submitted,
-                                )
-                                return (
-                                  <Field invalid={invalid}>
-                                    <Field.Label required>Currency</Field.Label>
-                                    <Field.Control>
-                                      <Input
-                                        value={field.state.value}
-                                        invalid={invalid}
-                                        maxLength={12}
-                                        onBlur={field.handleBlur}
-                                        onChange={(event) =>
-                                          field.handleChange(
-                                            event.target.value.toUpperCase(),
-                                          )
-                                        }
-                                      />
-                                    </Field.Control>
-                                    <Field.Error>
-                                      {invalid ? error : null}
-                                    </Field.Error>
-                                  </Field>
-                                )
-                              }}
-                            </form.Field>
-                            <form.Field name={`prices[${index}].amount`}>
-                              {(field) => {
-                                const { error, invalid } = fieldState(
-                                  field.state.meta.errors,
-                                  field.state.meta.isTouched,
-                                  submitted,
-                                )
-                                return (
-                                  <Field invalid={invalid}>
-                                    <Field.Label required>Amount</Field.Label>
-                                    <Field.Control>
-                                      <Input
-                                        type="number"
-                                        min={0}
-                                        step="0.01"
-                                        value={field.state.value}
-                                        invalid={invalid}
-                                        onBlur={field.handleBlur}
-                                        onChange={(event) =>
-                                          field.handleChange(event.target.value)
-                                        }
-                                      />
-                                    </Field.Control>
-                                    <Field.Error>
-                                      {invalid ? error : null}
-                                    </Field.Error>
-                                  </Field>
-                                )
-                              }}
-                            </form.Field>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="mt-7"
-                              disabled={prices.length === 1}
-                              onClick={() =>
-                                form.setFieldValue(
-                                  'prices',
-                                  prices.filter(
-                                    (_price, rowIndex) => rowIndex !== index,
-                                  ),
-                                )
-                              }
-                            >
-                              <TrashIcon />
-                              Remove
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </form.Subscribe>
+                  <div className="grid items-start gap-4 sm:grid-cols-[8rem_1fr]">
+                    <form.Field name="prices[0].currency">
+                      {(field) => {
+                        const { error, invalid } = fieldState(
+                          field.state.meta.errors,
+                          field.state.meta.isTouched,
+                          submitted,
+                        )
+                        return (
+                          <Field invalid={invalid}>
+                            <Field.Label required>Currency</Field.Label>
+                            <Field.Control>
+                              <Input
+                                value={field.state.value}
+                                invalid={invalid}
+                                maxLength={12}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(
+                                    event.target.value.toUpperCase(),
+                                  )
+                                }
+                              />
+                            </Field.Control>
+                            <Field.Error>
+                              {invalid ? error : null}
+                            </Field.Error>
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                    <form.Field name="prices[0].amount">
+                      {(field) => {
+                        const { error, invalid } = fieldState(
+                          field.state.meta.errors,
+                          field.state.meta.isTouched,
+                          submitted,
+                        )
+                        return (
+                          <Field invalid={invalid}>
+                            <Field.Label required>Amount</Field.Label>
+                            <Field.Control>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={field.state.value}
+                                invalid={invalid}
+                                onBlur={field.handleBlur}
+                                onChange={(event) =>
+                                  field.handleChange(event.target.value)
+                                }
+                              />
+                            </Field.Control>
+                            <Field.Error>
+                              {invalid ? error : null}
+                            </Field.Error>
+                          </Field>
+                        )
+                      }}
+                    </form.Field>
+                  </div>
                 </div>
 
                 <div className="grid items-start gap-4 sm:grid-cols-2">

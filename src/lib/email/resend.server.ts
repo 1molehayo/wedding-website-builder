@@ -14,11 +14,20 @@ import {
   guestRsvpInviteEmailText,
   inviteEmailHtml,
   inviteEmailText,
+  registryContributionConfirmEmailHtml,
+  registryContributionConfirmEmailText,
+  registryContributionReminderEmailHtml,
+  registryContributionReminderEmailText,
+  registryContributionThanksEmailHtml,
+  registryContributionThanksEmailText,
 } from '@/lib/email/templates'
 import type {
   GuestDateAnnouncedEmailInput,
   GuestPhotoShareEmailInput,
   GuestRsvpInviteEmailInput,
+  RegistryContributionConfirmEmailInput,
+  RegistryContributionReminderEmailInput,
+  RegistryContributionThanksEmailInput,
 } from '@/lib/email/templates'
 
 export type EmailInlineAttachment = {
@@ -367,6 +376,54 @@ export async function sendGuestDateAnnouncedEmail(
     subject,
     text: guestDateAnnouncedEmailText(input),
     html: guestDateAnnouncedEmailHtml(input),
+  })
+}
+
+export async function sendRegistryContributionConfirmEmail(
+  input: RegistryContributionConfirmEmailInput & {
+    to: string
+    replyTo?: string
+  },
+) {
+  const subject = `Confirm your gift for ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    replyTo: input.replyTo,
+    subject,
+    text: registryContributionConfirmEmailText(input),
+    html: registryContributionConfirmEmailHtml(input),
+  })
+}
+
+export async function sendRegistryContributionThanksEmail(
+  input: RegistryContributionThanksEmailInput & {
+    to: string
+    replyTo?: string
+  },
+) {
+  const subject = `Thank you from ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    replyTo: input.replyTo,
+    subject,
+    text: registryContributionThanksEmailText(input),
+    html: registryContributionThanksEmailHtml(input),
+  })
+}
+
+export async function sendRegistryContributionReminderEmail(
+  input: RegistryContributionReminderEmailInput & {
+    to: string
+    replyTo?: string
+  },
+) {
+  const subject = `Reminder: confirm your gift for ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    replyTo: input.replyTo,
+    subject,
+    text: registryContributionReminderEmailText(input),
+    html: registryContributionReminderEmailHtml(input),
   })
 }
 

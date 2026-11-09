@@ -12,8 +12,7 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 
 ### Pending tasks
 
-1. **Registry** — **decided Oct 10. Build the bank-transfer flow first.** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry). The Nov 8 note on [one ledger for every store](#nov-8-2026--one-ledger-then-amazon-and-later-stores) is part of that build: bank transfer is the first channel, and the same contribution row must accept Amazon and later stores.  
-   Guests contribute by bank transfer toward a gift, or donate straight to the couple’s account. We do not take the payment. Amazon is the second way to pay for a gift, and it comes after this. Do not build an in-app card checkout.
+1. **Registry** — **bank-transfer + Amazon + activity + live FX (NGN-capable) with rate lock in code (Nov 9).** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry) and [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores). Apply listings + FX-lock migrations locally. Do not build an in-app card checkout.
 
 2. **E-invitation: boilerplate designs that follow the wedding theme** — **persisted + email image (Nov 3).**  
    Catalog designs on Wedding settings, under the colour theme, with a Light / Dark toggle. Names, date, and venue come from the form.  
@@ -39,8 +38,8 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 6. **E-invitation designs, then the email image** — **done in item 2 (Nov 3).**  
    Design persists; card PNG is generated on settings save and embedded in guest invite emails.
 
-7. **Amazon on a gift** — **after the bank-transfer registry, not before.**  
-   A gift can then be paid on Amazon or by the bank transfer in the Oct 10 spec. Amazon owns that payment and shipping. Group gifting (contribute any amount, or buy the whole item) is an Amazon.com wedding registry, not Amazon.es. A test list was started on a personal Amazon.com account. Still to verify as a guest: button labels, contribute vs buy, and that a $1 contribution does not ship. A full purchase needs a real US shipping address on the registry first. The odd names on that test list are fine.
+7. **Amazon on a gift** — **in code (Nov 9); needs a browser pass.**  
+   Gift Amazon listing + public Buy on Amazon + admin Record Amazon. Amazon owns payment/shipping. Still to verify as a guest on a real Amazon.com wedding list: button labels, contribute vs buy, and that a $1 contribution does not ship.
 
 ### After touch-ups and the registry feature
 
@@ -82,17 +81,15 @@ Both use the same transfer, confirmation, thank-you, and admin audit. Amazon is 
 
 ### Gift
 
-Fields: photo, title, an optional link to the product online, and prices by currency. The link is so guests can see the gift. It is not how they pay.
+Fields: photo, title, an optional link to the product online, and **one** price (amount + currency). The link is so guests can see the gift. It is not how they pay.
 
-The form starts with one currency and its price. Both are required. The admin can add more currencies with a repeatable list (a TanStack Form array field). Every added row must have a currency and a price. Saving is blocked until each row has both. There is no live exchange rate. The prices they enter are the rate. A payment in one currency reduces the others by that ratio. A direct donation still has a currency, and it does not change a gift.
+Guests pay in a currency that has an enabled bank account (including NGN). Live FX (Frankfurter, with open.er-api fallback) converts their amount into the gift base currency. The rate used for that payment is **locked** on the contribution (`fx_rate`, `amount_base`, `base_currency`, `fx_locked_at`, `fx_source`). Remaining is tracked only in the gift base currency via locked `amount_base` sums. Admin amount edits keep the locked rate and recalculate `amount_base`. A direct donation still has a currency, and it does not change a gift.
 
-Example: the gift is listed at 100 USD and 90 EUR. A guest sends 45 EUR. That is half of the EUR price, so USD left becomes 50 and EUR left becomes 45. A later admin edit of the amount uses the corrected figure in the currency they paid. Past payments keep the reduction already applied. Changing a listed price affects later payments.
+Example: gift is 100 USD. Guest pays in NGN at a locked 1346.61 NGN per 1 USD. Sending 67,330.50 NGN locks `amount_base` ≈ 50 USD, so 50 USD remains. Later FX moves do not change that payment.
 
-The guest pays in one of the currencies on that gift, and we show the bank account for that currency. A direct donation (no gift) still has a currency, and it does not change any gift.
+On the public gift, show the base original and amount left. Amount left changes only after the guest confirms they sent the money, and only for transfers that are not **Not received**. Use the admin-adjusted amount when the admin has changed it. **Not received** puts that share back. Marking it **Received** again takes it off again.
 
-On the public gift, show each original price with a line through it and the amount still left in that currency. Amount left changes only after the guest confirms they sent the money, and only for transfers that are not **Not received**. Use the admin-adjusted amount when the admin has changed it. **Not received** puts that share back. Marking it **Received** again takes it off again.
-
-The gift is still open while any amount left is above zero. When the money covers the price, the gift is complete. If the total runs over, that is fine. The page only needs to show that a gift is still short.
+The gift is still open while base remaining is above zero. When the money covers the price, the gift is complete. If the total runs over, that is fine. The page only needs to show that a gift is still short.
 
 ### Transfer status
 
@@ -155,7 +152,17 @@ Bank transfer ships first. Amazon ships second. Other stores (Target, a local sh
 
 **One row changes a gift’s remaining amount: `registry_contributions`.** Bank details do not live on that row. A store name never appears in the remaining-amount function.
 
-Phase 1 schema is in `supabase/migrations/20261108230000_registry_contributions_and_activity_logs.sql`. It is not applied until you run `pnpm db:migrate` locally (and `pnpm db:push` when you want it on the linked remote). `recordActivity` is in `src/lib/activity/activity.server.ts`. Phase 2 admin gift form is in the registry drawer: photo, optional product link, and a currency/price list. Saving a gift or bank account writes an activity row. The old reserve buttons stay until the guest contribute flow replaces them. Deleting a gift that already has a contribution is blocked on purpose.
+Phase 1 schema is in `supabase/migrations/20261108230000_registry_contributions_and_activity_logs.sql` (applied locally). `recordActivity` is in `src/lib/activity/activity.server.ts`. Phase 2 admin gift form is in the registry drawer: photo, optional product link, and a currency/price list. Saving a gift or bank account writes an activity row. Deleting a gift that already has a contribution is blocked on purpose.
+
+**Guest bank path (Nov 9, in code):** public Contribute / Donate drawer → start contribution + confirm email → bank details with reference → `/registry/confirm/$token` thank-you (confetti, thank-you email, `applied_at`). Remaining prices use listed-price ratios.
+
+**Admin transfer audit (Nov 9, in code):** Registry → Transfers tab. Audit drawer: edit amount, mark Received / Not received / back to Pending, mailto + WhatsApp when Not received. Activity rows written on amount/status changes.
+
+**Confirm reminders (Nov 9, in code):** Daily cron `GET/POST /api/cron/registry-reminders` (Bearer `CRON_SECRET`, `vercel.json` at 14:00 UTC). Up to 3 emails, one day apart, stop when `applied_at` is set. Activity `system.reminder_sent`.
+
+**Activity logs (Nov 9, in code):** Admin → Activity (filters: area, actor role, email, date). `recordActivity` / `recordAdminActivity` wired for guests, registry, pages, media/shares, settings, profile, admins, feedback, auth login/logout, and system reminder/thank-you.
+
+**Amazon on a gift (Nov 9, in code):** `registry_item_listings` migration. Admin gift form Amazon link. Public “Buy on Amazon” + bank Contribute. Transfers → Record Amazon (external_store, applied immediately as Received). No Amazon API/webhooks. Apply migration `20261109010000_registry_item_listings.sql`.
 
 ### Contribution
 

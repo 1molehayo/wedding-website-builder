@@ -1,3 +1,4 @@
+import { recordActivity } from '@/lib/activity/activity.server'
 import {
   getLocalBootstrapRole,
   isLocalAllowedEmail,
@@ -349,15 +350,69 @@ export async function verifyAdminOtpHandler(input: {
     )
   }
 
+  try {
+    await recordActivity({
+      weddingId: session.wedding?.id ?? null,
+      actorId: session.user.id,
+      actorEmail: session.profile.email ?? session.user.email ?? null,
+      actorRole: session.profile.role,
+      action: 'auth.login',
+      entityType: 'admin_profile',
+      entityId: session.user.id,
+      summary: 'Signed in.',
+    })
+  } catch (activityError) {
+    console.error('[auth] login activity failed', activityError)
+  }
+
   return session
 }
 
 export async function logoutAdminHandler() {
+  let actor: {
+    weddingId: string | null
+    actorId: string
+    actorEmail: string | null
+    actorRole: AdminRole
+  } | null = null
+
+  try {
+    const current = await getAdminSessionHandler()
+    if (current) {
+      actor = {
+        weddingId: current.wedding?.id ?? null,
+        actorId: current.user.id,
+        actorEmail: current.profile.email ?? current.user.email ?? null,
+        actorRole: current.profile.role,
+      }
+    }
+  } catch {
+    actor = null
+  }
+
   const supabase = createServerSupabaseClient()
   const { error } = await supabase.auth.signOut()
   if (error) {
     throw new Error(error.message)
   }
+
+  if (actor) {
+    try {
+      await recordActivity({
+        weddingId: actor.weddingId,
+        actorId: actor.actorId,
+        actorEmail: actor.actorEmail,
+        actorRole: actor.actorRole,
+        action: 'auth.logout',
+        entityType: 'admin_profile',
+        entityId: actor.actorId,
+        summary: 'Signed out.',
+      })
+    } catch (logError) {
+      console.error('[auth] logout activity failed', logError)
+    }
+  }
+
   return { ok: true as const }
 }
 
