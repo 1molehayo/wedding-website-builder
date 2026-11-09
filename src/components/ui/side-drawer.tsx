@@ -1,6 +1,7 @@
 import { XIcon } from '@phosphor-icons/react'
 import { Drawer } from 'vaul'
 import { Button } from '@/components/ui/button'
+import { useTopLayerActive } from '@/lib/ui/top-layer'
 import { cn } from '@/lib/utils'
 
 type SideDrawerProps = {
@@ -10,8 +11,18 @@ type SideDrawerProps = {
 }
 
 function SideDrawerRoot({ open, onOpenChange, children }: SideDrawerProps) {
+  // Vaul is a Radix dialog: while modal, it inerts everything outside the
+  // drawer portal — including FeedbackModal/ConfirmDialog. Drop modal while a
+  // top-layer dialog is open so those stay clickable without closing the drawer.
+  const topLayerActive = useTopLayerActive()
+
   return (
-    <Drawer.Root direction="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root
+      direction="right"
+      open={open}
+      onOpenChange={onOpenChange}
+      modal={!topLayerActive}
+    >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/30" />
         <Drawer.Content

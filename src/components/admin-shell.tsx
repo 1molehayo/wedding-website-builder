@@ -28,6 +28,7 @@ import {
 import { FeedbackProvider } from '@/lib/feedback/feedback-context'
 import type { FeedbackOpenDefaults } from '@/lib/feedback/feedback-context'
 import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
+import { TopLayerProvider } from '@/lib/ui/top-layer'
 import { publicWeddingPath } from '@/lib/wedding/public-settings'
 import { cn } from '@/lib/utils'
 
@@ -326,6 +327,7 @@ export function AdminShell({
   }, [isContentLoading])
 
   return (
+    <TopLayerProvider>
     <FeedbackProvider value={feedbackApi}>
       <div
         data-surface="admin"
@@ -412,5 +414,6 @@ export function AdminShell({
         </div>
       </div>
     </FeedbackProvider>
+    </TopLayerProvider>
   )
 }

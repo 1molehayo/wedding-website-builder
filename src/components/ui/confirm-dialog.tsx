@@ -1,6 +1,7 @@
 import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
+import { useRegisterTopLayer } from '@/lib/ui/top-layer'
 import { cn } from '@/lib/utils'
 
 type ConfirmDialogProps = {
@@ -30,17 +31,21 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const titleId = useId()
   const descriptionId = useId()
+  useRegisterTopLayer(open)
 
   useEffect(() => {
     if (!open) return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isConfirming) onOpenChange(false)
+      if (event.key !== 'Escape' || isConfirming) return
+      event.preventDefault()
+      event.stopPropagation()
+      onOpenChange(false)
     }
-    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('keydown', onKeyDown, true)
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('keydown', onKeyDown, true)
       document.body.style.overflow = previous
     }
   }, [open, onOpenChange, isConfirming])

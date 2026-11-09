@@ -2,6 +2,7 @@ import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { XIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { useRegisterTopLayer } from '@/lib/ui/top-layer'
 import { cn } from '@/lib/utils'
 
 type ModalProps = {
@@ -28,6 +29,7 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId()
   const descriptionId = useId()
+  useRegisterTopLayer(open)
 
   useEffect(() => {
     if (!open) return
@@ -50,7 +52,8 @@ export function Modal({
 
   if (!open) return null
 
-  // Portal + z above SideDrawer (z-50) so modals opened from drawers stay usable.
+  // Portal + z above SideDrawer (z-50). Top-layer registration releases the
+  // drawer's Radix modal trap so this dialog is focusable/clickable.
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <button
