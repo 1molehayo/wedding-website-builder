@@ -222,7 +222,7 @@ web3 = 30
 # Keep email provider ON so OTP/magic-link works locally.
 # Public self-signup is still blocked by [auth].enable_signup = false;
 # admin users are created via the secret/admin API, not public signup.
-enable_signup = true
+enabled = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -264,8 +264,8 @@ content_path = "./supabase/templates/magic_link.html"
 # content_path = "./templates/password_changed_notification.html"
 
 [auth.sms]
-# Allow/disallow new user signups via SMS to your project.
-enable_signup = false
+# Turn the SMS/phone auth provider off for this project.
+enabled = false
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 # Template for sending OTP to users
