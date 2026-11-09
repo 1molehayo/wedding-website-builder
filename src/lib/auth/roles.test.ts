@@ -4,7 +4,9 @@ import {
   LOCAL_SUPER_ADMIN_EMAIL,
   getLocalBootstrapRole,
   getProductionSuperAdminEmail,
+  getProductionSuperAdminEmails,
   getSuperAdminEmail,
+  getSuperAdminEmails,
   isLocalAllowedEmail,
   isReservedSuperAdminEmail,
   isSuperAdminEmail,
@@ -13,6 +15,7 @@ import {
 } from './roles'
 
 const DEMO_PRODUCTION_SUPER_ADMIN = 'owner@example.com'
+const DEMO_PRODUCTION_SUPER_ADMIN_SECOND = 'co-owner@example.com'
 
 describe('admin roles', () => {
   afterEach(() => {
@@ -22,12 +25,35 @@ describe('admin roles', () => {
   it('resolves super admin email by environment', () => {
     process.env.PRODUCTION_SUPER_ADMIN_EMAIL = DEMO_PRODUCTION_SUPER_ADMIN
     expect(getProductionSuperAdminEmail()).toBe(DEMO_PRODUCTION_SUPER_ADMIN)
+    expect(getProductionSuperAdminEmails()).toEqual([
+      DEMO_PRODUCTION_SUPER_ADMIN,
+    ])
     expect(getSuperAdminEmail(false)).toBe(DEMO_PRODUCTION_SUPER_ADMIN)
     expect(getSuperAdminEmail(true)).toBe(LOCAL_SUPER_ADMIN_EMAIL)
     expect(isSuperAdminEmail(DEMO_PRODUCTION_SUPER_ADMIN, false)).toBe(true)
     expect(isSuperAdminEmail(LOCAL_SUPER_ADMIN_EMAIL, true)).toBe(true)
     expect(isSuperAdminEmail(DEMO_PRODUCTION_SUPER_ADMIN, true)).toBe(false)
     expect(isSuperAdminEmail(null)).toBe(false)
+  })
+
+  it('accepts comma-separated production super admin emails', () => {
+    process.env.PRODUCTION_SUPER_ADMIN_EMAIL = `  ${DEMO_PRODUCTION_SUPER_ADMIN} , ${DEMO_PRODUCTION_SUPER_ADMIN_SECOND.toUpperCase()} , ${DEMO_PRODUCTION_SUPER_ADMIN} `
+    expect(getProductionSuperAdminEmails()).toEqual([
+      DEMO_PRODUCTION_SUPER_ADMIN,
+      DEMO_PRODUCTION_SUPER_ADMIN_SECOND,
+    ])
+    expect(getSuperAdminEmails(false)).toEqual([
+      DEMO_PRODUCTION_SUPER_ADMIN,
+      DEMO_PRODUCTION_SUPER_ADMIN_SECOND,
+    ])
+    expect(isSuperAdminEmail(DEMO_PRODUCTION_SUPER_ADMIN, false)).toBe(true)
+    expect(isSuperAdminEmail(DEMO_PRODUCTION_SUPER_ADMIN_SECOND, false)).toBe(
+      true,
+    )
+    expect(isSuperAdminEmail('other@example.com', false)).toBe(false)
+    expect(
+      isReservedSuperAdminEmail(DEMO_PRODUCTION_SUPER_ADMIN_SECOND),
+    ).toBe(true)
   })
 
   it('requires PRODUCTION_SUPER_ADMIN_EMAIL for non-local resolution', () => {

@@ -1,27 +1,42 @@
 import type { AdminProfile, AdminRole } from '@/lib/supabase/types'
 
 /**
- * Server-only production super-admin email (`PRODUCTION_SUPER_ADMIN_EMAIL`).
- * Never use a `VITE_` prefix — must not ship to the browser bundle.
+ * Server-only production super-admin emails (`PRODUCTION_SUPER_ADMIN_EMAIL`).
+ * Comma-separated list is supported. Never use a `VITE_` prefix — must not
+ * ship to the browser bundle.
  */
-function readProductionSuperAdminEmail(): string | undefined {
-  if (typeof process === 'undefined') return undefined
+function readProductionSuperAdminEmails(): string[] {
+  if (typeof process === 'undefined') return []
   const value = process.env.PRODUCTION_SUPER_ADMIN_EMAIL?.trim()
-  return value ? normalizeAdminEmail(value) : undefined
+  if (!value) return []
+
+  return [
+    ...new Set(
+      value
+        .split(',')
+        .map((part) => normalizeAdminEmail(part))
+        .filter((email) => email.length > 0),
+    ),
+  ]
 }
 
 /**
- * Production super admin from server env. Throws if unset (fail closed).
+ * Production super admins from server env. Throws if unset (fail closed).
  * Local Mailpit auth uses {@link LOCAL_SUPER_ADMIN_EMAIL} instead.
  */
-export function getProductionSuperAdminEmail(): string {
-  const email = readProductionSuperAdminEmail()
-  if (!email) {
+export function getProductionSuperAdminEmails(): string[] {
+  const emails = readProductionSuperAdminEmails()
+  if (emails.length === 0) {
     throw new Error(
       'Missing PRODUCTION_SUPER_ADMIN_EMAIL (server-only). Set it in .env / Vercel Environment Variables.',
     )
   }
-  return email
+  return emails
+}
+
+/** First configured production super-admin email. */
+export function getProductionSuperAdminEmail(): string {
+  return getProductionSuperAdminEmails()[0]
 }
 
 /** Local-only Mailpit test accounts (never used in production Auth rules). */
@@ -37,8 +52,12 @@ export function normalizeAdminEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
+export function getSuperAdminEmails(isLocal: boolean): string[] {
+  return isLocal ? [LOCAL_SUPER_ADMIN_EMAIL] : getProductionSuperAdminEmails()
+}
+
 export function getSuperAdminEmail(isLocal: boolean): string {
-  return isLocal ? LOCAL_SUPER_ADMIN_EMAIL : getProductionSuperAdminEmail()
+  return getSuperAdminEmails(isLocal)[0]
 }
 
 export function isSuperAdminEmail(
@@ -46,16 +65,15 @@ export function isSuperAdminEmail(
   isLocal = false,
 ): boolean {
   if (!email) return false
-  return normalizeAdminEmail(email) === getSuperAdminEmail(isLocal)
+  return getSuperAdminEmails(isLocal).includes(normalizeAdminEmail(email))
 }
 
-/** Either environment's super-admin address (cannot be invited/removed). */
+/** Any environment's super-admin address (cannot be invited/removed). */
 export function isReservedSuperAdminEmail(email?: string | null): boolean {
   if (!email) return false
   const normalized = normalizeAdminEmail(email)
   if (normalized === LOCAL_SUPER_ADMIN_EMAIL) return true
-  const production = readProductionSuperAdminEmail()
-  return production !== undefined && normalized === production
+  return readProductionSuperAdminEmails().includes(normalized)
 }
 
 export function isLocalAllowedEmail(email: string): boolean {

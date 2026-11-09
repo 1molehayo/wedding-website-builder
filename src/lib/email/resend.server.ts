@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { getSuperAdminEmail } from '@/lib/auth/roles'
+import { getSuperAdminEmails } from '@/lib/auth/roles'
 import { getLocalMailpitUrl, isLocalSupabase } from '@/lib/supabase/env'
 import { PRODUCT_NAME, PRODUCT_NAME_ASCII } from '@/lib/constants'
 import {
@@ -63,7 +63,7 @@ function supportFromAddress() {
 }
 
 function superAdminInbox() {
-  return getSuperAdminEmail(isLocalSupabase())
+  return getSuperAdminEmails(isLocalSupabase())
 }
 
 async function deliverViaLocalMailpit(input: {
@@ -210,7 +210,7 @@ export async function sendSupportEmail(input: SupportEmailInput) {
   const resend = getResendClient()
   const result = await resend.emails.send({
     from: supportFromAddress(),
-    to: [superAdminInbox()],
+    to: superAdminInbox(),
     replyTo: input.adminEmail,
     subject,
     text,
@@ -247,7 +247,7 @@ export async function sendDeletionRequestEmail(
     input.reason,
     '',
     `Review and remove them from Admins if appropriate.`,
-    `Super admin inbox: ${superAdminInbox()}`,
+    `Super admin inbox: ${superAdminInbox().join(', ')}`,
   ].join('\n')
 
   return sendResendEmail({

@@ -1,52 +1,100 @@
-# Ìgbéyàwówa — recovered progress (Aug 9–13, 2026)
+# Ìgbéyàwówa — product progress
 
-Snapshot from the recovered chat ([Co creation discussion](a83c655c-b3ac-447b-b0bd-017ee56c5999)). Last agent work: **lint clean** (Aug 13, ~8:12 AM). You were going to test the overnight slice after a nap; that confirmation never happened.
+This is the technical source of truth for current delivery status. For a
+plain-English product walkthrough and QA scenarios, see
+[QA product guide](./qa-product-guide.md).
 
-v1 is **one wedding per deploy**. Local/demo couple samples use fictional **Theo & Ada**. Domain direction: `igbeyawowa.app`.
+v1 supports **one wedding per deployment**. Local/demo samples use the
+fictional couple **Theo & Ada**. Production:
+[igbeyawowa.app](https://www.igbeyawowa.app/). Do not add test data there.
+
+## Current snapshot — Nov 9, 2026
+
+- Branch: `main`
+- Base commit at snapshot: `ce37a33`
+- Worktree: **uncommitted changes present**
+- Verification: lint, typecheck, and admin-role tests passed after the
+  multi-super-admin change; production deployment state still needs a manual
+  check after the next deploy.
+
+### Shipped in the application
+
+- Four themed public wedding sites with configurable page blocks, draft
+  preview, publishing, SEO metadata, and image lightboxes.
+- Passwordless admin sign-in, onboarding, `super_admin` and `admin` roles,
+  invitations, profile management, and account deletion requests.
+- Guest management, individual/bulk invitation email, WhatsApp sharing,
+  private RSVP links, plus-ones, RSVP lock/unlock, and date publication.
+- Private media library, albums, assigned guest access, email shares, personal
+  links, QR codes, open tracking, and full-screen viewing.
+- Gift registry with multi-currency gift prices, accepted bank accounts, direct
+  donations, live FX with a locked contribution rate, guest confirmation,
+  reminders, transfer audit, and manually recorded Amazon purchases.
+- Activity history, admin notification inbox, feedback backlog, support email,
+  privacy page, and cookie page.
+- Rich-text content blocks sanitized on save/render without a browser-only DOM
+  dependency.
+
+### On `main`; verify after deployment
+
+- Compact searchable currency/amount field in admin and public registry forms.
+- Drawer-hosted modal layering so feedback and confirmation dialogs remain
+  usable when opened from a side drawer.
+- Production HTML sanitization fix that avoids the previous server runtime
+  `xhr-sync-worker.js` failure.
+
+### In progress in the current worktree
+
+- Comma-separated `PRODUCTION_SUPER_ADMIN_EMAIL` support. Every configured
+  address can bootstrap as a super admin, is protected from invite/removal,
+  and receives super-admin notification emails.
+
+### Environment verification
+
+| Environment | Code status                                         | Database/migrations                              | Manual QA                      |
+| ----------- | --------------------------------------------------- | ------------------------------------------------ | ------------------------------ |
+| Local       | Current worktree available                          | Check before testing data-dependent flows        | Required for recent UI changes |
+| Staging     | Last known deployed before current uncommitted work | Confirm all Nov 9 migrations are applied         | Re-run smoke test after deploy |
+| Production  | Public site available                               | Do not infer from local state; verify explicitly | Keep free of test data         |
+
+Relevant migrations include registry contributions/activity, Amazon listings,
+and admin notifications. Record the actual applied migration state here after
+each deployment rather than assuming that a successful code deploy applied it.
+
+### Remaining product work
+
+1. **Super-admin import/export** — move a wedding between environments,
+   including settings, page content, media references, guests, and registry
+   data. Define privacy and conflict rules before implementation.
+2. **Wedding status decision** — today status is mostly an admin badge;
+   `completed` closes RSVP. Decide whether status stays manual, is derived from
+   events, or is removed.
+
+### Optional backlog
+
+- Richer plus-one policy types (today it is a number).
+- Public announcement bar.
+- Pick an existing Media item from Page Content.
+- Additional public-site motion, with reduced-motion support.
+- Later platform work: typography picker, subscriptions, multi-wedding
+  tenancy, per-wedding domains, wedding-party block, admin suspension, and
+  payment/seat limits.
+
+### Recent changes
+
+- Nov 9: registry contribution, FX, reminders, Amazon recording, activity log,
+  notification inbox, legal pages, image lightbox, and rich-text block.
+- Nov 9: compact currency selector, nested modal/drawer fix, server sanitizer
+  fix, and multiple production super-admin emails.
 
 ---
 
-## Sep 27, 2026 — current backlog (source of truth)
+## Archived specifications and recovery notes
 
-Updated Nov 9 after your browser checks. Older sections below are history; **this list is what matters for “what’s left.”**
-
-### Done (you confirmed)
-
-| Feature                                                          | Notes                                                                                                                                                                                                                                               |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| E-invitation designs + email card image                          | Migration + Save settings; works                                                                                                                                                                                                                    |
-| Nocturne dark hero overlay                                       | Works                                                                                                                                                                                                                                               |
-| In-page nav uses block titles                                    | Works (hero stays Home)                                                                                                                                                                                                                             |
-| Admin nav no full-page reload                                    | Sidebar stays; works                                                                                                                                                                                                                                |
-| Staging on Vercel                                                | Has latest changes                                                                                                                                                                                                                                  |
-| Gift registry (bank transfer + FX lock + Amazon + Activity page) | In code on `gift-registry` / staging. Specs: [bank-transfer](#oct-10-2026--bank-transfer-gift-registry), [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores), [activity](#nov-8-2026--admin-activity-logs). No in-app card checkout. |
-| Public footer cleanup                                            | “Built with” removed on wedding sites and landing; © kept. Privacy + Cookies links added (Nov 9).                                                                                                                                                   |
-| Image lightbox                                                   | Shared viewer on public image blocks and private photo shares (`object-contain`) (Nov 9).                                                                                                                                                           |
-| Privacy + Cookie policies                                        | `/privacy` and `/cookies` pages with GDPR-oriented copy for this product (Nov 9). Have counsel review before production reliance. Contact: `hello@igbeyawowa.app` (set up domain inbox/forward later).                                              |
-| In-app notifications                                             | Admin bell inbox from activity fan-out (`admin_notifications`). RSVP, registry, pages publish, media shares, settings, feedback for super admins, etc. (Nov 9). Apply migration `20261109030000_admin_notifications.sql`.                           |
-| Text-content page block                                          | TipTap rich text block (`text`): H4–H6, lists, quote, links, align. Sanitized HTML. Separate from Story. (Nov 9).                                                                                                                                   |
-
-### Features still left to build
-
-These are the real remaining product features (not old smoke tests):
-
-1. **Super-admin import / export**  
-   Move a wedding between environments: page content, settings, media, registry. Super admin only.
-
-2. **Wedding settings `status`**  
-   Product decision first (then code if needed). Today it is mostly a badge + closes RSVP when Completed. It does not send invites or publish the date. Options: keep as manual lifecycle, auto-derive, or remove so it is not confusing.
-
-### Optional / discuss later (not blocking the list above)
-
-- **Plus-one policy types** (today it is only a number)
-- **Announcement bar** on the public site
-- **Pick from Media** in Page Content (hero/image still upload on their own)
-- **Motion** animations (last v1 phase)
-- v2: typography picker, subscriptions, multi-wedding, etc.
-
-Production: [igbeyawowa.app](https://www.igbeyawowa.app/). Do not fill production with test data.
-
----
+The sections below preserve product decisions and earlier QA observations.
+They are **historical context**, not the current delivery status. When an old
+statement conflicts with the snapshot above or the current code, use the
+snapshot above.
 
 ## Oct 10, 2026 — bank-transfer gift registry
 

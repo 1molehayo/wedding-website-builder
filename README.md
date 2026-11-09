@@ -12,6 +12,11 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 
 > **Naming:** **Wedding Website Builder** / **Onemole** = product. **Groom** and **bride** names = this wedding (Wedding settings). Do not hardcode the couple into the admin product chrome.
 
+Product documentation:
+
+- [Plain-English product and QA guide](./docs/qa-product-guide.md)
+- [Current engineering progress and historical decisions](./docs/progress.md)
+
 ## Stack
 
 - React 19 + TypeScript
@@ -30,15 +35,22 @@ Useful routes:
 - `/design` — design showcase
 - `/admin/login` — admin sign-in
 - `/admin` — protected overview
+- `/admin/onboarding` — first wedding setup
 - `/admin/settings` — wedding settings (groom, bride, date, venue, theme, public URL slug)
-- `/admin/pages` — page content blocks (hero, story, image, details)
+- `/admin/pages` — draft/live page content (hero, story, text, image, details, registry)
 - `/admin/guests` — guest list, RSVP status, themed invite email / WhatsApp / copy `/rsvp/$token`
-- `/admin/registry` — gift items (external links) + cash/bank accounts; soft guest reserve
+- `/admin/media` — private media library, albums, and guest shares
+- `/admin/registry` — gifts, multi-currency prices, bank accounts, contributions, and transfer audit
+- `/admin/activity` — filterable activity history
+- `/admin/feedback` — super-admin feedback backlog
+- `/admin/support` — regular admin → super-admin support email
 - `/rsvp/$token` — public guest RSVP form (tokenized; no login)
+- `/photos/$token` — private guest photo album
+- `/registry/confirm/$token` — private bank-contribution confirmation
 - `/admin/admins` — invite/resend/cancel/delete admins; deletion requests (super admin only)
 - `/admin/invite/$token` — accept admin invite link from email
 - `/admin/profile` — name, optional phone; email editable for super admin only
-- `/admin/support` — admin → super admin email (hidden for super admin)
+- `/privacy` and `/cookies` — public policy information
 
 ## Prerequisites
 
@@ -140,7 +152,7 @@ Regular `pnpm db:link` / `db:push` still read `.env` / default `supabase/` and *
 
 #### Demo cloud Supabase (migrations, empty wedding)
 
-Demo cloud uses the **same 20 historical migrations** as Regular (shared via `demo-stack/supabase/migrations` → `supabase/migrations`). `db push` applies schema only — it does **not** run `seed.sql`, so a fresh Demo cloud DB has **zero weddings**; use onboarding after deploy.
+Demo cloud uses the **same 25 historical migrations** as Regular (shared via `demo-stack/supabase/migrations` → `supabase/migrations`). `db push` applies schema only — it does **not** run `seed.sql`, so a fresh Demo cloud DB has **zero weddings**; use onboarding after deploy.
 
 1. Create a **separate** Demo Supabase project (not the Regular/production project).
 2. In `.env.demo`, keep local `VITE_SUPABASE_URL=http://127.0.0.1:54331` for `pnpm dev:demo`, and set:
@@ -230,14 +242,14 @@ Couple-facing copy in the **app** comes from the DB (Wedding settings + page blo
 
 ### A. Code / repo (usually once per product; change per couple only if needed)
 
-| What                                       | Where                                                                | Notes                                                                               |
-| ------------------------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Product name / tagline                     | `src/lib/constants.ts` (`PRODUCT_*`)                                 | Keep as Onemole product branding unless white-labeling the builder itself           |
-| Production super admin email               | Env `PRODUCTION_SUPER_ADMIN_EMAIL` (server-only; see `.env.example`) | Who can bootstrap `/admin` on first cloud login. Set in Vercel before deploy.       |
-| Admin OTP email subject                    | App (`adminOtpEmailSubject`)                                         | No wedding → product name (`Ìgbéyàwówa`); wedding set → `{Groom} & {Bride} Wedding` |
-| Admin OTP email body                       | App template (`adminOtpEmailHtml`)                                   | Delivered via Resend (cloud) or Mailpit (local); not GoTrue’s static subject        |
-| Sample couple (opt-in)                     | `supabase/seed.sql` via `pnpm db:seed` / `db:demo:seed`              | Not applied on reset. Cloud uses **onboarding**, not seed.                          |
-| Fallback couple (DB down / no wedding yet) | `src/lib/wedding/public-settings.ts` → `FALLBACK_PUBLIC_WEDDING`     | Public site only until onboarding creates a row                                     |
+| What                                       | Where                                                                | Notes                                                                                                 |
+| ------------------------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Product name / tagline                     | `src/lib/constants.ts` (`PRODUCT_*`)                                 | Keep as Onemole product branding unless white-labeling the builder itself                             |
+| Production super admin email(s)            | Env `PRODUCTION_SUPER_ADMIN_EMAIL` (server-only; see `.env.example`) | Comma-separated list of who can bootstrap `/admin` on first cloud login. Set in Vercel before deploy. |
+| Admin OTP email subject                    | App (`adminOtpEmailSubject`)                                         | No wedding → product name (`Ìgbéyàwówa`); wedding set → `{Groom} & {Bride} Wedding`                   |
+| Admin OTP email body                       | App template (`adminOtpEmailHtml`)                                   | Delivered via Resend (cloud) or Mailpit (local); not GoTrue’s static subject                          |
+| Sample couple (opt-in)                     | `supabase/seed.sql` via `pnpm db:seed` / `db:demo:seed`              | Not applied on reset. Cloud uses **onboarding**, not seed.                                            |
+| Fallback couple (DB down / no wedding yet) | `src/lib/wedding/public-settings.ts` → `FALLBACK_PUBLIC_WEDDING`     | Public site only until onboarding creates a row                                                       |
 
 ### B. Supabase Dashboard (cloud project for this wedding)
 
@@ -310,16 +322,16 @@ When reusing this product for another wedding:
 
 ### Environment variables
 
-| Name                            | Where                                      | Purpose                                                                                                                                                                                  |
-| ------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_SUPABASE_URL`             | browser + server                           | Project URL                                                                                                                                                                              |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | browser + server                           | Publishable key (`sb_publishable_…`)                                                                                                                                                     |
-| `SUPABASE_SECRET_KEY`           | **server only**                            | Secret key (`sb_secret_…`) for privileged ops (first-login admin profile)                                                                                                                |
-| `PRODUCTION_SUPER_ADMIN_EMAIL`  | **server only**                            | Email allowed to bootstrap as `super_admin` on first **cloud** login. Required in production/Vercel. Not used for local Mailpit (`superadmin@supabase.com`). Never use a `VITE_` prefix. |
-| `RESEND_API_KEY`                | server (required for guest/admin app mail) | App transactional email via Resend SDK: guest RSVP invites, photo-share links, admin invites, support. **Separate** from Auth OTP (that uses Resend as **Supabase custom SMTP**)         |
-| `RESEND_FROM_EMAIL`             | server optional                            | From identity for app-sent mail (verified domain). Defaults to Resend onboarding sender for tests                                                                                        |
-| `APP_URL`                       | server                                     | Public origin for RSVP/photo/admin invite links in emails (defaults to `http://localhost:3000`)                                                                                          |
-| `EMAIL_DELIVERY_ENABLED`        | server optional                            | Set `false` to skip outbound app emails (logs instead)                                                                                                                                   |
+| Name                            | Where                                      | Purpose                                                                                                                                                                                                     |
+| ------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | browser + server                           | Project URL                                                                                                                                                                                                 |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | browser + server                           | Publishable key (`sb_publishable_…`)                                                                                                                                                                        |
+| `SUPABASE_SECRET_KEY`           | **server only**                            | Secret key (`sb_secret_…`) for privileged ops (first-login admin profile)                                                                                                                                   |
+| `PRODUCTION_SUPER_ADMIN_EMAIL`  | **server only**                            | Comma-separated email(s) allowed to bootstrap as `super_admin` on first **cloud** login. Required in production/Vercel. Not used for local Mailpit (`superadmin@supabase.com`). Never use a `VITE_` prefix. |
+| `RESEND_API_KEY`                | server (required for guest/admin app mail) | App transactional email via Resend SDK: guest RSVP invites, photo-share links, admin invites, support. **Separate** from Auth OTP (that uses Resend as **Supabase custom SMTP**)                            |
+| `RESEND_FROM_EMAIL`             | server optional                            | From identity for app-sent mail (verified domain). Defaults to Resend onboarding sender for tests                                                                                                           |
+| `APP_URL`                       | server                                     | Public origin for RSVP/photo/admin invite links in emails (defaults to `http://localhost:3000`)                                                                                                             |
+| `EMAIL_DELIVERY_ENABLED`        | server optional                            | Set `false` to skip outbound app emails (logs instead)                                                                                                                                                      |
 
 Never put the secret key in a `VITE_` variable. Mark it Sensitive in Vercel.
 
@@ -359,7 +371,7 @@ Local Auth has `enable_signup = false`. Local OTP uses Mailpit + `supabase/templ
 - Public self-signup disabled (local config + production setting)
 - Admin sign-in is **email + OTP** (6–8 digits; no passwords for admins)
 - Admin routes gated in `beforeLoad` via `getAdminSession()`
-- Roles: `super_admin` (matches `PRODUCTION_SUPER_ADMIN_EMAIL` in cloud, or local Mailpit test email) vs `admin`
+- Roles: `super_admin` (matches any email in `PRODUCTION_SUPER_ADMIN_EMAIL` in cloud, or local Mailpit test email) vs `admin`
 - Only super admin can invite/remove admins (`/admin/admins`)
 - Regular admins can edit wedding settings / content CRUD
 - OTP is only sent to authorized emails (super admin or invited)
@@ -411,9 +423,9 @@ Admins edit structured facts at `/admin/settings`:
 
 Admins edit ordered home-page blocks at `/admin/pages`:
 
-- Block types: `hero`, `story`, `image`, `details`
-- Up/down reorder, add/remove, save whole `page_blocks` JSONB array
-- Public `/` renders blocks via `DynamicBlock`
+- Block types: `hero`, `story`, `text`, `image`, `details`, `registry`
+- Reorder, add/remove/duplicate, draft preview, publish, and restore history
+- Public `/$weddingSlug` renders published blocks via `DynamicBlock`
 - Image blocks store a path in the private `photos` bucket; signed URLs for admin preview and public render
 
 After pulling migrations: `pnpm db:reset` (local) or `pnpm db:push` (cloud, once linked).
@@ -437,20 +449,21 @@ supabase/
 
 ## Implementation phases (v1)
 
-| Phase | Focus                                                        |
-| ----: | ------------------------------------------------------------ |
-|     1 | Bootstrap, local infra, CI                                   |
-|     2 | Design foundation / wedding tokens                           |
-|     3 | Supabase schema + admin auth                                 |
-|     4 | Wedding settings editing                                     |
-|    4b | Page blocks CMS                                              |
-|     5 | Public wedding website polish                                |
-|     6 | Guest list admin                                             |
-|     7 | RSVP                                                         |
-|     8 | Guest email (themed Resend invites + photo shares)           |
-|     9 | Registry (gift links + bank accounts + soft reserve)         |
-|    10 | Date publish (draft date + publish + guest notify) — current |
-|    11 | Motion / launch polish                                       |
+| Phase | Focus                                                      |
+| ----: | ---------------------------------------------------------- |
+|     1 | Bootstrap, local infra, CI                                 |
+|     2 | Design foundation / wedding tokens                         |
+|     3 | Supabase schema + admin auth                               |
+|     4 | Wedding settings editing                                   |
+|    4b | Page blocks CMS                                            |
+|     5 | Public wedding website polish                              |
+|     6 | Guest list admin                                           |
+|     7 | RSVP                                                       |
+|     8 | Guest email (themed Resend invites + photo shares)         |
+|     9 | Registry (bank contributions, FX lock, Amazon recording)   |
+|    10 | Date publish (draft date + publish + guest notify)         |
+|    11 | Activity, notifications, legal pages, rich text, UI polish |
+|    12 | Import/export + status decision — planned                  |
 
 Guest invite, photo-share, and date-announced emails inherit the wedding’s active public theme (light palette for deliverability). Auth OTP templates remain separate (Supabase SMTP).
 
@@ -460,10 +473,10 @@ Do not start the next phase until the previous phase is merged and confirmed.
 
 ## Future plan
 
-| Version | Goal                                                                                                                                                                                                                                                                                                                                                       |
-| ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  **v1** | Single wedding per deploy (this repo). Whitelabel by reconfiguring Supabase / Resend / Vercel / seed + admin content.                                                                                                                                                                                                                                      |
-|  **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. Also: activity logs, support tickets inbox, **admin suspend**, payment/seat limits. |
+| Version | Goal                                                                                                                                                                                                                                                                                                                                        |
+| ------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  **v1** | Single wedding per deploy (this repo). Whitelabel by reconfiguring Supabase / Resend / Vercel / seed + admin content.                                                                                                                                                                                                                       |
+|  **v2** | Multi-wedding platform: create many live wedding websites from one product (tenancy, per-wedding domains, shared admin/builder, provisioning). Auth email subjects/templates and super-admin bootstrap must become data-driven instead of per-project dashboard edits. Also: support tickets inbox, **admin suspend**, payment/seat limits. |
 
 Track v2 explicitly so we do not bolt multi-site onto v1 accidentally. Until then, treat each production wedding as its own Supabase + Vercel surface and use the [launch checklist](#whitelabel-launch-checklist-for-a-new-wedding-v1).
 
