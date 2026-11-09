@@ -1,7 +1,6 @@
 import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
-import { useRegisterTopLayer } from '@/lib/ui/top-layer'
 import { cn } from '@/lib/utils'
 
 type ConfirmDialogProps = {
@@ -31,7 +30,6 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const titleId = useId()
   const descriptionId = useId()
-  useRegisterTopLayer(open)
 
   useEffect(() => {
     if (!open) return

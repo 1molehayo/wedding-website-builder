@@ -299,7 +299,7 @@ export function CurrencyAmountField({
                     openFeedback({
                       category: 'currency',
                       message:
-                        'Please add support for this currency:\nCode: \nCountry: \n',
+                        'Please add a currency that is not in the list yet.\n\nCurrency I need: ',
                     })
                   }}
                 >

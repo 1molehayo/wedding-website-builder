@@ -2,7 +2,7 @@ import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { XIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
-import { useRegisterTopLayer } from '@/lib/ui/top-layer'
+import { useActiveDrawerLayerHost } from '@/lib/ui/drawer-layer-host'
 import { cn } from '@/lib/utils'
 
 type ModalProps = {
@@ -29,33 +29,46 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId()
   const descriptionId = useId()
-  useRegisterTopLayer(open)
+  const drawerHost = useActiveDrawerLayerHost()
+  const nestedInDrawer = Boolean(drawerHost)
 
   useEffect(() => {
     if (!open) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      // Stop drawers/overlays underneath from also handling Escape.
       event.preventDefault()
       event.stopPropagation()
       onOpenChange(false)
     }
-    // Capture so we win over vaul/drawer listeners.
     document.addEventListener('keydown', onKeyDown, true)
+    if (nestedInDrawer) {
+      return () => {
+        document.removeEventListener('keydown', onKeyDown, true)
+      }
+    }
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKeyDown, true)
       document.body.style.overflow = previous
     }
-  }, [open, onOpenChange])
+  }, [open, onOpenChange, nestedInDrawer])
 
   if (!open) return null
 
-  // Portal + z above SideDrawer (z-50). Top-layer registration releases the
-  // drawer's Radix modal trap so this dialog is focusable/clickable.
+  const mountNode =
+    drawerHost ?? (typeof document !== 'undefined' ? document.body : null)
+  if (!mountNode) return null
+
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      className={cn(
+        'flex items-center justify-center p-4',
+        // Portal into the open drawer when present so Vaul keeps us inside its
+        // dialog tree (interactive). Otherwise full-viewport on document.body.
+        nestedInDrawer ? 'absolute inset-0 z-[100]' : 'fixed inset-0 z-[100]',
+      )}
+    >
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
@@ -102,6 +115,6 @@ export function Modal({
         {footer ? <div className="mt-6">{footer}</div> : null}
       </div>
     </div>,
-    document.body,
+    mountNode,
   )
 }
