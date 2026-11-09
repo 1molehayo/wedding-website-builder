@@ -4,5 +4,8 @@
       "path": "/api/cron/registry-reminders",
       "schedule": "0 14 * * *"
     }
-  ]
+  ],
+  "env": {
+    "NODE_OPTIONS": "--experimental-require-module"
+  }
 }
