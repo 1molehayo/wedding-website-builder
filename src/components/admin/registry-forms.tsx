@@ -2,6 +2,7 @@ import { QuestionIcon, TrashIcon } from '@phosphor-icons/react'
 import { useForm } from '@tanstack/react-form'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { CurrencyAmountField } from '@/components/ui/currency-amount-field'
 import { CurrencySelect } from '@/components/ui/currency-select'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -494,60 +495,48 @@ export function GiftItemForm({
                       ) : null
                     }}
                   </form.Field>
-                  <div className="grid items-start gap-4 sm:grid-cols-[minmax(12rem,16rem)_1fr]">
-                    <form.Field name="prices[0].currency">
-                      {(field) => {
-                        const { error, invalid } = fieldState(
-                          field.state.meta.errors,
-                          field.state.meta.isTouched,
-                          submitted,
-                        )
-                        return (
-                          <Field invalid={invalid}>
-                            <Field.Label required>Currency</Field.Label>
-                            <Field.Control>
-                              <CurrencySelect
-                                value={field.state.value}
-                                invalid={invalid}
-                                includeCodes={[field.state.value]}
-                                onBlur={field.handleBlur}
-                                onChange={(next) => field.handleChange(next)}
-                              />
-                            </Field.Control>
-                            <Field.Error>{invalid ? error : null}</Field.Error>
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                    <form.Field name="prices[0].amount">
-                      {(field) => {
-                        const { error, invalid } = fieldState(
-                          field.state.meta.errors,
-                          field.state.meta.isTouched,
-                          submitted,
-                        )
-                        return (
-                          <Field invalid={invalid}>
-                            <Field.Label required>Amount</Field.Label>
-                            <Field.Control>
-                              <Input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                value={field.state.value}
-                                invalid={invalid}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                              />
-                            </Field.Control>
-                            <Field.Error>{invalid ? error : null}</Field.Error>
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                  </div>
+                  <form.Field name="prices[0].currency">
+                    {(currencyField) => (
+                      <form.Field name="prices[0].amount">
+                        {(amountField) => {
+                          const currencyState = fieldState(
+                            currencyField.state.meta.errors,
+                            currencyField.state.meta.isTouched,
+                            submitted,
+                          )
+                          const amountState = fieldState(
+                            amountField.state.meta.errors,
+                            amountField.state.meta.isTouched,
+                            submitted,
+                          )
+                          const invalid =
+                            currencyState.invalid || amountState.invalid
+                          const error =
+                            amountState.error || currencyState.error
+                          return (
+                            <CurrencyAmountField
+                              currency={currencyField.state.value}
+                              amount={amountField.state.value}
+                              invalid={invalid}
+                              error={invalid ? error : undefined}
+                              required
+                              includeCodes={[currencyField.state.value]}
+                              onBlur={() => {
+                                currencyField.handleBlur()
+                                amountField.handleBlur()
+                              }}
+                              onCurrencyChange={(next) =>
+                                currencyField.handleChange(next)
+                              }
+                              onAmountChange={(next) =>
+                                amountField.handleChange(next)
+                              }
+                            />
+                          )
+                        }}
+                      </form.Field>
+                    )}
+                  </form.Field>
                 </div>
 
                 <div className="grid items-start gap-4 sm:grid-cols-2">

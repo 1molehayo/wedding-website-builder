@@ -2,12 +2,11 @@ import { useForm } from '@tanstack/react-form'
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { PhoneField } from '@/components/phone-field'
 import { Button } from '@/components/ui/button'
+import { CurrencyAmountField } from '@/components/ui/currency-amount-field'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
-import { currencyOptionLabel } from '@/lib/currency/currencies'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import {
@@ -396,63 +395,48 @@ function ContributeDrawer({
                     </p>
                   ) : null}
 
-                  <div className="grid items-start gap-4 sm:grid-cols-2">
-                    <form.Field name="amount">
-                      {(field) => {
-                        const error = fieldErrorMessage(field.state.meta.errors)
-                        const invalid =
-                          !!error && (field.state.meta.isTouched || submitted)
-                        return (
-                          <Field invalid={invalid}>
-                            <Field.Label required>Amount</Field.Label>
-                            <Field.Control>
-                              <Input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                value={field.state.value}
-                                invalid={invalid}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                              />
-                            </Field.Control>
-                            <Field.Error>{invalid ? error : null}</Field.Error>
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                    <form.Field name="currency">
-                      {(field) => {
-                        const error = fieldErrorMessage(field.state.meta.errors)
-                        const invalid =
-                          !!error && (field.state.meta.isTouched || submitted)
-                        return (
-                          <Field invalid={invalid}>
-                            <Field.Label required>Currency</Field.Label>
-                            <Field.Control>
-                              <Select
-                                value={field.state.value}
-                                invalid={invalid}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                              >
-                                {currencies.map((currency) => (
-                                  <option key={currency} value={currency}>
-                                    {currencyOptionLabel(currency)}
-                                  </option>
-                                ))}
-                              </Select>
-                            </Field.Control>
-                            <Field.Error>{invalid ? error : null}</Field.Error>
-                          </Field>
-                        )
-                      }}
-                    </form.Field>
-                  </div>
+                  <form.Field name="currency">
+                    {(currencyField) => (
+                      <form.Field name="amount">
+                        {(amountField) => {
+                          const currencyError = fieldErrorMessage(
+                            currencyField.state.meta.errors,
+                          )
+                          const amountError = fieldErrorMessage(
+                            amountField.state.meta.errors,
+                          )
+                          const invalid =
+                            (!!currencyError &&
+                              (currencyField.state.meta.isTouched ||
+                                submitted)) ||
+                            (!!amountError &&
+                              (amountField.state.meta.isTouched || submitted))
+                          const error = amountError || currencyError
+                          return (
+                            <CurrencyAmountField
+                              currency={currencyField.state.value}
+                              amount={String(amountField.state.value)}
+                              invalid={invalid}
+                              error={invalid ? error : undefined}
+                              required
+                              allowedCodes={currencies}
+                              showRequestLink={false}
+                              onBlur={() => {
+                                currencyField.handleBlur()
+                                amountField.handleBlur()
+                              }}
+                              onCurrencyChange={(next) =>
+                                currencyField.handleChange(next)
+                              }
+                              onAmountChange={(next) =>
+                                amountField.handleChange(next)
+                              }
+                            />
+                          )
+                        }}
+                      </form.Field>
+                    )}
+                  </form.Field>
 
                   {fxLoading ? (
                     <p className="text-foreground-secondary text-sm">
