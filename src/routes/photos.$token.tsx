@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { PublicShell } from '@/components/public-shell'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import { getPhotoShareViewer } from '@/lib/photo-shares/photo-shares'
 import type { PhotoShareViewerData } from '@/lib/photo-shares/photo-shares'
 
@@ -65,7 +66,10 @@ export const Route = createFileRoute('/photos/$token')({
 
 function PhotoShareViewerPage() {
   const result = Route.useLoaderData()
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<{
+    url: string
+    alt: string
+  } | null>(null)
 
   if (!result.ok) {
     return (
@@ -120,8 +124,11 @@ function PhotoShareViewerPage() {
               <button
                 key={photo.id}
                 type="button"
-                onClick={() => setLightboxUrl(photo.url)}
-                className="border-border bg-background-secondary public-reveal aspect-[4/5] overflow-hidden rounded-sm border text-left"
+                onClick={() =>
+                  setLightbox({ url: photo.url, alt: photo.filename })
+                }
+                className="border-border bg-background-secondary public-reveal aspect-[4/5] cursor-zoom-in overflow-hidden rounded-sm border text-left"
+                aria-label={`Open larger view of ${photo.filename}`}
               >
                 <img
                   src={photo.url}
@@ -136,20 +143,12 @@ function PhotoShareViewerPage() {
         )}
       </main>
 
-      {lightboxUrl ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-4"
-          aria-label="Close photo preview"
-          onClick={() => setLightboxUrl(null)}
-        >
-          <img
-            src={lightboxUrl}
-            alt=""
-            className="max-h-[90dvh] max-w-full object-contain"
-          />
-        </button>
-      ) : null}
+      <ImageLightbox
+        open={lightbox != null}
+        src={lightbox?.url ?? null}
+        alt={lightbox?.alt}
+        onClose={() => setLightbox(null)}
+      />
     </PublicShell>
   )
 }

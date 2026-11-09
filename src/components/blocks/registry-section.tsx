@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
+import { currencyOptionLabel } from '@/lib/currency/currencies'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import {
@@ -441,7 +442,7 @@ function ContributeDrawer({
                               >
                                 {currencies.map((currency) => (
                                   <option key={currency} value={currency}>
-                                    {currency}
+                                    {currencyOptionLabel(currency)}
                                   </option>
                                 ))}
                               </Select>

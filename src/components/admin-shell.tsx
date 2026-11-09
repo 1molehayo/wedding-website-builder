@@ -2,7 +2,6 @@ import { useEffect, useId, useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
   ArrowSquareOutIcon,
-  BellIcon,
   ChatTeardropTextIcon,
   HeartIcon,
   ListIcon,
@@ -11,9 +10,10 @@ import {
 } from '@phosphor-icons/react'
 import { DonateModal } from '@/components/admin/donate-modal'
 import { FeedbackModal } from '@/components/admin/feedback-modal'
+import { NotificationBell } from '@/components/admin/notification-bell'
 import { NavigationProgress } from '@/components/navigation-progress'
 import { Button } from '@/components/ui/button'
-import { Toaster, toast } from '@/components/ui/toaster'
+import { Toaster } from '@/components/ui/toaster'
 import { adminBreadcrumbs } from '@/lib/admin/breadcrumbs'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import type { AdminSession } from '@/lib/auth/types'
@@ -25,6 +25,8 @@ import {
   formatCoupleNames,
   getAdminNavItems,
 } from '@/lib/constants'
+import { FeedbackProvider } from '@/lib/feedback/feedback-context'
+import type { FeedbackOpenDefaults } from '@/lib/feedback/feedback-context'
 import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
 import { publicWeddingPath } from '@/lib/wedding/public-settings'
 import { cn } from '@/lib/utils'
@@ -228,16 +230,7 @@ function AdminTopbar({
             <ChatTeardropTextIcon />
             <span className="hidden sm:inline">Feedback</span>
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            square
-            aria-label="Notifications"
-            onClick={() => toast.message('Notifications are coming soon.')}
-          >
-            <BellIcon />
-          </Button>
+          <NotificationBell />
           <Button
             type="button"
             size="sm"
@@ -268,10 +261,24 @@ export function AdminShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [donateOpen, setDonateOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [feedbackDefaults, setFeedbackDefaults] =
+    useState<FeedbackOpenDefaults | null>(null)
   const titleId = useId()
   const navItems = getAdminNavItems(isSuperAdminProfile(session.profile), {
     hasWedding: Boolean(session.wedding),
   })
+
+  const openFeedback = (defaults?: FeedbackOpenDefaults) => {
+    setFeedbackDefaults(defaults ?? null)
+    setFeedbackOpen(true)
+  }
+
+  const feedbackApi = { openFeedback }
+
+  const handleFeedbackOpenChange = (open: boolean) => {
+    setFeedbackOpen(open)
+    if (!open) setFeedbackDefaults(null)
+  }
 
   useEffect(() => {
     const html = document.documentElement
@@ -319,85 +326,91 @@ export function AdminShell({
   }, [isContentLoading])
 
   return (
-    <div
-      data-surface="admin"
-      className="bg-background text-foreground min-h-dvh"
-    >
-      <NavigationProgress />
-      <Toaster />
-      <DonateModal open={donateOpen} onOpenChange={setDonateOpen} />
-      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
-
-      {mobileNavOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-          aria-label="Close menu"
-          onClick={closeMobileNav}
-        />
-      ) : null}
-
-      <aside
-        id="admin-mobile-nav"
-        aria-labelledby={titleId}
-        className={cn(
-          'bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex w-[min(18rem,88vw)] flex-col gap-6 p-4 transition-transform duration-200 md:hidden',
-          mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
-          isContentLoading && 'pointer-events-none',
-        )}
-        inert={isContentLoading || undefined}
-        aria-disabled={isContentLoading}
+    <FeedbackProvider value={feedbackApi}>
+      <div
+        data-surface="admin"
+        className="bg-background text-foreground min-h-dvh"
       >
-        <span id={titleId} className="sr-only">
-          Admin navigation
-        </span>
-        <SidebarBrand />
-        <SidebarNav navItems={navItems} onNavigate={closeMobileNav} />
-        <SidebarFooter
-          session={session}
-          onDonate={() => {
-            closeMobileNav()
-            setDonateOpen(true)
-          }}
+        <NavigationProgress />
+        <Toaster />
+        <DonateModal open={donateOpen} onOpenChange={setDonateOpen} />
+        <FeedbackModal
+          open={feedbackOpen}
+          onOpenChange={handleFeedbackOpenChange}
+          defaults={feedbackDefaults}
         />
-      </aside>
 
-      <div className="md:grid md:min-h-dvh md:grid-cols-[15rem_1fr]">
+        {mobileNavOpen ? (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            aria-label="Close menu"
+            onClick={closeMobileNav}
+          />
+        ) : null}
+
         <aside
+          id="admin-mobile-nav"
+          aria-labelledby={titleId}
           className={cn(
-            'bg-sidebar text-sidebar-foreground sticky top-0 hidden h-dvh flex-col gap-6 p-4 md:flex',
+            'bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex w-[min(18rem,88vw)] flex-col gap-6 p-4 transition-transform duration-200 md:hidden',
+            mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
             isContentLoading && 'pointer-events-none',
           )}
           inert={isContentLoading || undefined}
           aria-disabled={isContentLoading}
         >
+          <span id={titleId} className="sr-only">
+            Admin navigation
+          </span>
           <SidebarBrand />
-          <SidebarNav navItems={navItems} />
+          <SidebarNav navItems={navItems} onNavigate={closeMobileNav} />
           <SidebarFooter
             session={session}
-            onDonate={() => setDonateOpen(true)}
+            onDonate={() => {
+              closeMobileNav()
+              setDonateOpen(true)
+            }}
           />
         </aside>
 
-        <div className="bg-background flex min-h-dvh min-w-0 flex-col md:min-h-full">
-          <AdminTopbar
-            onOpenNav={() => setMobileNavOpen((open) => !open)}
-            navOpen={mobileNavOpen}
-            onLogout={onLogout}
-            isLoggingOut={isLoggingOut}
-            onFeedback={() => setFeedbackOpen(true)}
-          />
-          <div
+        <div className="md:grid md:min-h-dvh md:grid-cols-[15rem_1fr]">
+          <aside
             className={cn(
-              'min-h-0 min-w-0 flex-1 p-6 md:p-8',
+              'bg-sidebar text-sidebar-foreground sticky top-0 hidden h-dvh flex-col gap-6 p-4 md:flex',
               isContentLoading && 'pointer-events-none',
             )}
-            aria-busy={isContentLoading}
+            inert={isContentLoading || undefined}
+            aria-disabled={isContentLoading}
           >
-            {children}
+            <SidebarBrand />
+            <SidebarNav navItems={navItems} />
+            <SidebarFooter
+              session={session}
+              onDonate={() => setDonateOpen(true)}
+            />
+          </aside>
+
+          <div className="bg-background flex min-h-dvh min-w-0 flex-col md:min-h-full">
+            <AdminTopbar
+              onOpenNav={() => setMobileNavOpen((open) => !open)}
+              navOpen={mobileNavOpen}
+              onLogout={onLogout}
+              isLoggingOut={isLoggingOut}
+              onFeedback={() => openFeedback()}
+            />
+            <div
+              className={cn(
+                'min-h-0 min-w-0 flex-1 p-6 md:p-8',
+                isContentLoading && 'pointer-events-none',
+              )}
+              aria-busy={isContentLoading}
+            >
+              {children}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </FeedbackProvider>
   )
 }

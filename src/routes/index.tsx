@@ -66,7 +66,17 @@ function LandingPage() {
         <p>
           © {new Date().getFullYear()} {PRODUCT_NAME}
         </p>
-        <p className="mt-1 text-xs">Built with {PRODUCT_NAME}</p>
+        <p className="mt-2 text-xs">
+          <Link to="/privacy" className="underline-offset-4 hover:underline">
+            Privacy
+          </Link>
+          <span className="mx-2" aria-hidden>
+            ·
+          </span>
+          <Link to="/cookies" className="underline-offset-4 hover:underline">
+            Cookies
+          </Link>
+        </p>
       </footer>
     </div>
   )

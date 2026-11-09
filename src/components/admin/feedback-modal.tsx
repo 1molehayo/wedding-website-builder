@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { FEEDBACK_CATEGORIES } from '@/lib/feedback/categories'
 import type { FeedbackCategoryId } from '@/lib/feedback/categories'
+import type { FeedbackOpenDefaults } from '@/lib/feedback/feedback-context'
 import { submitProductFeedback } from '@/lib/feedback/feedback'
 
 const MAX_LEN = 4000
@@ -15,14 +16,22 @@ const MAX_LEN = 4000
 export function FeedbackModal({
   open,
   onOpenChange,
+  defaults,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  defaults?: FeedbackOpenDefaults | null
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const [category, setCategory] = useState<FeedbackCategoryId>('general')
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    setCategory(defaults?.category ?? 'general')
+    setMessage(defaults?.message ?? '')
+  }, [open, defaults])
 
   const remaining = MAX_LEN - message.length
 

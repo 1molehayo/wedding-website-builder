@@ -1,4 +1,10 @@
-export const PAGE_BLOCK_TYPES = ['hero', 'story', 'image', 'details'] as const
+export const PAGE_BLOCK_TYPES = [
+  'hero',
+  'story',
+  'text',
+  'image',
+  'details',
+] as const
 
 export type PageBlockType = (typeof PAGE_BLOCK_TYPES)[number]
 
@@ -20,6 +26,12 @@ export type BlockNavFields = {
 export type StoryBlockFields = BlockNavFields & {
   title: string
   body: string
+}
+
+/** Title + TipTap HTML. Separate from the Story block. */
+export type TextBlockFields = BlockNavFields & {
+  title: string
+  content: string
 }
 
 export type ImageBlockFields = BlockNavFields & {
@@ -47,6 +59,12 @@ export type StoryPageBlock = {
   fields: StoryBlockFields
 }
 
+export type TextPageBlock = {
+  id: string
+  type: 'text'
+  fields: TextBlockFields
+}
+
 export type ImagePageBlock = {
   id: string
   type: 'image'
@@ -60,11 +78,16 @@ export type DetailsPageBlock = {
 }
 
 export type PageBlock =
-  HeroPageBlock | StoryPageBlock | ImagePageBlock | DetailsPageBlock
+  | HeroPageBlock
+  | StoryPageBlock
+  | TextPageBlock
+  | ImagePageBlock
+  | DetailsPageBlock
 
 export const PAGE_BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
   hero: 'Hero',
   story: 'Story',
+  text: 'Text',
   image: 'Image',
   details: 'Details',
 }
@@ -90,6 +113,17 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         fields: {
           title: 'Our story',
           body: 'Share how you met.',
+          useTitleInNav: true,
+          navLabel: null,
+        },
+      }
+    case 'text':
+      return {
+        id,
+        type: 'text',
+        fields: {
+          title: 'A note',
+          content: '<p></p>',
           useTitleInNav: true,
           navLabel: null,
         },
@@ -196,6 +230,8 @@ export function publicSectionId(block: PageBlock): string {
       return 'hero'
     case 'story':
       return `story-${block.id}`
+    case 'text':
+      return `text-${block.id}`
     case 'image':
       return `photo-${block.id}`
     case 'details':

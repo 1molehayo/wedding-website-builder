@@ -4,6 +4,7 @@ import { DetailsBlock } from './details-block'
 import { HeroBlock } from './hero-block'
 import { ImageBlock } from './image-block'
 import { StoryBlock } from './story-block'
+import { TextBlock } from './text-block'
 
 export function DynamicBlock({
   block,
@@ -19,6 +20,8 @@ export function DynamicBlock({
       return <HeroBlock block={block} wedding={wedding} imageUrl={imageUrl} />
     case 'story':
       return <StoryBlock block={block} />
+    case 'text':
+      return <TextBlock block={block} />
     case 'image':
       return <ImageBlock block={block} imageUrl={imageUrl} />
     case 'details':

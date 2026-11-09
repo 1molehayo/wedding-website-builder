@@ -1,10 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { ACTIVITY_AREAS } from '@/lib/activity/areas'
-import type {
-  ActivityArea,
-  ListActivityLogsResult,
-} from '@/lib/activity/areas'
+import type { ActivityArea, ListActivityLogsResult } from '@/lib/activity/areas'
 
 const actorRoles = ['admin', 'super_admin', 'guest', 'system'] as const
 

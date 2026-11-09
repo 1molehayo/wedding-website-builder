@@ -153,12 +153,9 @@ export async function listProductFeedbackHandler(): Promise<{
     }
   })
 
-  const counts = {
-    general: 0,
-    bug: 0,
-    idea: 0,
-    praise: 0,
-  } satisfies Record<FeedbackCategoryId, number>
+  const counts = Object.fromEntries(
+    FEEDBACK_CATEGORIES.map((item) => [item.id, 0]),
+  ) as Record<FeedbackCategoryId, number>
 
   for (const item of items) {
     if (item.status === 'new' || item.status === 'planned') {

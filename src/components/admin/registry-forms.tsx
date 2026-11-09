@@ -2,6 +2,7 @@ import { QuestionIcon, TrashIcon } from '@phosphor-icons/react'
 import { useForm } from '@tanstack/react-form'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { CurrencySelect } from '@/components/ui/currency-select'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
@@ -9,6 +10,7 @@ import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
+import { DEFAULT_CURRENCY } from '@/lib/currency/currencies'
 import { Tooltip } from '@/components/ui/tooltip'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
@@ -65,7 +67,10 @@ type AccountFormValues = {
   is_enabled: boolean
 }
 
-const emptyPrice = (): PriceDraft => ({ currency: 'USD', amount: '' })
+const emptyPrice = (): PriceDraft => ({
+  currency: DEFAULT_CURRENCY,
+  amount: '',
+})
 
 function emptyGiftForm(): GiftFormValues {
   return {
@@ -109,7 +114,7 @@ function emptyAccountForm(): AccountFormValues {
   return {
     label: '',
     bank_name: '',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
     account_name: '',
     account_number: '',
     routing_number: '',
@@ -489,7 +494,7 @@ export function GiftItemForm({
                       ) : null
                     }}
                   </form.Field>
-                  <div className="grid items-start gap-4 sm:grid-cols-[8rem_1fr]">
+                  <div className="grid items-start gap-4 sm:grid-cols-[minmax(12rem,16rem)_1fr]">
                     <form.Field name="prices[0].currency">
                       {(field) => {
                         const { error, invalid } = fieldState(
@@ -501,16 +506,12 @@ export function GiftItemForm({
                           <Field invalid={invalid}>
                             <Field.Label required>Currency</Field.Label>
                             <Field.Control>
-                              <Input
+                              <CurrencySelect
                                 value={field.state.value}
                                 invalid={invalid}
-                                maxLength={12}
+                                includeCodes={[field.state.value]}
                                 onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(
-                                    event.target.value.toUpperCase(),
-                                  )
-                                }
+                                onChange={(next) => field.handleChange(next)}
                               />
                             </Field.Control>
                             <Field.Error>{invalid ? error : null}</Field.Error>
@@ -786,15 +787,12 @@ export function AccountForm({
                         <Field invalid={invalid}>
                           <Field.Label required>Currency</Field.Label>
                           <Field.Control>
-                            <Input
+                            <CurrencySelect
                               value={field.state.value}
                               invalid={invalid}
+                              includeCodes={[field.state.value]}
                               onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(
-                                  event.target.value.toUpperCase(),
-                                )
-                              }
+                              onChange={(next) => field.handleChange(next)}
                             />
                           </Field.Control>
                           <Field.Error>{invalid ? error : null}</Field.Error>

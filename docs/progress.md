@@ -8,61 +8,43 @@ v1 is **one wedding per deploy**. Local/demo couple samples use fictional **Theo
 
 ## Sep 27, 2026 — current backlog (source of truth)
 
-Recap confirmed with you. Older Sep 10 notes below still apply where they are not restated here.
+Updated Nov 9 after your browser checks. Older sections below are history; **this list is what matters for “what’s left.”**
 
-### Pending tasks
+### Done (you confirmed)
 
-1. **Registry** — **bank-transfer + Amazon + activity + live FX (NGN-capable) with rate lock in code (Nov 9).** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry) and [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores). Apply listings + FX-lock migrations locally. Do not build an in-app card checkout.
+| Feature                                                          | Notes                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E-invitation designs + email card image                          | Migration + Save settings; works                                                                                                                                                                                                                    |
+| Nocturne dark hero overlay                                       | Works                                                                                                                                                                                                                                               |
+| In-page nav uses block titles                                    | Works (hero stays Home)                                                                                                                                                                                                                             |
+| Admin nav no full-page reload                                    | Sidebar stays; works                                                                                                                                                                                                                                |
+| Staging on Vercel                                                | Has latest changes                                                                                                                                                                                                                                  |
+| Gift registry (bank transfer + FX lock + Amazon + Activity page) | In code on `gift-registry` / staging. Specs: [bank-transfer](#oct-10-2026--bank-transfer-gift-registry), [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores), [activity](#nov-8-2026--admin-activity-logs). No in-app card checkout. |
+| Public footer cleanup                                            | “Built with” removed on wedding sites and landing; © kept. Privacy + Cookies links added (Nov 9).                                                                                                                                                   |
+| Image lightbox                                                   | Shared viewer on public image blocks and private photo shares (`object-contain`) (Nov 9).                                                                                                                                                           |
+| Privacy + Cookie policies                                        | `/privacy` and `/cookies` pages with GDPR-oriented copy for this product (Nov 9). Have counsel review before production reliance. Contact: `hello@igbeyawowa.app` (set up domain inbox/forward later).                                              |
+| In-app notifications                                             | Admin bell inbox from activity fan-out (`admin_notifications`). RSVP, registry, pages publish, media shares, settings, feedback for super admins, etc. (Nov 9). Apply migration `20261109030000_admin_notifications.sql`.                           |
+| Text-content page block                                          | TipTap rich text block (`text`): H4–H6, lists, quote, links, align. Sanitized HTML. Separate from Story. (Nov 9).                                                                                                                                   |
 
-2. **E-invitation: boilerplate designs that follow the wedding theme** — **persisted + email image (Nov 3).**  
-   Catalog designs on Wedding settings, under the colour theme, with a Light / Dark toggle. Names, date, and venue come from the form.  
-   Design + mode save with wedding settings. Saving also captures the preview PNG into storage. Guest invite emails embed that card inline when `invitation_card_path` is set. Apply migration `20261103220000_invitation_design.sql`, then **Save settings** once so the card image is generated.
+### Features still left to build
 
-3. **Nocturne dark hero overlay is too heavy** — **in code (Sep 27), needs a look in the browser.**  
-   Only **Nocturne + dark mode**. Other themes stay as they are.  
-   Middle of the photo is lighter. The bottom of the overlay is still solid theme background so the hero fades into the next section.
+These are the real remaining product features (not old smoke tests):
 
-4. **In-page nav uses each block’s title, not the block type** — **in code (Sep 27).**  
-   Colour Palette was **Photos** because it is an image block.  
-   **Except the hero** (stays “Home”).
-   - Anchor is the block id (stable if the title changes). Each details block has its own id (`details-{id}`).
-   - Checkbox, **on by default:** “Use title in nav”. When off, a shorter nav label.
-   - Visible label truncates at **20 characters** with an ellipsis. Full title is the tooltip.
-   - Details has a title field (existing blocks default to “Celebrate with us”). An image with an empty title is left out of the nav.
+1. **Super-admin import / export**  
+   Move a wedding between environments: page content, settings, media, registry. Super admin only.
 
-5. **Admin navigation must not full-page load** — **in code (Sep 27), needs a click-through.**  
-   Sidebar stays. Only the content area spins. Root route no longer reloads on every admin click (that was replacing the whole page). Session is reused in the browser so the layout does not wait on a new round-trip.
+2. **Wedding settings `status`**  
+   Product decision first (then code if needed). Today it is mostly a badge + closes RSVP when Completed. It does not send invites or publish the date. Options: keep as manual lifecycle, auto-derive, or remove so it is not confusing.
 
-### Next, after the three above are checked
+### Optional / discuss later (not blocking the list above)
 
-6. **E-invitation designs, then the email image** — **done in item 2 (Nov 3).**  
-   Design persists; card PNG is generated on settings save and embedded in guest invite emails.
+- **Plus-one policy types** (today it is only a number)
+- **Announcement bar** on the public site
+- **Pick from Media** in Page Content (hero/image still upload on their own)
+- **Motion** animations (last v1 phase)
+- v2: typography picker, subscriptions, multi-wedding, etc.
 
-7. **Amazon on a gift** — **in code (Nov 9); needs a browser pass.**  
-   Gift Amazon listing + public Buy on Amazon + admin Record Amazon. Amazon owns payment/shipping. Still to verify as a guest on a real Amazon.com wedding list: button labels, contribute vs buy, and that a $1 contribution does not ship.
-
-### After touch-ups and the registry feature
-
-Do not start these until the current UI touch-ups and the registry work are finished. Production is [igbeyawowa.app](https://www.igbeyawowa.app/). Do not fill it with test data.
-
-1. **Staging on Vercel**  
-   A staging environment for tests, separate from production. Import and export must work the same on staging, production, and any later environment.
-
-2. **Super-admin import and export**  
-   Page content, wedding settings, media, and registry. Only a super admin can import or export. The point is to move a wedding between environments without retyping it.
-
-3. **In-app notifications**  
-   Guest RSVP emails already send. The app should also notify admins when something changes: guest RSVP, profile updates, registry add or remove, page content updates, library shares, and similar. Super-admin notifications are only for feedback submitted from the feedback form.
-
-4. **Activity logs** — **specified Nov 8. Build with the registry, not after it.**  
-   Full rules are in [Admin activity logs](#nov-8-2026--admin-activity-logs). Append-only log of admin and guest mutations across the whole admin, plus a page to read them. Wire the helper in the registry migration, then cover every other admin area in the same effort.
-
-### Still open from Sep 10 (unchanged)
-
-- Public footer: drop “Built with Ìgbéyàwówa”; keep the © line. Landing page line: confirm.
-- Wedding settings `status`: what it should do (see Sep 10).
-- New text-content block (title + rich text content; TipTap; H4–H6 only).
-- Image block lightbox (`object-contain`, viewport max height).
+Production: [igbeyawowa.app](https://www.igbeyawowa.app/). Do not fill production with test data.
 
 ---
 
@@ -294,7 +276,7 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
 ### Bugs
 
 1. **Guest invitation not reliable** — **fixed (Sep 10).** Drawer now keeps the guest open after save; Email invite uses the form email, saves first, then sends. Save is no longer blocked by native `type="email"` validation (`noValidate` + Zod).
-2. **Admin route loader covers the whole page** — **reopened (Sep 27).** Sep 11 change (`shouldReload: false`, outlet spinner) is still showing a full-viewport loader with no sidebar. Sidebar must stay; only the content region loads.
+2. **Admin route loader covers the whole page** — **fixed (you confirmed Nov 9).** Sidebar stays; only the content region loads.
 
 ---
 
@@ -392,10 +374,9 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 ## Suggested next session
 
-1. You check Nocturne dark, nav titles, and admin sidebar loading.
-2. Then e-invitation: four theme-coloured designs (light and dark), preview, and put that image in the invite email.
-3. Then the Oct 10 bank-transfer gift registry, on the Nov 8 contribution ledger, with admin activity logs in the same effort. Amazon on a gift comes after that.
-4. Then footer, text block, lightbox, wedding status.
-5. Older smoke-test / UI bugs / announcement bar. Motion still last.
+Build from **Features still left to build** in the Sep 27 backlog (top of this file):
 
-Do not start Motion until you confirm the list above.
+1. Super-admin import / export
+2. Wedding settings `status` decision
+
+Then optional: plus-one policy types, announcement bar, pick-from-media. Motion last. Have a lawyer review `/privacy` and `/cookies` before you treat them as final for production. Set up `hello@igbeyawowa.app` forwarding (Cloudflare Email Routing or ImprovMX) when ready.

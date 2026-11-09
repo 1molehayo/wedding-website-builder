@@ -21,6 +21,7 @@ import {
   PageActionBar,
   formatLastUpdated,
 } from '@/components/admin/page-action-bar'
+import { RichTextEditor } from '@/components/admin/rich-text-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -96,6 +97,8 @@ function withNavPatch(
 ): PageBlock {
   switch (block.type) {
     case 'story':
+      return { ...block, fields: { ...block.fields, ...patch } }
+    case 'text':
       return { ...block, fields: { ...block.fields, ...patch } }
     case 'image':
       return { ...block, fields: { ...block.fields, ...patch } }
@@ -358,6 +361,53 @@ function BlockEditor({
             />
           </Field.Control>
           {bodyInvalid ? <Field.Error>{fieldErrors.body}</Field.Error> : null}
+        </Field>
+        <NavLabelFields block={block} onChange={onChange} />
+      </div>
+    )
+  }
+
+  if (block.type === 'text') {
+    const titleInvalid = !!fieldErrors?.title
+    const contentInvalid = !!fieldErrors?.content
+    return (
+      <div className="space-y-4">
+        <Field invalid={titleInvalid}>
+          <Field.Label required>Title</Field.Label>
+          <Field.Control>
+            <Input
+              value={block.fields.title}
+              invalid={titleInvalid}
+              onChange={(event) =>
+                onChange({
+                  ...block,
+                  fields: { ...block.fields, title: event.target.value },
+                })
+              }
+            />
+          </Field.Control>
+          {titleInvalid ? <Field.Error>{fieldErrors.title}</Field.Error> : null}
+        </Field>
+        <Field invalid={contentInvalid}>
+          <Field.Label required>Content</Field.Label>
+          <RichTextEditor
+            value={block.fields.content}
+            invalid={contentInvalid}
+            onChange={(html) =>
+              onChange({
+                ...block,
+                fields: { ...block.fields, content: html },
+              })
+            }
+          />
+          {contentInvalid ? (
+            <Field.Error>{fieldErrors.content}</Field.Error>
+          ) : null}
+          <Field.Description>
+            Headings 4 to 6, lists, quotes, links, and basic formatting. Theme
+            colours and large headings stay off so the wedding look stays
+            consistent.
+          </Field.Description>
         </Field>
         <NavLabelFields block={block} onChange={onChange} />
       </div>
@@ -782,8 +832,8 @@ function AdminPagesPage() {
         <div className="border-border bg-surface rounded-xl border border-dashed px-6 py-12 text-center">
           <p className="text-lg font-medium">No sections yet</p>
           <p className="text-foreground-secondary mx-auto mt-2 max-w-md text-sm leading-relaxed">
-            Add a hero, story, photo, or details block. This draft stays off the
-            live site until you publish.
+            Add a hero, story, text, photo, or details block. This draft stays
+            off the live site until you publish.
           </p>
           <div className="mt-6 flex justify-center">
             <AddItemMenu onAdd={onAdd} triggerClassName="px-4" />
@@ -897,6 +947,14 @@ function AdminPagesPage() {
                           }
                           if (next.fields.body.trim()) {
                             clearBlockFieldError(next.id, 'body')
+                          }
+                        }
+                        if (next.type === 'text') {
+                          if (next.fields.title.trim()) {
+                            clearBlockFieldError(next.id, 'title')
+                          }
+                          if (next.fields.content.trim()) {
+                            clearBlockFieldError(next.id, 'content')
                           }
                         }
                         if (

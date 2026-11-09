@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '@/components/color-mode-toggle'
 import { PublicRevealObserver } from '@/components/public-reveal-observer'
 import { PRODUCT_NAME } from '@/lib/constants'
@@ -300,14 +301,23 @@ export function PublicShell({
           <p className="text-foreground-secondary mt-4 text-xs tracking-[0.14em] uppercase">
             © {new Date().getFullYear()} {PRODUCT_NAME}
           </p>
-          {/* <p className="text-foreground-secondary text-sm">
+          <p className="text-foreground-secondary mt-2 text-xs">
             <Link
-              to="/"
-              className="text-foreground underline-offset-4 transition hover:underline"
+              to="/privacy"
+              className="underline-offset-4 transition hover:underline"
             >
-              {productBuiltWithCredit()}
+              Privacy
             </Link>
-          </p> */}
+            <span className="mx-2" aria-hidden>
+              ·
+            </span>
+            <Link
+              to="/cookies"
+              className="underline-offset-4 transition hover:underline"
+            >
+              Cookies
+            </Link>
+          </p>
         </div>
       </footer>
     </div>

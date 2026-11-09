@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { sanitizeTextBlockHtml } from '@/lib/page-blocks/sanitize-html'
 import { PAGE_BLOCK_TYPES } from '@/lib/page-blocks/types'
 import type { PageBlock } from '@/lib/page-blocks/types'
 
@@ -33,6 +34,27 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
     ...navFieldsSchema,
   })
 
+  const textContentSchema =
+    mode === 'strict'
+      ? trimmedString
+          .min(1, 'Content is required.')
+          .transform(sanitizeTextBlockHtml)
+          .refine(
+            (html) =>
+              html
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&nbsp;/g, ' ')
+                .trim().length > 0,
+            'Content is required.',
+          )
+      : trimmedString.transform(sanitizeTextBlockHtml)
+
+  const textFieldsSchema = z.object({
+    title: mode === 'strict' ? requiredTrimmedString('Title') : trimmedString,
+    content: textContentSchema,
+    ...navFieldsSchema,
+  })
+
   const imageFieldsSchema = z.object({
     imagePath:
       mode === 'strict' ? requiredTrimmedString('Image') : trimmedString,
@@ -56,6 +78,11 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
       id: blockIdSchema(),
       type: z.literal('story'),
       fields: storyFieldsSchema,
+    }),
+    z.object({
+      id: blockIdSchema(),
+      type: z.literal('text'),
+      fields: textFieldsSchema,
     }),
     z.object({
       id: blockIdSchema(),
