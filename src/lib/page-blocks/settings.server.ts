@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import {
   getAdminSessionHandler,
   requireWeddingSession,
@@ -172,6 +173,7 @@ export async function getPageBlocksHandler(): Promise<PageContentEditorData> {
 
 export async function savePageBlocksDraftHandler(
   pageBlocks: PageBlock[],
+  options?: { skipActivity?: boolean },
 ): Promise<PageContentEditorData> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
@@ -192,6 +194,16 @@ export async function savePageBlocksDraftHandler(
       throwPageContentSchemaError(updated.error.message)
     }
     throw new Error(updated.error.message)
+  }
+
+  if (!options?.skipActivity) {
+    await recordAdminActivity(session, {
+      action: 'pages.draft_saved',
+      entityType: 'wedding',
+      entityId: session.wedding.id,
+      summary: 'Saved page content draft.',
+      metadata: { blockCount: pageBlocks.length },
+    })
   }
 
   return toEditorData(updated.data)
@@ -242,6 +254,14 @@ export async function publishPageBlocksHandler(
 
   await recordPublishedVersion(admin, session.wedding.id, pageBlocks, now)
 
+  await recordAdminActivity(session, {
+    action: 'pages.published',
+    entityType: 'wedding',
+    entityId: session.wedding.id,
+    summary: 'Published page content.',
+    metadata: { blockCount: pageBlocks.length },
+  })
+
   return toEditorData(updated.data)
 }
 
@@ -291,9 +311,19 @@ export async function restorePageContentVersionHandler(
     throw new Error('That version could not be found.')
   }
 
-  return savePageBlocksDraftHandler(
+  const restored = await savePageBlocksDraftHandler(
     readVersionPageBlocks(version.data.page_blocks),
+    { skipActivity: true },
   )
+
+  await recordAdminActivity(session, {
+    action: 'pages.restored',
+    entityType: 'page_content_version',
+    entityId: versionId,
+    summary: 'Restored a previous page content version to the draft.',
+  })
+
+  return restored
 }
 
 async function resolvePublicPageBlocks(input: {

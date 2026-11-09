@@ -120,6 +120,17 @@ export const sendGuestInvite = createServerFn({ method: 'POST' })
     return sendGuestInviteHandler(data.guestId)
   })
 
+export const logGuestWhatsappShare = createServerFn({ method: 'POST' })
+  .validator((data: { guestId: string }) => {
+    const guestId = String(data.guestId).trim()
+    if (!guestId) throw new Error('Guest id is required.')
+    return { guestId }
+  })
+  .handler(async ({ data }) => {
+    const { logGuestWhatsappShareHandler } = await import('./guests.server')
+    return logGuestWhatsappShareHandler(data.guestId)
+  })
+
 export const sendGuestInvitesBulk = createServerFn({ method: 'POST' })
   .validator((data: { onlyPending?: boolean }) => ({
     onlyPending: Boolean(data.onlyPending),

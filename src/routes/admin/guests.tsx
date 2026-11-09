@@ -45,6 +45,7 @@ import {
   createGuest,
   deleteGuest,
   listGuests,
+  logGuestWhatsappShare,
   sendGuestInvite,
   sendGuestInvitesBulk,
   unlockGuestRsvp,
@@ -499,6 +500,12 @@ function AdminGuestsPage() {
       toast.message(
         'WhatsApp did not open. Use the WhatsApp button on this guest.',
       )
+      return
+    }
+    try {
+      await logGuestWhatsappShare({ data: { guestId: guest.id } })
+    } catch (err) {
+      console.error('[whatsapp activity]', err)
     }
   }
 
@@ -883,8 +890,14 @@ function AdminGuestsPage() {
             <SideDrawer.Content>
               <div className="flex flex-col gap-4">
                 <div className="grid items-start gap-4 sm:grid-cols-2">
-                  <ReadValue label="First name" value={selectedGuest.first_name} />
-                  <ReadValue label="Last name" value={selectedGuest.last_name} />
+                  <ReadValue
+                    label="First name"
+                    value={selectedGuest.first_name}
+                  />
+                  <ReadValue
+                    label="Last name"
+                    value={selectedGuest.last_name}
+                  />
                 </div>
                 <ReadValue label="Email" value={selectedGuest.email ?? ''} />
                 <ReadValue
@@ -1012,11 +1025,7 @@ function AdminGuestsPage() {
           </>
         ) : drawerOpen ? (
           <GuestDrawerForms
-            key={
-              isCreating
-                ? 'new'
-                : `${drawerMode}-${selectedId ?? 'guest'}`
-            }
+            key={isCreating ? 'new' : `${drawerMode}-${selectedId ?? 'guest'}`}
             guest={isCreating ? null : selectedGuest}
             isCreating={isCreating}
             onSubmit={async (value, rsvpValues) => {
@@ -1222,7 +1231,9 @@ function AdminGuestsPage() {
                                 {(field) => (
                                   <Field>
                                     <div className="flex items-center gap-1.5">
-                                      <Field.Label>Invite preference</Field.Label>
+                                      <Field.Label>
+                                        Invite preference
+                                      </Field.Label>
                                       <FieldHint label="About invite preference">
                                         Sends when you add this guest. You can
                                         invite again from their page.
@@ -1234,8 +1245,7 @@ function AdminGuestsPage() {
                                         onBlur={field.handleBlur}
                                         onChange={(event) =>
                                           field.handleChange(
-                                            event.target
-                                              .value as InviteChannel,
+                                            event.target.value as InviteChannel,
                                           )
                                         }
                                       >
@@ -1265,7 +1275,9 @@ function AdminGuestsPage() {
                                 return (
                                   <Field invalid={invalid}>
                                     <div className="flex items-center gap-1.5">
-                                      <Field.Label>Party / household</Field.Label>
+                                      <Field.Label>
+                                        Party / household
+                                      </Field.Label>
                                       <FieldHint label="About party / household">
                                         Family or group this guest sits with.
                                       </FieldHint>

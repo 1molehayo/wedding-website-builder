@@ -64,12 +64,21 @@ export type Wedding = {
 
 export type RegistryItemStatus = 'available' | 'reserved' | 'purchased'
 
+export type RegistryContributionChannel = 'bank_transfer' | 'external_store'
+
+export type RegistryContributionStatus = 'pending' | 'received' | 'not_received'
+
+export type ActivityActorRole = 'admin' | 'super_admin' | 'guest' | 'system'
+
 export type RegistryItem = {
   id: string
   wedding_id: string
   title: string
   description: string | null
-  store_url: string
+  /** Optional browse link. Not a payment URL. */
+  store_url: string | null
+  /** Photos bucket path for the gift image. */
+  photo_path: string | null
   price_label: string | null
   desired_qty: number
   claimed_qty: number
@@ -78,6 +87,79 @@ export type RegistryItem = {
   is_visible: boolean
   created_at: string
   updated_at: string
+}
+
+export type RegistryItemPrice = {
+  id: string
+  item_id: string
+  wedding_id: string
+  currency: string
+  amount: number
+  created_at: string
+  updated_at: string
+}
+
+export type RegistryItemListing = {
+  id: string
+  item_id: string
+  wedding_id: string
+  provider: string
+  url: string
+  label: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type RegistryContribution = {
+  id: string
+  wedding_id: string
+  gift_id: string | null
+  channel: RegistryContributionChannel
+  provider: string | null
+  amount: number
+  currency: string
+  /** Amount in base_currency using the locked fx_rate. */
+  amount_base: number
+  base_currency: string
+  /** Pay-currency units per 1 base unit at lock time. */
+  fx_rate: number
+  fx_locked_at: string
+  fx_source: string
+  payer_name: string
+  payer_email: string
+  payer_phone: string | null
+  status: RegistryContributionStatus
+  applied_at: string | null
+  external_ref: string | null
+  listing_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** Bank-only row. confirm_token is server-only and omitted from this type. */
+export type RegistryContributionBank = {
+  contribution_id: string
+  account_id: string
+  reference: string
+  reminder_count: number
+  last_reminder_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ActivityLog = {
+  id: string
+  wedding_id: string | null
+  actor_id: string | null
+  actor_email: string | null
+  actor_role: ActivityActorRole
+  action: string
+  entity_type: string
+  entity_id: string | null
+  summary: string
+  metadata: Record<string, unknown>
+  created_at: string
 }
 
 export type RegistryAccount = {

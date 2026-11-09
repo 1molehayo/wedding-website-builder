@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import { getAppUrl } from '@/lib/app-url'
 import { formatCoupleNames } from '@/lib/constants'
@@ -97,6 +98,13 @@ export async function setInvitationCardPathHandler(
     throw new Error('Invitation card path could not be saved.')
   }
 
+  await recordAdminActivity(session, {
+    action: 'settings.invitation_card_regenerated',
+    entityType: 'wedding',
+    entityId: session.wedding.id,
+    summary: 'Saved a new invitation card image.',
+  })
+
   return { path: savedPath }
 }
 
@@ -164,6 +172,13 @@ export async function updateWeddingHandler(
     throw new Error('Wedding settings could not be updated.')
   }
 
+  await recordAdminActivity(session, {
+    action: 'settings.saved',
+    entityType: 'wedding',
+    entityId: session.wedding.id,
+    summary: 'Saved wedding settings.',
+  })
+
   return updated.data
 }
 
@@ -210,6 +225,15 @@ export async function publishWeddingDateHandler(input: {
     skipped: 0,
     failed: [],
   }
+
+  await recordAdminActivity(session, {
+    action: 'settings.date_published',
+    entityType: 'wedding',
+    entityId: session.wedding.id,
+    summary: input.notifyGuests
+      ? 'Published the wedding date and notified invited guests.'
+      : 'Published the wedding date.',
+  })
 
   if (!input.notifyGuests) {
     return result
@@ -275,6 +299,13 @@ export async function unpublishWeddingDateHandler(): Promise<Wedding> {
 
   if (updated.error) throw new Error(updated.error.message)
   if (!updated.data) throw new Error('Unable to unpublish wedding date.')
+
+  await recordAdminActivity(session, {
+    action: 'settings.date_unpublished',
+    entityType: 'wedding',
+    entityId: session.wedding.id,
+    summary: 'Unpublished the wedding date.',
+  })
 
   return updated.data as Wedding
 }

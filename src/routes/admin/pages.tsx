@@ -74,7 +74,6 @@ export const Route = createFileRoute('/admin/pages')({
   component: AdminPagesPage,
 })
 
-
 function moveBlock(blocks: PageBlock[], from: number, to: number) {
   if (to < 0 || to >= blocks.length) return blocks
   const next = [...blocks]

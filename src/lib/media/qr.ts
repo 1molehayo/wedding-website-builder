@@ -29,7 +29,10 @@ export async function qrPngFile(
 }
 
 export function canShareQrFile(file: File): boolean {
-  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+  if (
+    typeof navigator === 'undefined' ||
+    typeof navigator.share !== 'function'
+  ) {
     return false
   }
   if (typeof navigator.canShare !== 'function') return false

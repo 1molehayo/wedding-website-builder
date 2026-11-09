@@ -52,11 +52,7 @@ export function uploadFileToSignedUrl(
     xhr.onerror = () => reject(new Error('Network error during upload.'))
     xhr.onabort = () => reject(new Error('Upload cancelled.'))
     xhr.ontimeout = () =>
-      reject(
-        new Error(
-          'Upload timed out. Try again, or use a smaller photo.',
-        ),
-      )
+      reject(new Error('Upload timed out. Try again, or use a smaller photo.'))
 
     if (options?.signal) {
       if (options.signal.aborted) {

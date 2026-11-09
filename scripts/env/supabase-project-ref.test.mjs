@@ -17,18 +17,18 @@ describe('projectRefFromSupabaseUrl', () => {
   })
 
   it('rejects local URLs', () => {
-    expect(() =>
-      projectRefFromSupabaseUrl('http://127.0.0.1:54331'),
-    ).toThrow(/local Supabase/)
+    expect(() => projectRefFromSupabaseUrl('http://127.0.0.1:54331')).toThrow(
+      /local Supabase/,
+    )
   })
 })
 
 describe('normalizeProjectRef', () => {
   it('accepts bare refs, API URLs, and dashboard URLs', () => {
     expect(normalizeProjectRef('AbCdEfGh')).toBe('abcdefgh')
-    expect(
-      normalizeProjectRef('https://abcdefghijklmnop.supabase.co'),
-    ).toBe('abcdefghijklmnop')
+    expect(normalizeProjectRef('https://abcdefghijklmnop.supabase.co')).toBe(
+      'abcdefghijklmnop',
+    )
     expect(
       normalizeProjectRef(
         'https://supabase.com/dashboard/project/rqpnyubvfptmaaopkqik',
@@ -119,7 +119,11 @@ describe('readLinkedProjectRef', () => {
 
   it('returns null when missing', () => {
     expect(
-      readLinkedProjectRef('/tmp/fake', () => false, () => ''),
+      readLinkedProjectRef(
+        '/tmp/fake',
+        () => false,
+        () => '',
+      ),
     ).toBeNull()
   })
 })

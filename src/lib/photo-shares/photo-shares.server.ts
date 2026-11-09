@@ -1,3 +1,4 @@
+import { recordAdminActivity } from '@/lib/activity/activity.server'
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import { getAppUrl } from '@/lib/app-url'
 import { formatCoupleNames } from '@/lib/constants'
@@ -192,6 +193,18 @@ export async function createPhotoShareGroupHandler(input: {
   const listed = await listPhotoShareGroupsHandler()
   const group = listed.groups.find((g) => g.id === created.data.id)
   if (!group) throw new Error('Share group could not be loaded.')
+
+  await recordAdminActivity(session, {
+    action: 'media.share_created',
+    entityType: 'photo_share_group',
+    entityId: group.id,
+    summary: `Created photo share “${group.name}”.`,
+    metadata: {
+      assetCount: input.assetIds.length,
+      guestCount: input.guestIds.length,
+    },
+  })
+
   return group
 }
 
@@ -232,6 +245,18 @@ export async function updatePhotoShareGroupHandler(input: {
   const listed = await listPhotoShareGroupsHandler()
   const group = listed.groups.find((g) => g.id === input.groupId)
   if (!group) throw new Error('Share group could not be loaded.')
+
+  await recordAdminActivity(session, {
+    action: 'media.share_updated',
+    entityType: 'photo_share_group',
+    entityId: group.id,
+    summary: `Updated photo share “${group.name}”.`,
+    metadata: {
+      assetCount: input.assetIds.length,
+      guestCount: input.guestIds.length,
+    },
+  })
+
   return group
 }
 
@@ -241,6 +266,16 @@ export async function deletePhotoShareGroupHandler(
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
 
+  const existing = await admin
+    .from('photo_share_groups')
+    .select('id, name')
+    .eq('id', groupId)
+    .eq('wedding_id', session.wedding.id)
+    .maybeSingle()
+
+  if (existing.error) throw new Error(existing.error.message)
+  if (!existing.data) throw new Error('Share group not found.')
+
   const removed = await admin
     .from('photo_share_groups')
     .delete()
@@ -248,6 +283,14 @@ export async function deletePhotoShareGroupHandler(
     .eq('wedding_id', session.wedding.id)
 
   if (removed.error) throw new Error(removed.error.message)
+
+  await recordAdminActivity(session, {
+    action: 'media.share_revoked',
+    entityType: 'photo_share_group',
+    entityId: groupId,
+    summary: `Revoked photo share “${existing.data.name}”.`,
+  })
+
   return { ok: true }
 }
 
@@ -329,6 +372,14 @@ export async function sendPhotoShareEmailsHandler(
       })
     }
   }
+
+  await recordAdminActivity(session, {
+    action: 'media.share_emailed',
+    entityType: 'photo_share_group',
+    entityId: groupId,
+    summary: `Emailed photo share “${group.name}” to ${sent} guest${sent === 1 ? '' : 's'}.`,
+    metadata: { sent, skipped, failed: failed.length },
+  })
 
   return { sent, skipped, failed }
 }

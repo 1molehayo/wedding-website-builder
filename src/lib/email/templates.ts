@@ -358,6 +358,179 @@ export function guestDateAnnouncedEmailText(
   return lines.join('\n')
 }
 
+export type RegistryContributionConfirmEmailInput = {
+  payerName: string
+  coupleLabel: string
+  amountLabel: string
+  giftTitle: string | null
+  reference: string
+  confirmUrl: string
+  theme: PublicThemeId
+  mode?: ColorMode
+}
+
+export function registryContributionConfirmEmailHtml(
+  input: RegistryContributionConfirmEmailInput,
+): string {
+  const palette = getEmailThemePalette(
+    input.theme,
+    input.mode ?? EMAIL_SEND_MODE,
+  )
+  const giftLine = input.giftTitle
+    ? ` toward <strong style="color:${palette.foreground};">${escapeHtml(input.giftTitle)}</strong>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:${palette.foregroundSecondary};">
+      Confirm your gift
+    </p>
+    <p style="margin:0 0 20px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-style:italic;line-height:1.2;color:${palette.foreground};">
+      ${escapeHtml(input.coupleLabel)}
+    </p>
+    <div style="width:48px;height:1px;background:${palette.highlight};margin:0 0 20px;"></div>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foreground};">
+      Hi ${escapeHtml(input.payerName)},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foregroundSecondary};">
+      After you send <strong style="color:${palette.foreground};">${escapeHtml(input.amountLabel)}</strong>${giftLine},
+      confirm here so the couple can see it. Reference:
+      <strong style="color:${palette.foreground};">${escapeHtml(input.reference)}</strong>.
+    </p>
+    <p style="margin:0 0 12px;">
+      ${ctaButton(input.confirmUrl, 'I’ve sent the money', palette)}
+    </p>
+    <p style="margin:0 0 0;font-size:13px;line-height:1.5;color:${palette.foregroundSecondary};">
+      Or open this link:<br/>
+      <a href="${escapeAttr(input.confirmUrl)}" style="color:${palette.accent};word-break:break-all;">${escapeHtml(input.confirmUrl)}</a>
+    </p>`
+
+  return themedEmailDocument(palette, body)
+}
+
+export function registryContributionConfirmEmailText(
+  input: RegistryContributionConfirmEmailInput,
+): string {
+  const giftLine = input.giftTitle ? ` toward ${input.giftTitle}` : ''
+  return [
+    `Hi ${input.payerName},`,
+    '',
+    `After you send ${input.amountLabel}${giftLine}, confirm here so the couple can see it.`,
+    `Reference: ${input.reference}`,
+    '',
+    `Confirm: ${input.confirmUrl}`,
+  ].join('\n')
+}
+
+export type RegistryContributionReminderEmailInput =
+  RegistryContributionConfirmEmailInput & {
+    reminderNumber: number
+  }
+
+export function registryContributionReminderEmailHtml(
+  input: RegistryContributionReminderEmailInput,
+): string {
+  const palette = getEmailThemePalette(
+    input.theme,
+    input.mode ?? EMAIL_SEND_MODE,
+  )
+  const giftLine = input.giftTitle
+    ? ` toward <strong style="color:${palette.foreground};">${escapeHtml(input.giftTitle)}</strong>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:${palette.foregroundSecondary};">
+      Reminder ${escapeHtml(String(input.reminderNumber))} of 3
+    </p>
+    <p style="margin:0 0 20px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-style:italic;line-height:1.2;color:${palette.foreground};">
+      ${escapeHtml(input.coupleLabel)}
+    </p>
+    <div style="width:48px;height:1px;background:${palette.highlight};margin:0 0 20px;"></div>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foreground};">
+      Hi ${escapeHtml(input.payerName)},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foregroundSecondary};">
+      Friendly reminder: after you send
+      <strong style="color:${palette.foreground};">${escapeHtml(input.amountLabel)}</strong>${giftLine},
+      confirm here so the couple can see it. Reference:
+      <strong style="color:${palette.foreground};">${escapeHtml(input.reference)}</strong>.
+    </p>
+    <p style="margin:0 0 12px;">
+      ${ctaButton(input.confirmUrl, 'I’ve sent the money', palette)}
+    </p>
+    <p style="margin:0 0 0;font-size:13px;line-height:1.5;color:${palette.foregroundSecondary};">
+      Or open this link:<br/>
+      <a href="${escapeAttr(input.confirmUrl)}" style="color:${palette.accent};word-break:break-all;">${escapeHtml(input.confirmUrl)}</a>
+    </p>`
+
+  return themedEmailDocument(palette, body)
+}
+
+export function registryContributionReminderEmailText(
+  input: RegistryContributionReminderEmailInput,
+): string {
+  const giftLine = input.giftTitle ? ` toward ${input.giftTitle}` : ''
+  return [
+    `Hi ${input.payerName},`,
+    '',
+    `Reminder ${input.reminderNumber} of 3.`,
+    `After you send ${input.amountLabel}${giftLine}, confirm here so the couple can see it.`,
+    `Reference: ${input.reference}`,
+    '',
+    `Confirm: ${input.confirmUrl}`,
+  ].join('\n')
+}
+
+export type RegistryContributionThanksEmailInput = {
+  payerName: string
+  coupleLabel: string
+  amountLabel: string
+  giftTitle: string | null
+  theme: PublicThemeId
+  mode?: ColorMode
+}
+
+export function registryContributionThanksEmailHtml(
+  input: RegistryContributionThanksEmailInput,
+): string {
+  const palette = getEmailThemePalette(
+    input.theme,
+    input.mode ?? EMAIL_SEND_MODE,
+  )
+  const giftLine = input.giftTitle
+    ? ` toward <strong style="color:${palette.foreground};">${escapeHtml(input.giftTitle)}</strong>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:${palette.foregroundSecondary};">
+      Thank you
+    </p>
+    <p style="margin:0 0 20px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-style:italic;line-height:1.2;color:${palette.foreground};">
+      ${escapeHtml(input.coupleLabel)}
+    </p>
+    <div style="width:48px;height:1px;background:${palette.highlight};margin:0 0 20px;"></div>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foreground};">
+      Hi ${escapeHtml(input.payerName)},
+    </p>
+    <p style="margin:0 0 0;font-size:15px;line-height:1.55;color:${palette.foregroundSecondary};">
+      Thank you for sending
+      <strong style="color:${palette.foreground};">${escapeHtml(input.amountLabel)}</strong>${giftLine}.
+      It means so much to us.
+    </p>`
+
+  return themedEmailDocument(palette, body)
+}
+
+export function registryContributionThanksEmailText(
+  input: RegistryContributionThanksEmailInput,
+): string {
+  const giftLine = input.giftTitle ? ` toward ${input.giftTitle}` : ''
+  return [
+    `Hi ${input.payerName},`,
+    '',
+    `Thank you for sending ${input.amountLabel}${giftLine}. It means so much to us.`,
+  ].join('\n')
+}
+
 function ctaButton(href: string, label: string, palette: EmailThemePalette) {
   return `<a href="${escapeAttr(href)}" style="display:inline-block;padding:12px 20px;background:${palette.accent};color:${palette.accentForeground};text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
       ${escapeHtml(label)}

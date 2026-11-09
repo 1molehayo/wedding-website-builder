@@ -12,8 +12,7 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 
 ### Pending tasks
 
-1. **Registry** — **decided Oct 10. Build the bank-transfer flow first.** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry).  
-   Guests contribute by bank transfer toward a gift, or donate straight to the couple’s account. We do not take the payment. Amazon is the second way to pay for a gift, and it comes after this. Do not build an in-app card checkout.
+1. **Registry** — **bank-transfer + Amazon + activity + live FX (NGN-capable) with rate lock in code (Nov 9).** Full rules are in [Bank-transfer gift registry](#oct-10-2026--bank-transfer-gift-registry) and [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores). Apply listings + FX-lock migrations locally. Do not build an in-app card checkout.
 
 2. **E-invitation: boilerplate designs that follow the wedding theme** — **persisted + email image (Nov 3).**  
    Catalog designs on Wedding settings, under the colour theme, with a Light / Dark toggle. Names, date, and venue come from the form.  
@@ -39,8 +38,8 @@ Recap confirmed with you. Older Sep 10 notes below still apply where they are no
 6. **E-invitation designs, then the email image** — **done in item 2 (Nov 3).**  
    Design persists; card PNG is generated on settings save and embedded in guest invite emails.
 
-7. **Amazon on a gift** — **after the bank-transfer registry, not before.**  
-   A gift can then be paid on Amazon or by the bank transfer in the Oct 10 spec. Amazon owns that payment and shipping. Group gifting (contribute any amount, or buy the whole item) is an Amazon.com wedding registry, not Amazon.es. A test list was started on a personal Amazon.com account. Still to verify as a guest: button labels, contribute vs buy, and that a $1 contribution does not ship. A full purchase needs a real US shipping address on the registry first. The odd names on that test list are fine.
+7. **Amazon on a gift** — **in code (Nov 9); needs a browser pass.**  
+   Gift Amazon listing + public Buy on Amazon + admin Record Amazon. Amazon owns payment/shipping. Still to verify as a guest on a real Amazon.com wedding list: button labels, contribute vs buy, and that a $1 contribution does not ship.
 
 ### After touch-ups and the registry feature
 
@@ -55,8 +54,8 @@ Do not start these until the current UI touch-ups and the registry work are fini
 3. **In-app notifications**  
    Guest RSVP emails already send. The app should also notify admins when something changes: guest RSVP, profile updates, registry add or remove, page content updates, library shares, and similar. Super-admin notifications are only for feedback submitted from the feedback form.
 
-4. **Activity logs**  
-   A record of what everyone does, including admins, so actions on the app can be traced.
+4. **Activity logs** — **specified Nov 8. Build with the registry, not after it.**  
+   Full rules are in [Admin activity logs](#nov-8-2026--admin-activity-logs). Append-only log of admin and guest mutations across the whole admin, plus a page to read them. Wire the helper in the registry migration, then cover every other admin area in the same effort.
 
 ### Still open from Sep 10 (unchanged)
 
@@ -69,7 +68,7 @@ Do not start these until the current UI touch-ups and the registry work are fini
 
 ## Oct 10, 2026 — bank-transfer gift registry
 
-Source of truth for the next registry build. Confirmed in chat. Implement this before Amazon.
+Source of truth for the guest and admin money rules. Confirmed in chat. Implement bank transfer before Amazon. The table shape is amended by [Nov 8 — one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores): do not create a bank-only transfers table.
 
 Today the registry is gift links, bank accounts, and a soft reserve. Cash is “show the account.” This replaces that guest path with a tracked transfer. Keep the couple’s bank accounts as the details we show. Do not take card payments in the app.
 
@@ -82,26 +81,24 @@ Both use the same transfer, confirmation, thank-you, and admin audit. Amazon is 
 
 ### Gift
 
-Fields: photo, title, an optional link to the product online, and prices by currency. The link is so guests can see the gift. It is not how they pay.
+Fields: photo, title, an optional link to the product online, and **one** price (amount + currency). The link is so guests can see the gift. It is not how they pay.
 
-The form starts with one currency and its price. Both are required. The admin can add more currencies with a repeatable list (a TanStack Form array field). Every added row must have a currency and a price. Saving is blocked until each row has both. There is no live exchange rate. The prices they enter are the rate. A payment in one currency reduces the others by that ratio. A direct donation still has a currency, and it does not change a gift.
+Guests pay in a currency that has an enabled bank account (including NGN). Live FX (Frankfurter, with open.er-api fallback) converts their amount into the gift base currency. The rate used for that payment is **locked** on the contribution (`fx_rate`, `amount_base`, `base_currency`, `fx_locked_at`, `fx_source`). Remaining is tracked only in the gift base currency via locked `amount_base` sums. Admin amount edits keep the locked rate and recalculate `amount_base`. A direct donation still has a currency, and it does not change a gift.
 
-Example: the gift is listed at 100 USD and 90 EUR. A guest sends 45 EUR. That is half of the EUR price, so USD left becomes 50 and EUR left becomes 45. A later admin edit of the amount uses the corrected figure in the currency they paid. Past payments keep the reduction already applied. Changing a listed price affects later payments.
+Example: gift is 100 USD. Guest pays in NGN at a locked 1346.61 NGN per 1 USD. Sending 67,330.50 NGN locks `amount_base` ≈ 50 USD, so 50 USD remains. Later FX moves do not change that payment.
 
-The guest pays in one of the currencies on that gift, and we show the bank account for that currency. A direct donation (no gift) still has a currency, and it does not change any gift.
+On the public gift, show the base original and amount left. Amount left changes only after the guest confirms they sent the money, and only for transfers that are not **Not received**. Use the admin-adjusted amount when the admin has changed it. **Not received** puts that share back. Marking it **Received** again takes it off again.
 
-On the public gift, show each original price with a line through it and the amount still left in that currency. Amount left changes only after the guest confirms they sent the money, and only for transfers that are not **Not received**. Use the admin-adjusted amount when the admin has changed it. **Not received** puts that share back. Marking it **Received** again takes it off again.
-
-The gift is still open while any amount left is above zero. When the money covers the price, the gift is complete. If the total runs over, that is fine. The page only needs to show that a gift is still short.
+The gift is still open while base remaining is above zero. When the money covers the price, the gift is complete. If the total runs over, that is fine. The page only needs to show that a gift is still short.
 
 ### Transfer status
 
 Label every transfer with one of these:
 
-| Status | When |
-| --- | --- |
-| **Pending** | The guest has started the transfer. It stays pending until the admin settles it. |
-| **Received** | The admin confirms the money arrived. |
+| Status           | When                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| **Pending**      | The guest has started the transfer. It stays pending until the admin settles it.                         |
+| **Received**     | The admin confirms the money arrived.                                                                    |
 | **Not received** | The admin confirms the money was not sent. Use this name on screen. “Failed” sounds like a system error. |
 
 Pending has two moments. Before the guest confirms they sent the money, it does not reduce the gift, and the reminders below still go out. After they confirm, it is still **Pending**, the gift amount drops, and the admin can audit it. Confirming again must not create a second transfer.
@@ -142,9 +139,111 @@ Back office lists the transfers with the status above. For each one the admin ca
 
 ### Explicitly out of this build
 
-- Amazon pay-on-a-gift (next, after this). A test Amazon.com wedding list was started on a personal account so group gifting can be checked. Do not treat that list as the couple’s.
+- Amazon pay-on-a-gift (next, after this). A test Amazon.com wedding list was started on a personal account so group gifting can be checked. Do not treat that list as the couple’s. The contribution row must already have `channel`, `provider`, and `external_ref` so that slice is an insert, not a new ledger.
 - In-app card checkout.
 - Scraping or calling Amazon for registry items.
+- A plugin framework per store. A new store is a `provider` value and, when it has its own fields, one detail table. It is not a new way to compute amount left.
+
+---
+
+## Nov 8, 2026 — one ledger, then Amazon and later stores
+
+Bank transfer ships first. Amazon ships second. Other stores (Target, a local shop, anything with a link or a later API) must be able to land without a second money model.
+
+**One row changes a gift’s remaining amount: `registry_contributions`.** Bank details do not live on that row. A store name never appears in the remaining-amount function.
+
+Phase 1 schema is in `supabase/migrations/20261108230000_registry_contributions_and_activity_logs.sql` (applied locally). `recordActivity` is in `src/lib/activity/activity.server.ts`. Phase 2 admin gift form is in the registry drawer: photo, optional product link, and a currency/price list. Saving a gift or bank account writes an activity row. Deleting a gift that already has a contribution is blocked on purpose.
+
+**Guest bank path (Nov 9, in code):** public Contribute / Donate drawer → start contribution + confirm email → bank details with reference → `/registry/confirm/$token` thank-you (confetti, thank-you email, `applied_at`). Remaining prices use listed-price ratios.
+
+**Admin transfer audit (Nov 9, in code):** Registry → Transfers tab. Audit drawer: edit amount, mark Received / Not received / back to Pending, mailto + WhatsApp when Not received. Activity rows written on amount/status changes.
+
+**Confirm reminders (Nov 9, in code):** Daily cron `GET/POST /api/cron/registry-reminders` (Bearer `CRON_SECRET`, `vercel.json` at 14:00 UTC). Up to 3 emails, one day apart, stop when `applied_at` is set. Activity `system.reminder_sent`.
+
+**Activity logs (Nov 9, in code):** Admin → Activity (filters: area, actor role, email, date). `recordActivity` / `recordAdminActivity` wired for guests, registry, pages, media/shares, settings, profile, admins, feedback, auth login/logout, and system reminder/thank-you.
+
+**Amazon on a gift (Nov 9, in code):** `registry_item_listings` migration. Admin gift form Amazon link. Public “Buy on Amazon” + bank Contribute. Transfers → Record Amazon (external_store, applied immediately as Received). No Amazon API/webhooks. Apply migration `20261109010000_registry_item_listings.sql`.
+
+### Contribution
+
+| Column                         | Use                                                                                                                                                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wedding_id`                   | Always set.                                                                                                                                                                                                               |
+| `gift_id`                      | Null for a direct bank donation. Set when the money is toward a gift.                                                                                                                                                     |
+| `channel`                      | `bank_transfer` now. `external_store` when Amazon or another platform is the one that took the money. Add a channel only when the flow is actually different.                                                             |
+| `provider`                     | Null for the bank. `amazon` later, then the next store’s slug. Free text with an allow-list in app code, so a new store is not a migration.                                                                               |
+| `amount`, `currency`           | What counts. Admin edits this amount, in the paid currency.                                                                                                                                                               |
+| Payer `name`, `email`, `phone` | Same rules as Oct 10. Phone optional.                                                                                                                                                                                     |
+| `status`                       | `pending`, `received`, `not_received`. Same three labels for every channel.                                                                                                                                               |
+| `applied_at`                   | When this row starts reducing the gift. Bank: set when the guest confirms they sent the money. External store: set when we accept the purchase (admin entry, or a webhook later). Null means it does not reduce the gift. |
+| `external_ref`                 | Nullable. Store order id or listing id when we have one.                                                                                                                                                                  |
+| `listing_url`                  | Nullable. The page we sent the guest to.                                                                                                                                                                                  |
+
+A row reduces the gift when `applied_at` is set and `status` is not `not_received`. **Not received** clears that effect. **Received** again puts it back. Overfunding stays allowed. Ratio math from the Oct 10 prices is unchanged and does not read `provider`.
+
+### Bank-only detail
+
+`registry_contribution_bank`, one-to-one with a contribution whose channel is `bank_transfer`:
+
+- bank `account_id`
+- public transfer reference
+- confirm token
+- reminder count and last reminder time
+
+Amazon rows never get a confirm token or a reminder. A later store with its own extra fields gets its own detail table the same way (`registry_contribution_amazon` only if Amazon needs columns the shared row does not have). Until then, `provider` + `external_ref` + `listing_url` is enough.
+
+### What a later store is
+
+A **listing** on the gift (`provider`, `url`, label) is a way out to that store. A listing does not change amount left. Only a contribution does. This build keeps the optional product link on the gift as the browse link. The listings table waits for the Amazon slice.
+
+This build writes `channel = bank_transfer` only. No Amazon API, no webhooks, no per-store plugins.
+
+---
+
+## Nov 8, 2026 — admin activity logs
+
+Append-only record of what people do in the admin and on the guest flows the admin has to answer for. Build it with the registry, not as a later project.
+
+### Row
+
+`activity_logs`:
+
+- `wedding_id` — null only for a platform action that is not about one wedding (super-admin feedback triage).
+- `actor_id` — admin user when there is one. Null for a guest or a cron job.
+- `actor_email` snapshot and `actor_role`: `admin`, `super_admin`, `guest`, `system`. The email is copied at write time so a removed admin still shows up. Removed admins stay archived for this reason.
+- `action` — `area.verb`, for example `guest.invited`, `registry.contribution_received`.
+- `entity_type` and `entity_id`
+- `summary` — one line for the list.
+- `metadata` jsonb — ids and the fields that changed. Never a secret, a session, a full bank account number, or a confirm token. Account numbers in metadata are last four digits only.
+- `created_at`
+
+The app does not update or delete these rows.
+
+### What gets a line
+
+Mutations and sends. Not page views, not list loads, not every keystroke.
+
+| Area     | Actions                                                                                                                                             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Guests   | create, update, delete, invite email, WhatsApp share                                                                                                |
+| Registry | gift create/update/delete, price change, account create/update/delete, contribution started, guest confirmed, amount edited, received, not received |
+| Pages    | draft save, publish, restore version                                                                                                                |
+| Media    | upload, delete, album add/remove, share create/revoke                                                                                               |
+| Settings | wedding settings save, date publish/unpublish, invitation card regenerated                                                                          |
+| Profile  | profile update, account deletion requested                                                                                                          |
+| Admins   | invite, resend, cancel, accept, remove                                                                                                              |
+| Feedback | submitted (the super-admin trail)                                                                                                                   |
+| System   | reminder email sent, thank-you email sent                                                                                                           |
+
+Login and logout: one line each. Skip failed-password noise until we have a real lockout story.
+
+### Who can read it
+
+A wedding admin sees their wedding. A super admin sees every wedding, plus platform rows. The page is a filterable list (area, actor, date), newest first. No export in this slice.
+
+### How it lands in the build
+
+Phase 1 of the registry migration adds `activity_logs` and a server helper `recordActivity`. Registry phases call it on every write. The admin page ships in that same effort. After the guest bank path works, wire the other areas in the table above before calling the registry done. Old actions from before the table exists are not backfilled.
 
 ---
 
@@ -225,12 +324,12 @@ You asked to ship these while you slept. They exist in the repo. They were **not
 
 ### 3. Explicitly deferred
 
-| When          | Item                                                                                                                                                                           |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist).                                                                                     |
-| v2            | Typography picker.                                                                                                                                                             |
-| v2            | Freemium / subscriptions (Donate / PayPal.Me stays for v1).                                                                                                                    |
-| v2            | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, admin suspend, payment/seat limits. Activity logs are in the Sep 27 list, after registry. |
+| When          | Item                                                                                                                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist).                                                                                                 |
+| v2            | Typography picker.                                                                                                                                                                         |
+| v2            | Freemium / subscriptions (Donate / PayPal.Me stays for v1).                                                                                                                                |
+| v2            | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, admin suspend, payment/seat limits. Activity logs moved to the Nov 8 spec and ship with the registry. |
 
 ---
 
@@ -295,7 +394,7 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 1. You check Nocturne dark, nav titles, and admin sidebar loading.
 2. Then e-invitation: four theme-coloured designs (light and dark), preview, and put that image in the invite email.
-3. Then the Oct 10 bank-transfer gift registry. Amazon on a gift comes after that.
+3. Then the Oct 10 bank-transfer gift registry, on the Nov 8 contribution ledger, with admin activity logs in the same effort. Amazon on a gift comes after that.
 4. Then footer, text block, lightbox, wedding status.
 5. Older smoke-test / UI bugs / announcement bar. Motion still last.
 

@@ -28,9 +28,9 @@ describe('guest form schema', () => {
     })
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.some((issue) => issue.path[0] === 'email')).toBe(
-        true,
-      )
+      expect(
+        result.error.issues.some((issue) => issue.path[0] === 'email'),
+      ).toBe(true)
     }
   })
 

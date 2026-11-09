@@ -1,5 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
 import {
+  parseRecordExternalContribution,
+  parseSetContributionStatus,
+  parseStartContributionInput,
+  parseUpdateContributionAmount,
+} from '@/lib/registry/contribution-schema'
+import {
   parseRegistryAccountInput,
   parseRegistryItemInput,
 } from '@/lib/registry/schema'
@@ -8,6 +14,12 @@ import type {
   PublicRegistryItem,
   RegistryAdminData,
 } from '@/lib/registry/registry.server'
+import type {
+  AdminContribution,
+  ConfirmedContribution,
+  ContributionFxQuote,
+  StartedContribution,
+} from '@/lib/registry/contribution.server'
 import type { RegistryAccount, RegistryItem } from '@/lib/supabase/types'
 
 export type {
@@ -16,6 +28,13 @@ export type {
   PublicRegistryItem,
   RegistryAdminData,
 } from '@/lib/registry/registry.server'
+
+export type {
+  AdminContribution,
+  ConfirmedContribution,
+  ContributionFxQuote,
+  StartedContribution,
+}
 
 export const listRegistryAdmin = createServerFn({ method: 'GET' }).handler(
   async (): Promise<RegistryAdminData> => {
@@ -114,4 +133,104 @@ export const getPublicRegistry = createServerFn({ method: 'GET' })
   .handler(async ({ data }): Promise<PublicRegistryData> => {
     const { getPublicRegistryBySlugHandler } = await import('./registry.server')
     return getPublicRegistryBySlugHandler(data.slug)
+  })
+
+export const quoteContributionFx = createServerFn({ method: 'POST' })
+  .validator((data: unknown) => {
+    const value = data as {
+      weddingSlug?: unknown
+      giftId?: unknown
+      currency?: unknown
+    }
+    const weddingSlug = String(value.weddingSlug ?? '')
+      .trim()
+      .toLowerCase()
+    if (!weddingSlug) throw new Error('Wedding is required.')
+    const giftRaw = value.giftId
+    const giftId =
+      giftRaw === null || giftRaw === undefined || String(giftRaw).trim() === ''
+        ? null
+        : String(giftRaw).trim()
+    const currency = String(value.currency ?? '')
+      .trim()
+      .toUpperCase()
+    if (!currency) throw new Error('Currency is required.')
+    return { weddingSlug, giftId, currency }
+  })
+  .handler(async ({ data }) => {
+    const { quoteContributionFxHandler } = await import('./contribution.server')
+    return quoteContributionFxHandler(data)
+  })
+
+export const startBankContribution = createServerFn({ method: 'POST' })
+  .validator((data: unknown) => parseStartContributionInput(data))
+  .handler(async ({ data }): Promise<StartedContribution> => {
+    const { startBankContributionHandler } =
+      await import('./contribution.server')
+    return startBankContributionHandler(data)
+  })
+
+export const confirmBankContribution = createServerFn({ method: 'POST' })
+  .validator((data: { token: string }) => {
+    const token = String(data.token).trim()
+    if (!token) throw new Error('Confirm link is missing.')
+    return { token }
+  })
+  .handler(async ({ data }): Promise<ConfirmedContribution> => {
+    const { confirmBankContributionHandler } =
+      await import('./contribution.server')
+    return confirmBankContributionHandler(data.token)
+  })
+
+export const updateContributionAmount = createServerFn({ method: 'POST' })
+  .validator((data: unknown) => parseUpdateContributionAmount(data))
+  .handler(async ({ data }): Promise<AdminContribution> => {
+    const { updateContributionAmountHandler } =
+      await import('./contribution.server')
+    return updateContributionAmountHandler(data)
+  })
+
+export const setContributionStatus = createServerFn({ method: 'POST' })
+  .validator((data: unknown) => parseSetContributionStatus(data))
+  .handler(async ({ data }): Promise<AdminContribution> => {
+    const { setContributionStatusHandler } =
+      await import('./contribution.server')
+    return setContributionStatusHandler(data)
+  })
+
+export const recordExternalContribution = createServerFn({ method: 'POST' })
+  .validator((data: unknown) => parseRecordExternalContribution(data))
+  .handler(async ({ data }): Promise<AdminContribution> => {
+    const { recordExternalContributionHandler } =
+      await import('./contribution.server')
+    return recordExternalContributionHandler(data)
+  })
+
+export const createRegistryPhotoUpload = createServerFn({ method: 'POST' })
+  .validator((data: { name: string; type: string; byteSize: number }) => {
+    const name = String(data.name).trim()
+    const type = String(data.type)
+    const byteSize = Number(data.byteSize)
+    if (!name) throw new Error('Image name is required.')
+    if (!Number.isFinite(byteSize) || byteSize <= 0) {
+      throw new Error('Image data is empty.')
+    }
+    return { name, type, byteSize }
+  })
+  .handler(async ({ data }) => {
+    const { createRegistryPhotoUploadHandler } =
+      await import('./registry.server')
+    return createRegistryPhotoUploadHandler(data)
+  })
+
+export const confirmRegistryPhotoUpload = createServerFn({ method: 'POST' })
+  .validator((data: { path: string }) => {
+    const path = String(data.path).trim()
+    if (!path) throw new Error('Image path is required.')
+    return { path }
+  })
+  .handler(async ({ data }) => {
+    const { confirmRegistryPhotoUploadHandler } =
+      await import('./registry.server')
+    return confirmRegistryPhotoUploadHandler(data)
   })
