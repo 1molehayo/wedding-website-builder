@@ -72,21 +72,36 @@ export async function recordActivity(
 
   const metadata = redactActivityMetadata(input.metadata ?? {})
   const admin = createAdminSupabaseClient()
-  const { error } = await admin.from('activity_logs').insert({
-    wedding_id: input.weddingId,
-    actor_id: input.actorId,
-    actor_email: input.actorEmail,
-    actor_role: input.actorRole,
-    action,
-    entity_type: entityType,
-    entity_id: input.entityId,
-    summary,
-    metadata,
-  })
+  const { data, error } = await admin
+    .from('activity_logs')
+    .insert({
+      wedding_id: input.weddingId,
+      actor_id: input.actorId,
+      actor_email: input.actorEmail,
+      actor_role: input.actorRole,
+      action,
+      entity_type: entityType,
+      entity_id: input.entityId,
+      summary,
+      metadata,
+    })
+    .select('id')
+    .single()
 
   if (error) {
     throw new Error(error.message)
   }
+
+  const { fanOutNotifications } = await import(
+    '@/lib/notifications/notifications.server'
+  )
+  await fanOutNotifications({
+    activityLogId: data.id,
+    weddingId: input.weddingId,
+    actorId: input.actorId,
+    action,
+    summary,
+  })
 }
 
 /** Record a mutation by the signed-in admin. */

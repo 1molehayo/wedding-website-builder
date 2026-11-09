@@ -22,22 +22,18 @@ Updated Nov 9 after your browser checks. Older sections below are history; **thi
 | Gift registry (bank transfer + FX lock + Amazon + Activity page) | In code on `gift-registry` / staging. Specs: [bank-transfer](#oct-10-2026--bank-transfer-gift-registry), [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores), [activity](#nov-8-2026--admin-activity-logs). No in-app card checkout. |
 | Public footer cleanup | “Built with” removed on wedding sites and landing; © kept. Privacy + Cookies links added (Nov 9). |
 | Image lightbox | Shared viewer on public image blocks and private photo shares (`object-contain`) (Nov 9). |
-| Privacy + Cookie policies | `/privacy` and `/cookies` pages with GDPR-oriented copy for this product (Nov 9). Have counsel review before production reliance. Contact: `privacy@igbeyawowa.app`. |
+| Privacy + Cookie policies | `/privacy` and `/cookies` pages with GDPR-oriented copy for this product (Nov 9). Have counsel review before production reliance. Contact: `hello@igbeyawowa.app` (set up domain inbox/forward later). |
+| In-app notifications | Admin bell inbox from activity fan-out (`admin_notifications`). RSVP, registry, pages publish, media shares, settings, feedback for super admins, etc. (Nov 9). Apply migration `20261109030000_admin_notifications.sql`. |
+| Text-content page block | TipTap rich text block (`text`): H4–H6, lists, quote, links, align. Sanitized HTML. Separate from Story. (Nov 9). |
 
 ### Features still left to build
 
 These are the real remaining product features (not old smoke tests):
 
-1. **In-app notifications**  
-   Admin bell that is real, not a placeholder. Notify on RSVP, profile changes, registry changes, page updates, library shares, etc. Super-admin: feedback-form submissions only. (Guest RSVP emails already exist.)
-
-2. **New text-content page block**  
-   Title + rich text (TipTap). Multiple on a page. Allowed: H4–H6, paragraphs, lists, quote, bold/italic/underline, align, indent. Blocked: H1–H3, media, colours, font picking. Separate from the existing Story block.
-
-3. **Super-admin import / export**  
+1. **Super-admin import / export**  
    Move a wedding between environments: page content, settings, media, registry. Super admin only.
 
-4. **Wedding settings `status`**  
+2. **Wedding settings `status`**  
    Product decision first (then code if needed). Today it is mostly a badge + closes RSVP when Completed. It does not send invites or publish the date. Options: keep as manual lifecycle, auto-derive, or remove so it is not confusing.
 
 ### Optional / discuss later (not blocking the list above)
@@ -378,11 +374,9 @@ Guest WhatsApp is a **share URL**, not the same as “one Send button that picks
 
 ## Suggested next session
 
-Build from **Features still left to build** in the Sep 27 backlog (top of this file), in this order unless you pick otherwise:
+Build from **Features still left to build** in the Sep 27 backlog (top of this file):
 
-1. In-app notifications
-2. Text-content block
-3. Super-admin import / export
-4. Wedding settings `status` decision
+1. Super-admin import / export
+2. Wedding settings `status` decision
 
-Motion and the optional list stay last. Have a lawyer review `/privacy` and `/cookies` before you treat them as final for production.
+Then optional: plus-one policy types, announcement bar, pick-from-media. Motion last. Have a lawyer review `/privacy` and `/cookies` before you treat them as final for production. Set up `hello@igbeyawowa.app` forwarding (Cloudflare Email Routing or ImprovMX) when ready.

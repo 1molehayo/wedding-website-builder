@@ -1,3 +1,4 @@
+import { recordActivity } from '@/lib/activity/activity.server'
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import { formatCoupleNames } from '@/lib/constants'
 import type {
@@ -167,6 +168,22 @@ export async function submitRsvpHandler(
   if (updated.error) {
     throw new Error(updated.error.message)
   }
+
+  await recordActivity({
+    weddingId: guest.wedding_id,
+    actorId: null,
+    actorEmail: guest.email,
+    actorRole: 'guest',
+    action: 'guest.rsvp_submitted',
+    entityType: 'guest',
+    entityId: guest.id,
+    summary: `${guest.first_name} ${guest.last_name} submitted an RSVP (${input.status}).`,
+    metadata: {
+      status: input.status,
+      attendingCount:
+        input.status === 'attending' ? input.attending_count : null,
+    },
+  })
 
   return getRsvpByTokenHandler(normalized)
 }

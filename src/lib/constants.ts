@@ -14,7 +14,7 @@ export const STUDIO_NAME = 'Onemole'
 /** Public site origin used in legal copy and emails. */
 export const PRODUCT_SITE_URL = 'https://www.igbeyawowa.app'
 /** Privacy and data protection contact. */
-export const PRIVACY_CONTACT_EMAIL = 'privacy@igbeyawowa.app'
+export const PRIVACY_CONTACT_EMAIL = 'hello@igbeyawowa.app'
 /** v1 donations (PayPal.Me). Freemium/subscriptions can replace this in v2. */
 export const DONATE_URL = 'https://paypal.me/OlusegunOmilabu641'
 export const DONATE_LABEL = 'Donate'

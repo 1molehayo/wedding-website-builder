@@ -2,7 +2,6 @@ import { useEffect, useId, useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
   ArrowSquareOutIcon,
-  BellIcon,
   ChatTeardropTextIcon,
   HeartIcon,
   ListIcon,
@@ -11,9 +10,10 @@ import {
 } from '@phosphor-icons/react'
 import { DonateModal } from '@/components/admin/donate-modal'
 import { FeedbackModal } from '@/components/admin/feedback-modal'
+import { NotificationBell } from '@/components/admin/notification-bell'
 import { NavigationProgress } from '@/components/navigation-progress'
 import { Button } from '@/components/ui/button'
-import { Toaster, toast } from '@/components/ui/toaster'
+import { Toaster } from '@/components/ui/toaster'
 import { adminBreadcrumbs } from '@/lib/admin/breadcrumbs'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import type { AdminSession } from '@/lib/auth/types'
@@ -228,16 +228,7 @@ function AdminTopbar({
             <ChatTeardropTextIcon />
             <span className="hidden sm:inline">Feedback</span>
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            square
-            aria-label="Notifications"
-            onClick={() => toast.message('Notifications are coming soon.')}
-          >
-            <BellIcon />
-          </Button>
+          <NotificationBell />
           <Button
             type="button"
             size="sm"
