@@ -5,8 +5,14 @@ plain-English product walkthrough and QA scenarios, see
 [QA product guide](./qa-product-guide.md).
 
 v1 supports **one wedding per deployment**. Local/demo samples use the
-fictional couple **Theo & Ada**. Production:
-[igbeyawowa.app](https://www.igbeyawowa.app/). Do not add test data there.
+fictional couple **Theo & Ada**.
+
+- Production: [igbeyawowa.app](https://www.igbeyawowa.app/)
+- Demo / staging: [demo.igbeyawowa.app](https://demo.igbeyawowa.app)
+  (Vercel project `igbeyawowa-demo`, Supabase project `igbeyawowa-demo`,
+  Git branch `demo`)
+
+Do not add test data on production.
 
 ## Current snapshot — Nov 9, 2026
 
@@ -51,11 +57,11 @@ fictional couple **Theo & Ada**. Production:
 
 ### Environment verification
 
-| Environment | Code status                                         | Database/migrations                              | Manual QA                      |
-| ----------- | --------------------------------------------------- | ------------------------------------------------ | ------------------------------ |
-| Local       | Current worktree available                          | Check before testing data-dependent flows        | Required for recent UI changes |
-| Staging     | Last known deployed before current uncommitted work | Confirm all Nov 9 migrations are applied         | Re-run smoke test after deploy |
-| Production  | Public site available                               | Do not infer from local state; verify explicitly | Keep free of test data         |
+| Environment | Code status                                        | Database/migrations                               | Manual QA                                          |
+| ----------- | -------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| Local       | Current worktree available                         | Check before testing data-dependent flows         | Required for recent UI changes                     |
+| Demo        | [demo.igbeyawowa.app](https://demo.igbeyawowa.app) | Confirm all Nov 9 migrations on `igbeyawowa-demo` | Prefer this URL over legacy `*.vercel.app` aliases |
+| Production  | [igbeyawowa.app](https://www.igbeyawowa.app/)      | Do not infer from local/demo state                | Keep free of test data                             |
 
 Relevant migrations include registry contributions/activity, Amazon listings,
 and admin notifications. Record the actual applied migration state here after

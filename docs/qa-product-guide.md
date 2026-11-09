@@ -31,6 +31,29 @@ flowchart LR
   Registry --> AdminArea
 ```
 
+## Where to test (demo vs production)
+
+Use **Demo** for almost all QA. Use **Production** only for final live checks
+with real couple data, never for inventing test guests or fake payments.
+
+| Environment                 | Purpose                                      | URL                                                |
+| --------------------------- | -------------------------------------------- | -------------------------------------------------- |
+| **Demo** (preferred for QA) | Safe cloud testing, new features, regression | [demo.igbeyawowa.app](https://demo.igbeyawowa.app) |
+| **Production**              | Live couple website                          | [www.igbeyawowa.app](https://www.igbeyawowa.app/)  |
+
+Notes for testers:
+
+- Demo and production are **separate** deployments with separate databases.
+  Changes on demo do not appear on production, and the reverse is also true.
+- Open the landing page for that environment and use the site’s admin entry
+  point when you need to sign in. Admin login is email + one-time code; only
+  authorized emails can request a code.
+- Prefer the custom demo URL above. Older Vercel links such as
+  `*.vercel.app` may still open the same demo app; treat them as backups only.
+- On demo, use fictional names and non-sensitive contact details.
+- On production, do not create throwaway guests, upload junk photos, or run
+  fake registry contributions.
+
 ## Who uses the app?
 
 ### Super admin
@@ -332,13 +355,17 @@ release specifically promises them.
 - RSVP and photo links are private bearer links: anyone who receives the exact
   link may be able to use it, so testers should not post them publicly.
 - Privacy and cookie text is product copy, not a substitute for legal review.
-- Production should not be filled with QA test data. Use a local or isolated
-  demo environment.
+- Production ([www.igbeyawowa.app](https://www.igbeyawowa.app/)) should not be
+  filled with QA test data. Use the cloud demo at
+  [demo.igbeyawowa.app](https://demo.igbeyawowa.app).
 
 ## Recommended QA smoke test
 
-Use fictional people and non-sensitive information in a local or demo
-environment.
+Run this on **Demo**:
+[demo.igbeyawowa.app](https://demo.igbeyawowa.app).
+
+Use fictional people and non-sensitive information. Do not run this smoke test
+on production.
 
 ### Admin journey
 

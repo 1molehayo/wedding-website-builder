@@ -135,8 +135,14 @@ Both stacks can run at once (different Docker `project_id` + ports). Schema/seed
 
 ### Cloud / Demo Deployment
 
-- The regular Vercel project keeps its existing Supabase env vars.
-- A **Demo Deployment** should use a separate Vercel project and a separate Supabase project. Prefer setting `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (required for the browser bundle). Server code also accepts `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` from a Vercel–Supabase integration. Always set `SUPABASE_SECRET_KEY` and `PRODUCTION_SUPER_ADMIN_EMAIL` as server-only. Do **not** put secrets in `VITE_*` vars. Ignore `POSTGRES_*` for the app (we use the Supabase JS client, not direct Postgres).
+- The regular Vercel project keeps its existing Supabase env vars and hosts production at [igbeyawowa.app](https://www.igbeyawowa.app/).
+- A **Demo Deployment** uses a separate Vercel project (`igbeyawowa-demo`) and a separate Supabase project (`igbeyawowa-demo`). Prefer setting `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (required for the browser bundle). Server code also accepts `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` from a Vercel–Supabase integration. Always set `SUPABASE_SECRET_KEY` and `PRODUCTION_SUPER_ADMIN_EMAIL` as server-only. Do **not** put secrets in `VITE_*` vars. Ignore `POSTGRES_*` for the app (we use the Supabase JS client, not direct Postgres).
+- Demo public URLs:
+  - Preferred: [demo.igbeyawowa.app](https://demo.igbeyawowa.app)
+  - Platform alias: `igbeyawowa-demo.vercel.app`
+  - Git production branch for that Vercel project: `demo`
+  - Set `APP_URL=https://demo.igbeyawowa.app` and Supabase Auth Site URL to the same origin
+  - Older `*.vercel.app` names from before a project rename may keep resolving; prefer the custom demo domain and ignore legacy aliases
 
 ### Demo Database commands (safe targeting)
 
@@ -289,11 +295,11 @@ Admin OTP uses the Resend SDK directly (same API key). Guest/admin transactional
 
 ### D. Vercel
 
-| What     | Where                                      | Notes                                                                                                                           |
-| -------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Project  | linked to this GitHub repo                 | One Vercel project per wedding site in v1                                                                                       |
-| Env vars | Project → Settings → Environment Variables | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (Sensitive) for **this** wedding’s Supabase project |
-| Domain   | Domains                                    | Temporary `*.vercel.app` is fine; custom domain later                                                                           |
+| What     | Where                                      | Notes                                                                                                                                                      |
+| -------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project  | linked to this GitHub repo                 | One Vercel project per wedding site in v1                                                                                                                  |
+| Env vars | Project → Settings → Environment Variables | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (Sensitive) for **this** wedding’s Supabase project                            |
+| Domain   | Domains                                    | Production: `igbeyawowa.app`. Demo: `demo.igbeyawowa.app` (plus `igbeyawowa-demo.vercel.app`). Temporary `*.vercel.app` is fine until custom DNS is ready. |
 
 Do **not** point production at local Mailpit keys.
 
