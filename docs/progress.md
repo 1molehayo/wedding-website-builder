@@ -98,10 +98,10 @@ The gift is still open while any amount left is above zero. When the money cover
 
 Label every transfer with one of these:
 
-| Status | When |
-| --- | --- |
-| **Pending** | The guest has started the transfer. It stays pending until the admin settles it. |
-| **Received** | The admin confirms the money arrived. |
+| Status           | When                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| **Pending**      | The guest has started the transfer. It stays pending until the admin settles it.                         |
+| **Received**     | The admin confirms the money arrived.                                                                    |
 | **Not received** | The admin confirms the money was not sent. Use this name on screen. “Failed” sounds like a system error. |
 
 Pending has two moments. Before the guest confirms they sent the money, it does not reduce the gift, and the reminders below still go out. After they confirm, it is still **Pending**, the gift amount drops, and the admin can audit it. Confirming again must not create a second transfer.
@@ -159,18 +159,18 @@ Phase 1 schema is in `supabase/migrations/20261108230000_registry_contributions_
 
 ### Contribution
 
-| Column | Use |
-| --- | --- |
-| `wedding_id` | Always set. |
-| `gift_id` | Null for a direct bank donation. Set when the money is toward a gift. |
-| `channel` | `bank_transfer` now. `external_store` when Amazon or another platform is the one that took the money. Add a channel only when the flow is actually different. |
-| `provider` | Null for the bank. `amazon` later, then the next store’s slug. Free text with an allow-list in app code, so a new store is not a migration. |
-| `amount`, `currency` | What counts. Admin edits this amount, in the paid currency. |
-| Payer `name`, `email`, `phone` | Same rules as Oct 10. Phone optional. |
-| `status` | `pending`, `received`, `not_received`. Same three labels for every channel. |
-| `applied_at` | When this row starts reducing the gift. Bank: set when the guest confirms they sent the money. External store: set when we accept the purchase (admin entry, or a webhook later). Null means it does not reduce the gift. |
-| `external_ref` | Nullable. Store order id or listing id when we have one. |
-| `listing_url` | Nullable. The page we sent the guest to. |
+| Column                         | Use                                                                                                                                                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wedding_id`                   | Always set.                                                                                                                                                                                                               |
+| `gift_id`                      | Null for a direct bank donation. Set when the money is toward a gift.                                                                                                                                                     |
+| `channel`                      | `bank_transfer` now. `external_store` when Amazon or another platform is the one that took the money. Add a channel only when the flow is actually different.                                                             |
+| `provider`                     | Null for the bank. `amazon` later, then the next store’s slug. Free text with an allow-list in app code, so a new store is not a migration.                                                                               |
+| `amount`, `currency`           | What counts. Admin edits this amount, in the paid currency.                                                                                                                                                               |
+| Payer `name`, `email`, `phone` | Same rules as Oct 10. Phone optional.                                                                                                                                                                                     |
+| `status`                       | `pending`, `received`, `not_received`. Same three labels for every channel.                                                                                                                                               |
+| `applied_at`                   | When this row starts reducing the gift. Bank: set when the guest confirms they sent the money. External store: set when we accept the purchase (admin entry, or a webhook later). Null means it does not reduce the gift. |
+| `external_ref`                 | Nullable. Store order id or listing id when we have one.                                                                                                                                                                  |
+| `listing_url`                  | Nullable. The page we sent the guest to.                                                                                                                                                                                  |
 
 A row reduces the gift when `applied_at` is set and `status` is not `not_received`. **Not received** clears that effect. **Received** again puts it back. Overfunding stays allowed. Ratio math from the Oct 10 prices is unchanged and does not read `provider`.
 
@@ -216,17 +216,17 @@ The app does not update or delete these rows.
 
 Mutations and sends. Not page views, not list loads, not every keystroke.
 
-| Area | Actions |
-| --- | --- |
-| Guests | create, update, delete, invite email, WhatsApp share |
+| Area     | Actions                                                                                                                                             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Guests   | create, update, delete, invite email, WhatsApp share                                                                                                |
 | Registry | gift create/update/delete, price change, account create/update/delete, contribution started, guest confirmed, amount edited, received, not received |
-| Pages | draft save, publish, restore version |
-| Media | upload, delete, album add/remove, share create/revoke |
-| Settings | wedding settings save, date publish/unpublish, invitation card regenerated |
-| Profile | profile update, account deletion requested |
-| Admins | invite, resend, cancel, accept, remove |
-| Feedback | submitted (the super-admin trail) |
-| System | reminder email sent, thank-you email sent |
+| Pages    | draft save, publish, restore version                                                                                                                |
+| Media    | upload, delete, album add/remove, share create/revoke                                                                                               |
+| Settings | wedding settings save, date publish/unpublish, invitation card regenerated                                                                          |
+| Profile  | profile update, account deletion requested                                                                                                          |
+| Admins   | invite, resend, cancel, accept, remove                                                                                                              |
+| Feedback | submitted (the super-admin trail)                                                                                                                   |
+| System   | reminder email sent, thank-you email sent                                                                                                           |
 
 Login and logout: one line each. Skip failed-password noise until we have a real lockout story.
 
@@ -317,11 +317,11 @@ You asked to ship these while you slept. They exist in the repo. They were **not
 
 ### 3. Explicitly deferred
 
-| When          | Item                                                                                                                                                                           |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist).                                                                                     |
-| v2            | Typography picker.                                                                                                                                                             |
-| v2            | Freemium / subscriptions (Donate / PayPal.Me stays for v1).                                                                                                                    |
+| When          | Item                                                                                                                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Last v1 phase | Public-site **Motion** animations (discuss after other phases; CSS reveals already exist).                                                                                                 |
+| v2            | Typography picker.                                                                                                                                                                         |
+| v2            | Freemium / subscriptions (Donate / PayPal.Me stays for v1).                                                                                                                                |
 | v2            | Wedding party block, multi-wedding platform, per-wedding `/{bride}/{groom}` routing, admin suspend, payment/seat limits. Activity logs moved to the Nov 8 spec and ship with the registry. |
 
 ---

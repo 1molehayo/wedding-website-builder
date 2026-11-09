@@ -66,10 +66,7 @@ export type RegistryItemStatus = 'available' | 'reserved' | 'purchased'
 
 export type RegistryContributionChannel = 'bank_transfer' | 'external_store'
 
-export type RegistryContributionStatus =
-  | 'pending'
-  | 'received'
-  | 'not_received'
+export type RegistryContributionStatus = 'pending' | 'received' | 'not_received'
 
 export type ActivityActorRole = 'admin' | 'super_admin' | 'guest' | 'system'
 

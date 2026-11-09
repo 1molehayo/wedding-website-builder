@@ -29,7 +29,12 @@ import {
   finalizeMediaUpload,
   listMediaAssets,
 } from '@/lib/media/media'
-import { downloadBlob, qrDataUrl, qrPngFile, shareQrImage } from '@/lib/media/qr'
+import {
+  downloadBlob,
+  qrDataUrl,
+  qrPngFile,
+  shareQrImage,
+} from '@/lib/media/qr'
 import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
   createPhotoShareGroup,

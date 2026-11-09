@@ -368,9 +368,8 @@ async function sendInviteForGuest(
     filename: string
   } | null = null
   if (invitationCardPath) {
-    const { downloadPhotoObject } = await import(
-      '@/lib/page-blocks/storage.server'
-    )
+    const { downloadPhotoObject } =
+      await import('@/lib/page-blocks/storage.server')
     const downloaded = await downloadPhotoObject(invitationCardPath)
     if (downloaded) {
       invitationCard = {

@@ -22,7 +22,9 @@ export type RecordActivityInput = {
  * Checks the action shape, then runs redactActivityMetadata so secrets are not stored.
  * Throws if the insert fails, so the action that called this does not look successful.
  */
-export async function recordActivity(input: RecordActivityInput): Promise<void> {
+export async function recordActivity(
+  input: RecordActivityInput,
+): Promise<void> {
   const action = assertActivityAction(input.action)
   const summary = input.summary.trim()
   if (summary.length === 0 || summary.length > 280) {

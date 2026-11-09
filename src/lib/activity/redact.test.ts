@@ -13,9 +13,7 @@ describe('assertActivityAction', () => {
   })
 
   it('rejects free text', () => {
-    expect(() => assertActivityAction('Saved the gift')).toThrow(
-      /area\.verb/,
-    )
+    expect(() => assertActivityAction('Saved the gift')).toThrow(/area\.verb/)
   })
 })
 

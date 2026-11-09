@@ -357,9 +357,7 @@ export async function deleteRegistryItemHandler(
 
   if (deleted.error) {
     if (deleted.error.code === '23503') {
-      throw new Error(
-        'This gift has contributions, so it cannot be deleted.',
-      )
+      throw new Error('This gift has contributions, so it cannot be deleted.')
     }
     throw new Error(deleted.error.message)
   }

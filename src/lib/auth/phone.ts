@@ -65,7 +65,9 @@ export function sanitizeNationalNumber(value: string): string {
 export function exampleNationalNumber(country: CountryCode): string {
   const example = getExampleNumber(country, examples)
   if (!example) return 'Phone number'
-  return example.formatNational().replace(/^0/, '').trim() || example.nationalNumber
+  return (
+    example.formatNational().replace(/^0/, '').trim() || example.nationalNumber
+  )
 }
 
 export function toE164Phone(

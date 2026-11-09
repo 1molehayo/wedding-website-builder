@@ -42,11 +42,7 @@ const { env } = buildDemoProcessEnv(root, ['.env.demo'])
 requireKeys(env, ['VITE_SUPABASE_URL'], 'Demo db:push')
 
 const expectedRef = resolveDemoCloudProjectRef(env)
-const regularEnv = parseEnvFile(
-  resolve(root, '.env'),
-  existsSync,
-  readFileSync,
-)
+const regularEnv = parseEnvFile(resolve(root, '.env'), existsSync, readFileSync)
 assertDemoRefDistinctFromRegular(
   expectedRef,
   tryRegularCloudProjectRef(regularEnv),
@@ -60,14 +56,7 @@ function linkDemo() {
   )
   const link = spawnSync(
     'npx',
-    [
-      'supabase',
-      'link',
-      '--workdir',
-      workdir,
-      '--project-ref',
-      expectedRef,
-    ],
+    ['supabase', 'link', '--workdir', workdir, '--project-ref', expectedRef],
     {
       cwd: root,
       stdio: 'inherit',

@@ -128,9 +128,8 @@ export const createRegistryPhotoUpload = createServerFn({ method: 'POST' })
     return { name, type, byteSize }
   })
   .handler(async ({ data }) => {
-    const { createRegistryPhotoUploadHandler } = await import(
-      './registry.server'
-    )
+    const { createRegistryPhotoUploadHandler } =
+      await import('./registry.server')
     return createRegistryPhotoUploadHandler(data)
   })
 
@@ -141,8 +140,7 @@ export const confirmRegistryPhotoUpload = createServerFn({ method: 'POST' })
     return { path }
   })
   .handler(async ({ data }) => {
-    const { confirmRegistryPhotoUploadHandler } = await import(
-      './registry.server'
-    )
+    const { confirmRegistryPhotoUploadHandler } =
+      await import('./registry.server')
     return confirmRegistryPhotoUploadHandler(data)
   })

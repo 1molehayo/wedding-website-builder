@@ -95,7 +95,11 @@ export function DropdownMenu({
       )}
       {open ? (
         <FloatingPortal>
-          <FloatingFocusManager context={context} modal={false} initialFocus={0}>
+          <FloatingFocusManager
+            context={context}
+            modal={false}
+            initialFocus={0}
+          >
             <div
               ref={refs.setFloating}
               id={menuId}

@@ -59,7 +59,8 @@ export async function createInvitationCardSignedUpload(input: {
   }
 
   const filename = input.name.trim() || 'invitation-card.png'
-  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'invitation-card.png'
+  const safeName =
+    filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'invitation-card.png'
   const path = `invitations/${input.weddingId}/${crypto.randomUUID()}-${safeName}`
   const admin = createAdminSupabaseClient()
 

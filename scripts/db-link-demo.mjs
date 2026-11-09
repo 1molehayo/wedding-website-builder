@@ -33,11 +33,7 @@ const { env } = buildDemoProcessEnv(root, ['.env.demo'])
 requireKeys(env, ['VITE_SUPABASE_URL'], 'Demo db:link')
 
 const projectRef = resolveDemoCloudProjectRef(env)
-const regularEnv = parseEnvFile(
-  resolve(root, '.env'),
-  existsSync,
-  readFileSync,
-)
+const regularEnv = parseEnvFile(resolve(root, '.env'), existsSync, readFileSync)
 assertDemoRefDistinctFromRegular(
   projectRef,
   tryRegularCloudProjectRef(regularEnv),

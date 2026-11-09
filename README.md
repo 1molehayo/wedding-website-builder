@@ -128,13 +128,13 @@ Both stacks can run at once (different Docker `project_id` + ports). Schema/seed
 
 ### Demo Database commands (safe targeting)
 
-| Script                               | Target                                                                 |
-| ------------------------------------ | ---------------------------------------------------------------------- |
-| `pnpm db:demo:reset`                 | Demo local stack only (`--workdir demo-stack`)                          |
-| `pnpm db:demo:seed`                  | Demo local only (refuses non-`:54331` URLs)                             |
-| `pnpm db:demo:link`                  | Demo cloud link via `--workdir demo-stack` + `.env.demo` only           |
-| `pnpm db:demo:push`                  | Demo cloud migrations only (same workdir; no seed)                      |
-| `pnpm db:demo:push --dry-run`        | Preview pending Demo cloud migrations without applying them             |
+| Script                        | Target                                                        |
+| ----------------------------- | ------------------------------------------------------------- |
+| `pnpm db:demo:reset`          | Demo local stack only (`--workdir demo-stack`)                |
+| `pnpm db:demo:seed`           | Demo local only (refuses non-`:54331` URLs)                   |
+| `pnpm db:demo:link`           | Demo cloud link via `--workdir demo-stack` + `.env.demo` only |
+| `pnpm db:demo:push`           | Demo cloud migrations only (same workdir; no seed)            |
+| `pnpm db:demo:push --dry-run` | Preview pending Demo cloud migrations without applying them   |
 
 Regular `pnpm db:link` / `db:push` still read `.env` / default `supabase/` and **must not** be used for the Demo Database.
 
@@ -149,8 +149,7 @@ Demo cloud uses the **same 20 historical migrations** as Regular (shared via `de
 DEMO_SUPABASE_PROJECT_REF=<your-demo-cloud-ref>
 ```
 
-   (Or temporarily set `VITE_SUPABASE_URL` to the Demo cloud URL.) The scripts refuse a ref that matches Regular `.env` cloud URL.
-3. Authenticate the Supabase CLI once (personal access token; not a project API key):
+(Or temporarily set `VITE_SUPABASE_URL` to the Demo cloud URL.) The scripts refuse a ref that matches Regular `.env` cloud URL. 3. Authenticate the Supabase CLI once (personal access token; not a project API key):
 
 ```bash
 npx supabase login
@@ -197,22 +196,22 @@ Mailpit (local OTP emails): [http://127.0.0.1:54324](http://127.0.0.1:54324)
 
 ### Useful pnpm scripts
 
-| Script                       | What it runs                                                    |
-| ---------------------------- | --------------------------------------------------------------- |
-| `pnpm status`                | `supabase status` (API URL, keys, Mailpit)                      |
-| `pnpm supabase:start`        | Start local Supabase                                            |
-| `pnpm supabase:stop`         | Stop local Supabase                                             |
-| `pnpm supabase:demo:*`       | Demo local stack (start / stop / status)                        |
-| `pnpm db:reset`              | Reset Regular local DB + migrations (**no** auto-seed)          |
-| `pnpm db:seed`               | Opt-in fictional wedding on Regular local (:54321) only         |
-| `pnpm db:link`               | Link CLI to cloud project ref from `.env` → `VITE_SUPABASE_URL` |
-| `pnpm db:push`               | Link from `.env`, then push migrations to cloud                 |
-| `pnpm db:demo:reset`         | Reset Demo local DB + migrations (**no** auto-seed)             |
-| `pnpm db:demo:seed`          | Opt-in fictional wedding on Demo local (:54331) only            |
-| `pnpm db:demo:link`          | Link CLI to Demo cloud (`--workdir demo-stack`, `.env.demo`)    |
-| `pnpm db:demo:push`          | Push migrations to Demo cloud only (supports `--dry-run`)       |
-| `pnpm env:check`             | Summarize regular env (hosts/lengths only)                      |
-| `pnpm env:check:demo`        | Summarize demo env; fail if required keys missing               |
+| Script                 | What it runs                                                    |
+| ---------------------- | --------------------------------------------------------------- |
+| `pnpm status`          | `supabase status` (API URL, keys, Mailpit)                      |
+| `pnpm supabase:start`  | Start local Supabase                                            |
+| `pnpm supabase:stop`   | Stop local Supabase                                             |
+| `pnpm supabase:demo:*` | Demo local stack (start / stop / status)                        |
+| `pnpm db:reset`        | Reset Regular local DB + migrations (**no** auto-seed)          |
+| `pnpm db:seed`         | Opt-in fictional wedding on Regular local (:54321) only         |
+| `pnpm db:link`         | Link CLI to cloud project ref from `.env` → `VITE_SUPABASE_URL` |
+| `pnpm db:push`         | Link from `.env`, then push migrations to cloud                 |
+| `pnpm db:demo:reset`   | Reset Demo local DB + migrations (**no** auto-seed)             |
+| `pnpm db:demo:seed`    | Opt-in fictional wedding on Demo local (:54331) only            |
+| `pnpm db:demo:link`    | Link CLI to Demo cloud (`--workdir demo-stack`, `.env.demo`)    |
+| `pnpm db:demo:push`    | Push migrations to Demo cloud only (supports `--dry-run`)       |
+| `pnpm env:check`       | Summarize regular env (hosts/lengths only)                      |
+| `pnpm env:check:demo`  | Summarize demo env; fail if required keys missing               |
 
 ### Quality checks
 

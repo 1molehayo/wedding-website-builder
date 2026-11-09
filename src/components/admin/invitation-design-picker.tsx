@@ -131,7 +131,8 @@ export function InvitationDesignPicker({
   }, [design])
 
   const selectedDesign =
-    INVITATION_DESIGNS.find((item) => item.id === design) ?? INVITATION_DESIGNS[0]
+    INVITATION_DESIGNS.find((item) => item.id === design) ??
+    INVITATION_DESIGNS[0]
   const visible = filterInvitationDesigns(category, query)
   const content = {
     groomName: groomName.trim() || 'Groom',

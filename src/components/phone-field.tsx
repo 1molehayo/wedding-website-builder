@@ -242,7 +242,9 @@ export function PhoneField({
                       <span className="text-base leading-none" aria-hidden>
                         {item.flag}
                       </span>
-                      <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {item.name}
+                      </span>
                       <span className="text-foreground-secondary shrink-0 text-sm">
                         +{item.callingCode}
                       </span>

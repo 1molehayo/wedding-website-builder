@@ -266,9 +266,7 @@ export function GiftItemForm({
         }}
       >
         <SideDrawer.Content>
-          <form.Subscribe
-            selector={(state) => state.submissionAttempts > 0}
-          >
+          <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
             {(submitted) => (
               <div className="flex flex-col gap-4">
                 <form.Field name="title">

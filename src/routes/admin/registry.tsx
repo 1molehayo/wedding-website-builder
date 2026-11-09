@@ -283,7 +283,6 @@ function AdminRegistryPage() {
         ) : null}
       </SideDrawer>
 
-
       <ConfirmDialog
         open={Boolean(deleteItemId)}
         onOpenChange={(open) => {
