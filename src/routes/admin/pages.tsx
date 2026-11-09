@@ -832,8 +832,8 @@ function AdminPagesPage() {
         <div className="border-border bg-surface rounded-xl border border-dashed px-6 py-12 text-center">
           <p className="text-lg font-medium">No sections yet</p>
           <p className="text-foreground-secondary mx-auto mt-2 max-w-md text-sm leading-relaxed">
-            Add a hero, story, text, photo, or details block. This draft stays off the
-            live site until you publish.
+            Add a hero, story, text, photo, or details block. This draft stays
+            off the live site until you publish.
           </p>
           <div className="mt-6 flex justify-center">
             <AddItemMenu onAdd={onAdd} triggerClassName="px-4" />

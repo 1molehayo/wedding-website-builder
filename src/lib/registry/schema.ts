@@ -1,5 +1,19 @@
 import { z } from 'zod'
+import { CURATED_CURRENCY_CODES } from '@/lib/currency/currencies'
 import { amazonRegistryUrlError } from '@/lib/registry/amazon-url'
+
+const curatedCurrencySchema = z
+  .string()
+  .trim()
+  .min(1, 'Currency is required.')
+  .transform((value) => value.toUpperCase())
+  .refine(
+    (value): value is (typeof CURATED_CURRENCY_CODES)[number] =>
+      (CURATED_CURRENCY_CODES as readonly string[]).includes(value),
+    {
+      message: 'Choose USD, EUR, GBP, or NGN.',
+    },
+  )
 
 const optionalText = (label: string, max: number) =>
   z
@@ -34,15 +48,7 @@ const optionalUrl = z
   }, 'Enter a valid http(s) link, or leave it empty.')
 
 const priceRowSchema = z.object({
-  currency: z
-    .string()
-    .trim()
-    .min(1, 'Currency is required.')
-    .max(12)
-    .transform((value) => value.toUpperCase())
-    .refine((value) => /^[A-Z]{3,12}$/.test(value), {
-      message: 'Use a currency code such as USD or NGN.',
-    }),
+  currency: curatedCurrencySchema,
   amount: z.coerce
     .number({ error: 'Enter a price.' })
     .positive('Enter a price greater than zero.')
@@ -113,12 +119,7 @@ export type RegistryItemFormValues = z.infer<typeof registryItemFormSchema>
 export const registryAccountFormSchema = z.object({
   label: z.string().trim().min(1, 'Label is required.').max(80),
   bank_name: optionalText('Bank name', 120),
-  currency: z
-    .string()
-    .trim()
-    .min(1, 'Currency is required.')
-    .max(12)
-    .transform((value) => value.toUpperCase()),
+  currency: curatedCurrencySchema,
   account_name: z.string().trim().min(1, 'Account name is required.').max(120),
   account_number: z
     .string()

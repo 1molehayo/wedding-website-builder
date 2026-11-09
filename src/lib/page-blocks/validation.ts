@@ -41,15 +41,16 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
           .transform(sanitizeTextBlockHtml)
           .refine(
             (html) =>
-              html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').trim()
-                .length > 0,
+              html
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&nbsp;/g, ' ')
+                .trim().length > 0,
             'Content is required.',
           )
       : trimmedString.transform(sanitizeTextBlockHtml)
 
   const textFieldsSchema = z.object({
-    title:
-      mode === 'strict' ? requiredTrimmedString('Title') : trimmedString,
+    title: mode === 'strict' ? requiredTrimmedString('Title') : trimmedString,
     content: textContentSchema,
     ...navFieldsSchema,
   })

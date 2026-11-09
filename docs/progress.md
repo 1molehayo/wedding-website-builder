@@ -12,19 +12,19 @@ Updated Nov 9 after your browser checks. Older sections below are history; **thi
 
 ### Done (you confirmed)
 
-| Feature | Notes |
-| --- | --- |
-| E-invitation designs + email card image | Migration + Save settings; works |
-| Nocturne dark hero overlay | Works |
-| In-page nav uses block titles | Works (hero stays Home) |
-| Admin nav no full-page reload | Sidebar stays; works |
-| Staging on Vercel | Has latest changes |
+| Feature                                                          | Notes                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E-invitation designs + email card image                          | Migration + Save settings; works                                                                                                                                                                                                                    |
+| Nocturne dark hero overlay                                       | Works                                                                                                                                                                                                                                               |
+| In-page nav uses block titles                                    | Works (hero stays Home)                                                                                                                                                                                                                             |
+| Admin nav no full-page reload                                    | Sidebar stays; works                                                                                                                                                                                                                                |
+| Staging on Vercel                                                | Has latest changes                                                                                                                                                                                                                                  |
 | Gift registry (bank transfer + FX lock + Amazon + Activity page) | In code on `gift-registry` / staging. Specs: [bank-transfer](#oct-10-2026--bank-transfer-gift-registry), [one ledger](#nov-8-2026--one-ledger-then-amazon-and-later-stores), [activity](#nov-8-2026--admin-activity-logs). No in-app card checkout. |
-| Public footer cleanup | “Built with” removed on wedding sites and landing; © kept. Privacy + Cookies links added (Nov 9). |
-| Image lightbox | Shared viewer on public image blocks and private photo shares (`object-contain`) (Nov 9). |
-| Privacy + Cookie policies | `/privacy` and `/cookies` pages with GDPR-oriented copy for this product (Nov 9). Have counsel review before production reliance. Contact: `hello@igbeyawowa.app` (set up domain inbox/forward later). |
-| In-app notifications | Admin bell inbox from activity fan-out (`admin_notifications`). RSVP, registry, pages publish, media shares, settings, feedback for super admins, etc. (Nov 9). Apply migration `20261109030000_admin_notifications.sql`. |
-| Text-content page block | TipTap rich text block (`text`): H4–H6, lists, quote, links, align. Sanitized HTML. Separate from Story. (Nov 9). |
+| Public footer cleanup                                            | “Built with” removed on wedding sites and landing; © kept. Privacy + Cookies links added (Nov 9).                                                                                                                                                   |
+| Image lightbox                                                   | Shared viewer on public image blocks and private photo shares (`object-contain`) (Nov 9).                                                                                                                                                           |
+| Privacy + Cookie policies                                        | `/privacy` and `/cookies` pages with GDPR-oriented copy for this product (Nov 9). Have counsel review before production reliance. Contact: `hello@igbeyawowa.app` (set up domain inbox/forward later).                                              |
+| In-app notifications                                             | Admin bell inbox from activity fan-out (`admin_notifications`). RSVP, registry, pages publish, media shares, settings, feedback for super admins, etc. (Nov 9). Apply migration `20261109030000_admin_notifications.sql`.                           |
+| Text-content page block                                          | TipTap rich text block (`text`): H4–H6, lists, quote, links, align. Sanitized HTML. Separate from Story. (Nov 9).                                                                                                                                   |
 
 ### Features still left to build
 

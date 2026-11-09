@@ -92,9 +92,8 @@ export async function recordActivity(
     throw new Error(error.message)
   }
 
-  const { fanOutNotifications } = await import(
-    '@/lib/notifications/notifications.server'
-  )
+  const { fanOutNotifications } =
+    await import('@/lib/notifications/notifications.server')
   await fanOutNotifications({
     activityLogId: data.id,
     weddingId: input.weddingId,

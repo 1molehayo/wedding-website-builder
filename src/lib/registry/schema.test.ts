@@ -38,4 +38,13 @@ describe('parseRegistryItemInput', () => {
       /currency and price/,
     )
   })
+
+  it('rejects a currency outside the curated list', () => {
+    expect(() =>
+      parseRegistryItemInput({
+        ...base,
+        prices: [{ currency: 'CAD', amount: '100' }],
+      }),
+    ).toThrow(/USD, EUR, GBP, or NGN/i)
+  })
 })

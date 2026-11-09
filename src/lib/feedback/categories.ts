@@ -2,6 +2,7 @@ export const FEEDBACK_CATEGORIES = [
   { id: 'general', label: 'General' },
   { id: 'bug', label: 'Bug / issue' },
   { id: 'idea', label: 'Idea / suggestion' },
+  { id: 'currency', label: 'Add a currency' },
   { id: 'praise', label: 'Praise' },
 ] as const
 

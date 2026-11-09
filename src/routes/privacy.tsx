@@ -35,8 +35,8 @@ function PrivacyPage() {
         Switzerland, we process personal data under the EU General Data
         Protection Regulation (GDPR) and the UK GDPR where they apply. This
         notice is written so those rights are clear. It is not legal advice.
-        Controllers should review it with their own counsel before relying on
-        it in production.
+        Controllers should review it with their own counsel before relying on it
+        in production.
       </p>
 
       <LegalSection title="Who is responsible">
@@ -73,8 +73,8 @@ function PrivacyPage() {
             number, role, and sign-in activity (email one-time codes).
           </li>
           <li>
-            <strong>Wedding settings:</strong> couple names, wedding date,
-            venue details, theme choices, and invitation card images.
+            <strong>Wedding settings:</strong> couple names, wedding date, venue
+            details, theme choices, and invitation card images.
           </li>
           <li>
             <strong>Guest list and RSVP:</strong> guest names, email, optional
@@ -181,11 +181,11 @@ function PrivacyPage() {
 
       <LegalSection title="Your rights">
         <p>
-          Depending on where you live, you may have the right to access, correct,
-          delete, or restrict processing of your personal data; to object to
-          certain processing; to data portability; and to withdraw consent where
-          processing is based on consent. You may also complain to your local
-          data protection authority.
+          Depending on where you live, you may have the right to access,
+          correct, delete, or restrict processing of your personal data; to
+          object to certain processing; to data portability; and to withdraw
+          consent where processing is based on consent. You may also complain to
+          your local data protection authority.
         </p>
         <p>
           To exercise these rights for platform account data, email{' '}

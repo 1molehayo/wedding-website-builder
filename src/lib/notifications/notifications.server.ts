@@ -35,9 +35,7 @@ async function listRecipientIds(input: {
       .not('invite_accepted_at', 'is', null)
 
     if (result.error) throw new Error(result.error.message)
-    return result.data
-      .map((row) => row.id)
-      .filter((id) => id !== input.actorId)
+    return result.data.map((row) => row.id).filter((id) => id !== input.actorId)
   }
 
   const result = await admin
@@ -48,9 +46,7 @@ async function listRecipientIds(input: {
     .not('invite_accepted_at', 'is', null)
 
   if (result.error) throw new Error(result.error.message)
-  return result.data
-    .map((row) => row.id)
-    .filter((id) => id !== input.actorId)
+  return result.data.map((row) => row.id).filter((id) => id !== input.actorId)
 }
 
 /** Fan-out inbox rows for a notify-worthy activity. Never throws to callers. */
