@@ -52,6 +52,13 @@ function GiftItemCard({
 
   return (
     <article className="border-border space-y-4 border-b py-8 last:border-b-0">
+      {item.photo_path ? (
+        <img
+          src={`/api/photo?path=${encodeURIComponent(item.photo_path)}`}
+          alt={item.title}
+          className="h-48 w-full max-w-md rounded-md object-cover"
+        />
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 max-w-xl">
           <h3 className="font-serif text-2xl italic md:text-3xl">
@@ -64,18 +71,26 @@ function GiftItemCard({
           ) : null}
           <p className="text-foreground-secondary mt-3 text-xs tracking-[0.14em] uppercase">
             {REGISTRY_ITEM_STATUS_LABELS[item.status]}
-            {item.price_label ? ` · ${item.price_label}` : ''}
+            {item.prices.length > 0
+              ? ` · ${item.prices
+                  .map((price) => `${price.amount} ${price.currency}`)
+                  .join(' · ')}`
+              : item.price_label
+                ? ` · ${item.price_label}`
+                : ''}
             {` · ${item.claimed_qty}/${item.desired_qty} claimed`}
           </p>
         </div>
-        <a
-          href={item.store_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-foreground text-xs tracking-[0.14em] uppercase underline-offset-4 transition hover:underline"
-        >
-          Open gift link
-        </a>
+        {item.store_url ? (
+          <a
+            href={item.store_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground text-xs tracking-[0.14em] uppercase underline-offset-4 transition hover:underline"
+          >
+            Open gift link
+          </a>
+        ) : null}
       </div>
 
       {canReserve ? (

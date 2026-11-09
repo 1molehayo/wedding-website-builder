@@ -12,28 +12,90 @@ const optionalText = (label: string, max: number) =>
       message: `${label} must be ${max} characters or fewer.`,
     })
 
-export const registryItemFormSchema = z.object({
-  title: z.string().trim().min(1, 'Title is required.').max(120),
-  description: optionalText('Description', 2000),
-  store_url: z
+const optionalUrl = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((value) => {
+    if (value === null || value === undefined) return null
+    const trimmed = value.trim()
+    return trimmed.length === 0 ? null : trimmed
+  })
+  .refine((value) => value === null || value.length <= 2000, {
+    message: 'Link must be 2000 characters or fewer.',
+  })
+  .refine((value) => {
+    if (value === null) return true
+    try {
+      const url = new URL(value)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }, 'Enter a valid http(s) link, or leave it empty.')
+
+const priceRowSchema = z.object({
+  currency: z
     .string()
     .trim()
-    .min(1, 'Store / gift link is required.')
-    .max(2000)
-    .refine((value) => {
-      try {
-        const url = new URL(value)
-        return url.protocol === 'http:' || url.protocol === 'https:'
-      } catch {
-        return false
-      }
-    }, 'Enter a valid http(s) gift or store link.'),
-  price_label: optionalText('Price label', 40),
-  desired_qty: z.coerce.number().int().min(1).max(100),
-  claimed_qty: z.coerce.number().int().min(0).max(100),
-  status: z.enum(['available', 'reserved', 'purchased']),
-  is_visible: z.boolean(),
+    .min(1, 'Currency is required.')
+    .max(12)
+    .transform((value) => value.toUpperCase())
+    .refine((value) => /^[A-Z]{3,12}$/.test(value), {
+      message: 'Use a currency code such as USD or NGN.',
+    }),
+  amount: z.coerce
+    .number({ error: 'Enter a price.' })
+    .positive('Enter a price greater than zero.')
+    .max(999_999_999.99, 'Price is too large.')
+    .transform((value) => Math.round(value * 100) / 100),
 })
+
+export const registryItemFormSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Title is required.').max(120),
+    description: optionalText('Description', 2000),
+    store_url: optionalUrl,
+    photo_path: z
+      .union([z.string(), z.null(), z.undefined()])
+      .transform((value) => {
+        if (value === null || value === undefined) return null
+        const trimmed = value.trim()
+        return trimmed.length === 0 ? null : trimmed
+      })
+      .refine(
+        (value) =>
+          value === null ||
+          (value.startsWith('registry/') && !value.includes('..')),
+        { message: 'Gift photo path is invalid.' },
+      ),
+    prices: z
+      .array(priceRowSchema)
+      .min(1, 'Add a currency and price.')
+      .max(8, 'Eight currencies is the maximum.'),
+    desired_qty: z.coerce.number().int().min(1).max(100),
+    claimed_qty: z.coerce.number().int().min(0).max(100),
+    status: z.enum(['available', 'reserved', 'purchased']),
+    is_visible: z.boolean(),
+  })
+  .superRefine((value, context) => {
+    const seen = new Set<string>()
+    value.prices.forEach((price, index) => {
+      if (seen.has(price.currency)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['prices', index, 'currency'],
+          message: 'Each currency can only be listed once.',
+        })
+      }
+      seen.add(price.currency)
+    })
+    if (value.claimed_qty > value.desired_qty) {
+      context.addIssue({
+        code: 'custom',
+        path: ['claimed_qty'],
+        message: 'Claimed quantity cannot exceed desired quantity.',
+      })
+    }
+  })
 
 export type RegistryItemFormValues = z.infer<typeof registryItemFormSchema>
 
@@ -60,6 +122,33 @@ export const registryAccountFormSchema = z.object({
 export type RegistryAccountFormValues = z.infer<
   typeof registryAccountFormSchema
 >
+
+/** Short line kept on the gift for the current public card until contributions replace it. */
+export function formatRegistryPriceLabel(
+  prices: Array<{ amount: number; currency: string }>,
+): string | null {
+  if (prices.length === 0) return null
+  return prices.map((price) => `${price.amount} ${price.currency}`).join(' · ')
+}
+
+export function registryFormFieldErrors(error: z.ZodError): {
+  fields: Record<string, string>
+} {
+  const fields: Record<string, string> = {}
+  for (const issue of error.issues) {
+    let key = ''
+    for (const part of issue.path) {
+      if (typeof part === 'number') {
+        key += `[${part}]`
+      } else if (typeof part === 'string') {
+        key += key ? `.${part}` : part
+      }
+    }
+    if (!key || fields[key]) continue
+    fields[key] = issue.message
+  }
+  return { fields }
+}
 
 export function parseRegistryItemInput(data: unknown): RegistryItemFormValues {
   const result = registryItemFormSchema.safeParse(data)

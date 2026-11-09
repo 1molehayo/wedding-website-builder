@@ -18,7 +18,8 @@ export function isAllowedPhotoStoragePath(imagePath: string): boolean {
   return (
     path.startsWith('page-blocks/') ||
     path.startsWith('media/') ||
-    path.startsWith('invitations/')
+    path.startsWith('invitations/') ||
+    path.startsWith('registry/')
   )
 }
 
@@ -117,6 +118,38 @@ export async function createPageBlockSignedUpload(input: {
   const filename = input.name.trim() || 'photo'
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'photo'
   const path = `page-blocks/${crypto.randomUUID()}-${safeName}`
+  return createSignedUpload(path, filename, contentType, input.byteSize)
+}
+
+/** Gift photo. Same rules as a page image, stored under registry/. */
+export async function createRegistrySignedUpload(input: {
+  name: string
+  type: string
+  byteSize: number
+}): Promise<PageBlockSignedUpload> {
+  const contentType = input.type || 'application/octet-stream'
+  if (!ALLOWED_MIME.has(contentType)) {
+    throw new Error('Only JPEG, PNG, WebP, and GIF images are allowed.')
+  }
+  if (!Number.isFinite(input.byteSize) || input.byteSize <= 0) {
+    throw new Error('Image data is empty.')
+  }
+  if (input.byteSize > MAX_MEDIA_UPLOAD_BYTES) {
+    throw new Error('Image must be 12MB or smaller.')
+  }
+
+  const filename = input.name.trim() || 'photo'
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_') || 'photo'
+  const path = `registry/${crypto.randomUUID()}-${safeName}`
+  return createSignedUpload(path, filename, contentType, input.byteSize)
+}
+
+async function createSignedUpload(
+  path: string,
+  filename: string,
+  contentType: string,
+  byteSize: number,
+): Promise<PageBlockSignedUpload> {
   const admin = createAdminSupabaseClient()
 
   const signed = await admin.storage
@@ -133,7 +166,7 @@ export async function createPageBlockSignedUpload(input: {
     signedUrl: signed.data.signedUrl,
     filename,
     contentType,
-    byteSize: input.byteSize,
+    byteSize,
   }
 }
 

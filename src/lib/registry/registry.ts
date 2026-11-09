@@ -115,3 +115,34 @@ export const getPublicRegistry = createServerFn({ method: 'GET' })
     const { getPublicRegistryBySlugHandler } = await import('./registry.server')
     return getPublicRegistryBySlugHandler(data.slug)
   })
+
+export const createRegistryPhotoUpload = createServerFn({ method: 'POST' })
+  .validator((data: { name: string; type: string; byteSize: number }) => {
+    const name = String(data.name).trim()
+    const type = String(data.type)
+    const byteSize = Number(data.byteSize)
+    if (!name) throw new Error('Image name is required.')
+    if (!Number.isFinite(byteSize) || byteSize <= 0) {
+      throw new Error('Image data is empty.')
+    }
+    return { name, type, byteSize }
+  })
+  .handler(async ({ data }) => {
+    const { createRegistryPhotoUploadHandler } = await import(
+      './registry.server'
+    )
+    return createRegistryPhotoUploadHandler(data)
+  })
+
+export const confirmRegistryPhotoUpload = createServerFn({ method: 'POST' })
+  .validator((data: { path: string }) => {
+    const path = String(data.path).trim()
+    if (!path) throw new Error('Image path is required.')
+    return { path }
+  })
+  .handler(async ({ data }) => {
+    const { confirmRegistryPhotoUploadHandler } = await import(
+      './registry.server'
+    )
+    return confirmRegistryPhotoUploadHandler(data)
+  })
