@@ -1,4 +1,5 @@
 import { useEffect, useId } from 'react'
+import { createPortal } from 'react-dom'
 import { XIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -31,21 +32,27 @@ export function Modal({
   useEffect(() => {
     if (!open) return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onOpenChange(false)
+      if (event.key !== 'Escape') return
+      // Stop drawers/overlays underneath from also handling Escape.
+      event.preventDefault()
+      event.stopPropagation()
+      onOpenChange(false)
     }
-    document.addEventListener('keydown', onKeyDown)
+    // Capture so we win over vaul/drawer listeners.
+    document.addEventListener('keydown', onKeyDown, true)
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('keydown', onKeyDown, true)
       document.body.style.overflow = previous
     }
   }, [open, onOpenChange])
 
   if (!open) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  // Portal + z above SideDrawer (z-50) so modals opened from drawers stay usable.
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
@@ -91,6 +98,7 @@ export function Modal({
         <div className="mt-4">{children}</div>
         {footer ? <div className="mt-6">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
