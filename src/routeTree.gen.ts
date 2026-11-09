@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WeddingSlugRouteImport } from './routes/$weddingSlug'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as DesignRouteImport } from './routes/design'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 import { Route as AdminAdminsRouteImport } from './routes/admin/admins'
@@ -48,9 +50,19 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DesignRoute = DesignRouteImport.update({
   id: '/design',
   path: '/design',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -154,7 +166,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/$weddingSlug': typeof WeddingSlugRoute
+  '/cookies': typeof CookiesRoute
   '/design': typeof DesignRoute
+  '/privacy': typeof PrivacyRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -178,7 +192,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$weddingSlug': typeof WeddingSlugRoute
+  '/cookies': typeof CookiesRoute
   '/design': typeof DesignRoute
+  '/privacy': typeof PrivacyRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -204,7 +220,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/$weddingSlug': typeof WeddingSlugRoute
+  '/cookies': typeof CookiesRoute
   '/design': typeof DesignRoute
+  '/privacy': typeof PrivacyRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
@@ -231,7 +249,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/$weddingSlug'
+    | '/cookies'
     | '/design'
+    | '/privacy'
     | '/admin/activity'
     | '/admin/admins'
     | '/admin/feedback'
@@ -255,7 +275,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$weddingSlug'
+    | '/cookies'
     | '/design'
+    | '/privacy'
     | '/admin/activity'
     | '/admin/admins'
     | '/admin/feedback'
@@ -280,7 +302,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/$weddingSlug'
+    | '/cookies'
     | '/design'
+    | '/privacy'
     | '/admin/activity'
     | '/admin/admins'
     | '/admin/feedback'
@@ -306,7 +330,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   WeddingSlugRoute: typeof WeddingSlugRoute
+  CookiesRoute: typeof CookiesRoute
   DesignRoute: typeof DesignRoute
+  PrivacyRoute: typeof PrivacyRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
   PhotosTokenRoute: typeof PhotosTokenRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
@@ -337,11 +363,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/design': {
       id: '/design'
       path: '/design'
       fullPath: '/design'
       preLoaderRoute: typeof DesignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -522,7 +562,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   WeddingSlugRoute: WeddingSlugRoute,
+  CookiesRoute: CookiesRoute,
   DesignRoute: DesignRoute,
+  PrivacyRoute: PrivacyRoute,
   ApiPhotoRoute: ApiPhotoRoute,
   PhotosTokenRoute: PhotosTokenRoute,
   RsvpTokenRoute: RsvpTokenRoute,

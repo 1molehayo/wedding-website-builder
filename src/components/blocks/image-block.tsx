@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ImageLightbox } from '@/components/ui/image-lightbox'
 import type { ImagePageBlock } from '@/lib/page-blocks/types'
 import { publicSectionId } from '@/lib/page-blocks/types'
 import { cn } from '@/lib/utils'
@@ -11,7 +12,9 @@ export function ImageBlock({
   imageUrl?: string | null
 }) {
   const [failed, setFailed] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const showImage = Boolean(imageUrl) && !failed
+  const alt = block.fields.title ?? 'Wedding photo'
 
   return (
     <section
@@ -20,7 +23,7 @@ export function ImageBlock({
     >
       <figure className="public-reveal">
         {block.fields.title || block.fields.description ? (
-          <figcaption className="mb-5 lg:mb-10 max-w-2xl">
+          <figcaption className="mb-5 max-w-2xl lg:mb-10">
             {block.fields.title ? (
               <p className="font-serif text-2xl italic md:text-3xl">
                 {block.fields.title}
@@ -41,15 +44,22 @@ export function ImageBlock({
           )}
         >
           {showImage && imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={block.fields.title ?? 'Wedding photo'}
-              loading="lazy"
-              decoding="async"
-              sizes="(min-width: 1024px) 64rem, 100vw"
-              className="public-image h-full w-full object-contain"
-              onError={() => setFailed(true)}
-            />
+            <button
+              type="button"
+              className="block h-full w-full cursor-zoom-in text-left"
+              aria-label={`Open larger view of ${alt}`}
+              onClick={() => setLightboxOpen(true)}
+            >
+              <img
+                src={imageUrl}
+                alt={alt}
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width: 1024px) 64rem, 100vw"
+                className="public-image h-full w-full object-contain"
+                onError={() => setFailed(true)}
+              />
+            </button>
           ) : (
             <p className="text-foreground-secondary px-6 text-center text-sm tracking-[0.14em] uppercase">
               Photo coming soon
@@ -57,6 +67,13 @@ export function ImageBlock({
           )}
         </div>
       </figure>
+
+      <ImageLightbox
+        open={lightboxOpen}
+        src={imageUrl ?? null}
+        alt={alt}
+        onClose={() => setLightboxOpen(false)}
+      />
     </section>
   )
 }

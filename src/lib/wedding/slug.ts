@@ -12,6 +12,9 @@ export const RESERVED_PUBLIC_SLUGS = new Set([
   'photos',
   'share',
   'media',
+  'privacy',
+  'cookies',
+  'registry',
 ])
 
 export function slugifySegment(value: string): string {
