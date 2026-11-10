@@ -14,6 +14,7 @@ Built as a single **TanStack Start** (React + TypeScript) application. Productio
 
 Product documentation:
 
+- [User guide — step-by-step help for managing a wedding website](https://1molehayo.github.io/wedding-website-builder/)
 - [Plain-English product and QA guide](./docs/qa-product-guide.md)
 - [Current engineering progress and historical decisions](./docs/progress.md)
 
@@ -37,7 +38,7 @@ Useful routes:
 - `/admin` — protected overview
 - `/admin/onboarding` — first wedding setup
 - `/admin/settings` — wedding settings (groom, bride, date, venue, theme, public URL slug)
-- `/admin/pages` — draft/live page content (hero, story, text, image, details, registry)
+- `/admin/pages` — draft/live page content (hero, story, text, image, details)
 - `/admin/guests` — guest list, RSVP status, themed invite email / WhatsApp / copy `/rsvp/$token`
 - `/admin/media` — private media library, albums, and guest shares
 - `/admin/registry` — gifts, multi-currency prices, bank accounts, contributions, and transfer audit
@@ -429,7 +430,7 @@ Admins edit structured facts at `/admin/settings`:
 
 Admins edit ordered home-page blocks at `/admin/pages`:
 
-- Block types: `hero`, `story`, `text`, `image`, `details`, `registry`
+- Block types: `hero`, `story`, `text`, `image`, `details`
 - Reorder, add/remove/duplicate, draft preview, publish, and restore history
 - Public `/$weddingSlug` renders published blocks via `DynamicBlock`
 - Image blocks store a path in the private `photos` bucket; signed URLs for admin preview and public render
