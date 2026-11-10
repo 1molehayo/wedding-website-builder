@@ -283,7 +283,10 @@ email. The visual celebration is skipped when the visitor prefers reduced
 motion.
 
 Admins may also add an Amazon listing to a gift and manually record an Amazon
-purchase. There is no Amazon API connection or automatic order tracking.
+purchase. There is no Amazon API connection or automatic order tracking. The
+Amazon field needs an **amazon.com wedding registry Share/registry link**, not
+a normal product `dp` page. See [Gift registry](./gift-registry.md#add-an-amazon-link-to-a-gift)
+for the exact steps.
 
 What QA should check:
 
