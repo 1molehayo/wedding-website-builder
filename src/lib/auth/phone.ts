@@ -52,7 +52,35 @@ export function listPhoneCountries(): CountryOption[] {
   return cachedCountries
 }
 
+function isSupportedCountry(code: string): code is CountryCode {
+  return getCountries().includes(code as CountryCode)
+}
+
+/** Region from a BCP 47 tag like `en-GB` → `GB`. */
+function regionFromLocaleTag(tag: string): string | null {
+  try {
+    const region = new Intl.Locale(tag).maximize().region
+    return region ? region.toUpperCase() : null
+  } catch {
+    const match = tag.trim().match(/[-_]([A-Za-z]{2})$/)
+    return match?.[1] ? match[1].toUpperCase() : null
+  }
+}
+
+/**
+ * Best-effort default from the browser locale (no geolocation permission).
+ * Falls back to NG when nothing valid can be inferred (SSR / unknown locale).
+ */
 export function defaultPhoneCountry(): CountryCode {
+  if (typeof navigator !== 'undefined') {
+    const tags = [...navigator.languages, navigator.language].filter(Boolean)
+
+    for (const tag of tags) {
+      const region = regionFromLocaleTag(tag)
+      if (region && isSupportedCountry(region)) return region
+    }
+  }
+
   return 'NG'
 }
 

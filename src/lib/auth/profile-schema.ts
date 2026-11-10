@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { toE164Phone } from '@/lib/auth/phone'
+import { defaultPhoneCountry, toE164Phone } from '@/lib/auth/phone'
 import type { CountryCode } from '@/lib/auth/phone'
 import { normalizeAdminEmail } from '@/lib/auth/roles'
 
@@ -88,7 +88,7 @@ const updateProfileInputSchema = z
     addPhoneIssue(
       ctx,
       ['phone_national'],
-      value.phone_country ?? 'NG',
+      value.phone_country ?? defaultPhoneCountry(),
       value.phone_national ?? '',
     )
   })
@@ -108,7 +108,7 @@ export function parseUpdateProfileInput(data: unknown): {
   const phoneNational = parsed.data.phone_national ?? ''
   const phone = phoneNational.trim()
     ? toE164Phone(
-        (parsed.data.phone_country || 'NG') as CountryCode,
+        (parsed.data.phone_country || defaultPhoneCountry()) as CountryCode,
         phoneNational,
       )
     : null
