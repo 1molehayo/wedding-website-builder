@@ -68,7 +68,7 @@ Use the switches to choose whether it shows:
 Edit the information itself on the Wedding settings page.
 
 ::: info Where is the gift registry block?
-The gift registry is managed on the separate **Registry** page. It is not a Page content block in the current app.
+The gift registry is managed on the separate **Registry** page. It is not a Page content block. The app automatically adds the registry to the public website when at least one gift is visible or one cash account is enabled.
 :::
 
 ## Add a block

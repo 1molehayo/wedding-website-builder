@@ -31,6 +31,10 @@ The app does not take card payments. Guests send money by bank transfer, and adm
 
 Add only one price for each gift. Guests choose one of your bank-account currencies, and the app converts the value using a live rate when they start the transfer.
 
+::: warning Gift status does not stop payments
+Changing **Status** to Reserved or Purchased does not by itself remove the **Send money** option. To stop new contributions, untick **Visible on public registry** or make sure the gift is fully funded.
+:::
+
 ## Edit or hide a gift
 
 1. Find the gift under **Gift items**.
@@ -47,7 +51,7 @@ The claimed quantity cannot be higher than the desired quantity.
 2. Select **Delete**.
 3. Confirm the deletion.
 
-This removes the gift and its reservation history. Hide the gift instead if you may need its history later.
+This removes the gift and its reservation history. A gift cannot be deleted after a contribution refers to it; hide it instead.
 
 ## Add a bank account
 
@@ -66,6 +70,10 @@ Guests need at least one visible account to make a bank contribution.
 
 The supported currencies are USD, EUR, GBP, and NGN.
 
+::: warning Bank details are public
+When **Visible on public registry** is ticked, the account name, number, and other payment details can be seen by anyone who has the public wedding website link. Add only an account intended for guest contributions.
+:::
+
 ## Edit, hide, or delete a bank account
 
 - Select **Edit** to change the details.
@@ -73,6 +81,8 @@ The supported currencies are USD, EUR, GBP, and NGN.
 - Select **Delete** only when guests should no longer use it.
 
 Check bank details very carefully before making an account visible.
+
+An account cannot be deleted after a contribution refers to it. Hide it instead.
 
 ## Check a guest transfer
 
