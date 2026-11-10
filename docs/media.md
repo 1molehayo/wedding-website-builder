@@ -45,6 +45,10 @@ Each guest can belong to only one photo share. A guest shown as **in another sha
 
 Each selected guest with an email address receives a private, themed album link. Guests without an email address are skipped.
 
+::: warning Keep album links private
+Anyone who receives an album link can open that album. Do not post the link or QR code on a public page or social media.
+:::
+
 ## Share an album another way
 
 Use one of these options:
@@ -54,7 +58,7 @@ Use one of these options:
 - **Share QR** — opens your device's share options where supported.
 - **Download QR** — saves the QR image so you can attach or print it.
 
-Personal links help the admin count when a selected guest opens the album.
+Personal links help the admin connect an open to a selected guest. The album's **open** number counts visits, not unique people.
 
 ## Edit an album
 

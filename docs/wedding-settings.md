@@ -25,7 +25,7 @@ Changing the public URL breaks links that you already sent to guests. Change it 
 
 ## Add and publish the wedding date
 
-Saving a date does not show it to guests immediately.
+The first date you save stays private until you publish it.
 
 ### Save the date as a private draft
 
@@ -34,6 +34,10 @@ Saving a date does not show it to guests immediately.
 3. Select **Save settings**.
 
 The public website continues to say that the date will be announced until you publish it.
+
+::: warning Changing a date that is already public
+If the current date is already published, saving a different date changes the public date immediately. To prepare the new date privately, select **Hide from public** first, change and save the date, then publish it when ready.
+:::
 
 ### Make the date public
 
@@ -51,14 +55,16 @@ Select **Hide from public**. The date stays saved in the admin area but guests w
 
 ## Update the wedding status
 
-Use **Status** as an internal progress marker:
+Choose the status that matches the wedding:
 
-- **Planning**
-- **Date confirmed**
-- **Invitations sent**
-- **Completed**
+- **Planning** — the wedding is still being prepared. Search engines are asked not to list the public website.
+- **Date confirmed** — the date is confirmed.
+- **Invitations sent** — invitations have been sent.
+- **Completed** — the wedding is over. Guests can no longer submit or change an RSVP.
 
 Choose the closest status and select **Save settings**.
+
+Publishing the wedding date automatically changes **Planning** to **Date confirmed**.
 
 ## Add the venue and dress code
 
