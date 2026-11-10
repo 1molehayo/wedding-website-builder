@@ -82,7 +82,8 @@ function AdminOverviewPage() {
     )
   }
 
-  const previewHref = publicWeddingPath(wedding.public_slug)
+  const previewPath = publicWeddingPath(wedding.public_slug)
+  const previewHref = previewPath ? `${previewPath}?preview=1` : null
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

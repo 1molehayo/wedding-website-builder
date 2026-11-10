@@ -55,52 +55,64 @@ function toSerializableMetadata(
 /**
  * Append one activity_logs row.
  * Checks the action shape, then runs redactActivityMetadata so secrets are not stored.
- * Throws if the insert fails, so the action that called this does not look successful.
+ *
+ * Never throws for storage/fan-out failures. Callers use this after the primary
+ * mutation has already succeeded; failing closed here made profile save, invites,
+ * and other admin actions look broken when migrations were behind.
  */
 export async function recordActivity(
   input: RecordActivityInput,
 ): Promise<void> {
-  const action = assertActivityAction(input.action)
-  const summary = input.summary.trim()
-  if (summary.length === 0 || summary.length > 280) {
-    throw new Error('Activity summary must be 1–280 characters.')
-  }
-  const entityType = input.entityType.trim()
-  if (entityType.length === 0 || entityType.length > 40) {
-    throw new Error('Activity entity type must be 1–40 characters.')
-  }
+  try {
+    const action = assertActivityAction(input.action)
+    const summary = input.summary.trim()
+    if (summary.length === 0 || summary.length > 280) {
+      throw new Error('Activity summary must be 1–280 characters.')
+    }
+    const entityType = input.entityType.trim()
+    if (entityType.length === 0 || entityType.length > 40) {
+      throw new Error('Activity entity type must be 1–40 characters.')
+    }
 
-  const metadata = redactActivityMetadata(input.metadata ?? {})
-  const admin = createAdminSupabaseClient()
-  const { data, error } = await admin
-    .from('activity_logs')
-    .insert({
-      wedding_id: input.weddingId,
-      actor_id: input.actorId,
-      actor_email: input.actorEmail,
-      actor_role: input.actorRole,
+    const metadata = redactActivityMetadata(input.metadata ?? {})
+    const admin = createAdminSupabaseClient()
+    const { data, error } = await admin
+      .from('activity_logs')
+      .insert({
+        wedding_id: input.weddingId,
+        actor_id: input.actorId,
+        actor_email: input.actorEmail,
+        actor_role: input.actorRole,
+        action,
+        entity_type: entityType,
+        entity_id: input.entityId,
+        summary,
+        metadata,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    const { fanOutNotifications } =
+      await import('@/lib/notifications/notifications.server')
+    await fanOutNotifications({
+      activityLogId: data.id,
+      weddingId: input.weddingId,
+      actorId: input.actorId,
       action,
-      entity_type: entityType,
-      entity_id: input.entityId,
       summary,
-      metadata,
     })
-    .select('id')
-    .single()
-
-  if (error) {
-    throw new Error(error.message)
+  } catch (error) {
+    console.error('[activity] recordActivity failed', {
+      action: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      error: error instanceof Error ? error.message : error,
+    })
   }
-
-  const { fanOutNotifications } =
-    await import('@/lib/notifications/notifications.server')
-  await fanOutNotifications({
-    activityLogId: data.id,
-    weddingId: input.weddingId,
-    actorId: input.actorId,
-    action,
-    summary,
-  })
 }
 
 /** Record a mutation by the signed-in admin. */

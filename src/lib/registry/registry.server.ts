@@ -120,6 +120,15 @@ function mapPriceRow(row: {
 const LISTING_SELECT =
   'id, item_id, wedding_id, provider, url, label, sort_order, created_at, updated_at'
 
+function isMissingRegistryRelation(message: string) {
+  const normalized = message.toLowerCase()
+  return (
+    normalized.includes('schema cache') ||
+    normalized.includes('does not exist') ||
+    normalized.includes('could not find')
+  )
+}
+
 async function loadPricesForWedding(
   weddingId: string,
 ): Promise<RegistryItemPrice[]> {
@@ -130,7 +139,10 @@ async function loadPricesForWedding(
     .eq('wedding_id', weddingId)
     .order('currency', { ascending: true })
 
-  if (result.error) throw new Error(result.error.message)
+  if (result.error) {
+    if (isMissingRegistryRelation(result.error.message)) return []
+    throw new Error(result.error.message)
+  }
   return result.data.map((row) => mapPriceRow(row))
 }
 
@@ -145,7 +157,10 @@ async function loadListingsForWedding(
     .order('sort_order', { ascending: true })
     .order('provider', { ascending: true })
 
-  if (result.error) throw new Error(result.error.message)
+  if (result.error) {
+    if (isMissingRegistryRelation(result.error.message)) return []
+    throw new Error(result.error.message)
+  }
   return result.data
 }
 

@@ -343,6 +343,32 @@ shortest create-invite-RSVP journey:
 These items should not be reported as defects in the current version unless a
 release specifically promises them.
 
+## FAQ from recent QA notes
+
+### Where does “RSVP now” go?
+
+There is no “RSVP now” control on **Set up your wedding** (onboarding). That
+button appears in **guest invitation emails**. It opens the guest’s private
+RSVP link (`/rsvp/…`). Only that invited guest should use it.
+
+The RSVP email mock inside the theme picker uses a placeholder link
+(`example.com`) and is preview-only — it does not send mail or open a real
+RSVP page.
+
+### Do users get an email when a guest RSVPs?
+
+The couple/admins get an **in-app notification** (and an Activity row) when a
+guest submits an RSVP. The product does not currently send a separate “guest
+RSVPed” email to the couple. Guests receive invitation/reminder/thank-you
+emails on their own flows (invite, registry confirm, and so on).
+
+### Preview site
+
+**Preview site** opens the wedding’s public URL with `?preview=1` so signed-in
+admins can see draft page content. If the public slug is missing, the button
+becomes **Set public URL** instead. Prefer Demo for testing:
+[demo.igbeyawowa.app](https://demo.igbeyawowa.app).
+
 ## Important limits and expectations
 
 - One deployment manages one wedding.

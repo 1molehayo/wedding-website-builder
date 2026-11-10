@@ -140,13 +140,52 @@ export async function inviteAdminHandler(input: {
   }
 
   if (existing.data) {
-    if (!existing.data.cancelled_at) {
-      throw new Error('An admin with this email already exists.')
+    if (existing.data.cancelled_at) {
+      return reinviteAdminHandler(existing.data.id, {
+        firstName: input.firstName,
+        lastName: input.lastName,
+      })
     }
-    return reinviteAdminHandler(existing.data.id, {
-      firstName: input.firstName,
-      lastName: input.lastName,
-    })
+
+    // Pending invite: treat a second Invite click as Resend instead of a hard
+    // failure (common when the first attempt emailed successfully but a later
+    // step like activity logging failed).
+    if (!existing.data.invite_accepted_at) {
+      if (existing.data.role === 'super_admin') {
+        throw new Error('An admin with this email already exists.')
+      }
+      const inviteToken = existing.data.invite_token ?? newInviteToken()
+      const updated = await admin
+        .from('admin_profiles')
+        .update({
+          first_name: input.firstName,
+          last_name: input.lastName,
+          display_name: input.firstName,
+          invite_token: inviteToken,
+          invited_at: new Date().toISOString(),
+        })
+        .eq('id', existing.data.id)
+        .select(ADMIN_LIST_SELECT)
+        .single()
+
+      if (updated.error) {
+        throw new Error(updated.error.message)
+      }
+
+      await sendInviteForProfile(updated.data)
+      await recordAdminActivity(session, {
+        weddingId: session.wedding?.id ?? updated.data.wedding_id ?? null,
+        action: 'admins.invite_resent',
+        entityType: 'admin_profile',
+        entityId: updated.data.id,
+        summary: `Resent invite to ${updated.data.email ?? email}.`,
+      })
+      return (await withAuthSignInTimes([updated.data]))[0]
+    }
+
+    throw new Error(
+      'An admin with this email already exists. Open Admins to manage them.',
+    )
   }
 
   const inviteToken = newInviteToken()

@@ -444,7 +444,19 @@ export async function getPublicHomeDataHandler(
 
   const { getPublicRegistryForWeddingId } =
     await import('@/lib/registry/registry.server')
-  const registry = await getPublicRegistryForWeddingId(weddingRow.id)
+  let registry: PublicRegistryData
+  try {
+    registry = await getPublicRegistryForWeddingId(weddingRow.id)
+  } catch (error) {
+    // Keep the public wedding site available even when registry migrations are
+    // behind (missing prices/listings/contributions tables).
+    console.error('[public-home] registry load failed', {
+      weddingId: weddingRow.id,
+      slug: weddingSlug,
+      error: error instanceof Error ? error.message : error,
+    })
+    registry = { items: [], accounts: [], hasContent: false }
+  }
 
   return {
     ...toPublicSettings(weddingRow),

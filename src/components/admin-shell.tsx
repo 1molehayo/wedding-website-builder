@@ -81,7 +81,8 @@ function SidebarFooter({
   onDonate: () => void
 }) {
   const wedding = session.wedding
-  const previewHref = publicWeddingPath(wedding?.public_slug)
+  const previewPath = publicWeddingPath(wedding?.public_slug)
+  const previewHref = previewPath ? `${previewPath}?preview=1` : null
   const dateLabel = !wedding
     ? 'Wedding not set up'
     : wedding.wedding_date
