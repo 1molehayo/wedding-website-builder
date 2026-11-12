@@ -1,6 +1,7 @@
-import { useForm, useStore } from '@tanstack/react-form'
 import { InfoIcon, WarningCircleIcon } from '@phosphor-icons/react'
-import { useEffect, useEffectEvent, useMemo, useState } from 'react'
+import { useForm, useStore } from '@tanstack/react-form'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { PhoneField } from '@/components/phone-field'
 import { Button } from '@/components/ui/button'
 import { CurrencyAmountField } from '@/components/ui/currency-amount-field'
@@ -12,14 +13,12 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { isUsableCrossCurrencyRate, payAmountToBase } from '@/lib/fx/money'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
+import { contributionFxQuoteQueryOptions } from '@/lib/query/fx-queries'
 import {
   emptyStartContributionForm,
   startContributionFormSchema,
 } from '@/lib/registry/contribution-schema'
-import {
-  quoteContributionFx,
-  startBankContribution,
-} from '@/lib/registry/registry'
+import { startBankContribution } from '@/lib/registry/registry'
 import type {
   ContributionFxQuote,
   PublicRegistryAccount,
@@ -178,9 +177,10 @@ function ContributeDrawer({
 }) {
   const [started, setStarted] = useState<StartedContribution | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [fxQuote, setFxQuote] = useState<ContributionFxQuote | null>(null)
-  const [fxLoading, setFxLoading] = useState(false)
-  const [fxError, setFxError] = useState<string | null>(null)
+  const latestFxRef = useRef<{
+    usable: ContributionFxQuote | null
+    error: string | null
+  }>({ usable: null, error: null })
 
   const currencies = useMemo(() => {
     return [
@@ -217,21 +217,18 @@ function ContributeDrawer({
       },
     },
     onSubmit: async ({ value }) => {
-      const payCurrency = value.currency.toUpperCase()
+      const pay = value.currency.toUpperCase()
+      const { usable: quote, error: blockedMessage } = latestFxRef.current
       if (
         giftBaseCurrency &&
-        giftBaseCurrency !== payCurrency &&
+        giftBaseCurrency !== pay &&
         !(
-          fxQuote &&
-          isUsableCrossCurrencyRate(
-            giftBaseCurrency,
-            payCurrency,
-            fxQuote.fxRate,
-          )
+          quote &&
+          isUsableCrossCurrencyRate(giftBaseCurrency, pay, quote.fxRate)
         )
       ) {
         toast.error(
-          fxError ??
+          blockedMessage ??
             `Live exchange rates are unavailable. Pay in ${giftBaseCurrency}, or try again in a moment.`,
         )
         return
@@ -264,29 +261,45 @@ function ContributeDrawer({
     (state) => state.values.currency || defaultCurrency,
   )
 
-  const applyFxQuote = useEffectEvent((quote: ContributionFxQuote) => {
-    const cross = isUsableCrossCurrencyRate(
-      quote.baseCurrency,
-      quote.payCurrency,
-      quote.fxRate,
-    )
-    const same =
-      quote.baseCurrency.toUpperCase() === quote.payCurrency.toUpperCase()
-
-    if (!same && !cross) {
-      setFxQuote(null)
-      setFxError(
-        'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.',
-      )
-      return
-    }
-
-    setFxError(null)
-    setFxQuote(quote)
-    if (cross && quote.suggestedAmount != null && quote.suggestedAmount > 0) {
-      form.setFieldValue('amount', String(quote.suggestedAmount))
-    }
+  const fxQueryEnabled = Boolean(open && target && !started && payCurrency)
+  const {
+    data: fxQuoteData,
+    isFetching: fxLoading,
+    isError: fxIsError,
+    error: fxQueryError,
+  } = useQuery({
+    ...contributionFxQuoteQueryOptions({
+      weddingSlug,
+      giftId,
+      currency: payCurrency,
+    }),
+    enabled: fxQueryEnabled,
   })
+
+  const needsCrossCurrency = Boolean(
+    giftBaseCurrency && giftBaseCurrency !== payCurrency.toUpperCase(),
+  )
+  const usableFxQuote =
+    fxQuoteData &&
+    isUsableCrossCurrencyRate(
+      fxQuoteData.baseCurrency,
+      fxQuoteData.payCurrency,
+      fxQuoteData.fxRate,
+    )
+      ? fxQuoteData
+      : null
+  const fxError = !needsCrossCurrency
+    ? null
+    : fxIsError
+      ? fxQueryError instanceof Error
+        ? fxQueryError.message
+        : 'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.'
+      : !fxLoading && !usableFxQuote
+        ? 'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.'
+        : null
+  const fxBlocked = needsCrossCurrency && !fxLoading && !usableFxQuote
+
+  latestFxRef.current = { usable: usableFxQuote, error: fxError }
 
   const syncAccountForCurrency = useEffectEvent((currency: string) => {
     const matches = accounts.filter(
@@ -297,60 +310,21 @@ function ContributeDrawer({
     form.setFieldValue('accountId', matches[0]?.id ?? '')
   })
 
-  useEffect(() => {
-    if (!open || !target || started) return
-    if (!payCurrency) return
-
-    syncAccountForCurrency(payCurrency)
-
-    let cancelled = false
-    setFxLoading(true)
-    setFxError(null)
-    setFxQuote(null)
-
-    void quoteContributionFx({
-      data: {
-        weddingSlug,
-        giftId,
-        currency: payCurrency,
-      },
-    })
-      .then((quote) => {
-        if (cancelled) return
-        applyFxQuote(quote)
-      })
-      .catch((error) => {
-        if (cancelled) return
-        setFxQuote(null)
-        setFxError(
-          error instanceof Error
-            ? error.message
-            : 'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.',
-        )
-      })
-      .finally(() => {
-        if (!cancelled) setFxLoading(false)
-      })
-
-    return () => {
-      cancelled = true
+  const applySuggestedAmount = useEffectEvent((quote: ContributionFxQuote) => {
+    if (quote.suggestedAmount != null && quote.suggestedAmount > 0) {
+      form.setFieldValue('amount', String(quote.suggestedAmount))
     }
-  }, [open, target, started, weddingSlug, giftId, payCurrency])
+  })
 
-  const needsCrossCurrency = Boolean(
-    giftBaseCurrency &&
-      giftBaseCurrency !== payCurrency.toUpperCase(),
-  )
-  const usableFxQuote =
-    fxQuote &&
-    isUsableCrossCurrencyRate(
-      fxQuote.baseCurrency,
-      fxQuote.payCurrency,
-      fxQuote.fxRate,
-    )
-      ? fxQuote
-      : null
-  const fxBlocked = needsCrossCurrency && !fxLoading && !usableFxQuote
+  useEffect(() => {
+    if (!open || !target || started || !payCurrency) return
+    syncAccountForCurrency(payCurrency)
+  }, [open, target, started, payCurrency])
+
+  useEffect(() => {
+    if (!usableFxQuote) return
+    applySuggestedAmount(usableFxQuote)
+  }, [usableFxQuote])
 
   const title =
     target?.kind === 'gift'
@@ -363,8 +337,6 @@ function ContributeDrawer({
       onOpenChange={(next) => {
         if (!next) {
           setStarted(null)
-          setFxQuote(null)
-          setFxError(null)
           form.reset()
         }
         onOpenChange(next)

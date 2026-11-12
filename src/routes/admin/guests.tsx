@@ -1,6 +1,3 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
-import { useForm } from '@tanstack/react-form'
-import { Route as AdminRoute } from './route'
 import {
   CopySimpleIcon,
   EnvelopeSimpleIcon,
@@ -13,6 +10,9 @@ import {
   TrashIcon,
   WhatsappLogoIcon,
 } from '@phosphor-icons/react'
+import { useForm } from '@tanstack/react-form'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -20,7 +20,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { OverviewCard } from '@/components/admin/overview-card'
 import { PhoneField } from '@/components/phone-field'
@@ -38,14 +38,18 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
 import { formatStoredPhone } from '@/lib/auth/phone'
+import { formatCoupleNames } from '@/lib/constants'
+import {
+  internalError,
+  raiseRouteError,
+  shouldRethrowRouteFailure,
+} from '@/lib/errors/route-error'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
-import { formatCoupleNames } from '@/lib/constants'
 import {
   createGuest,
   deleteGuest,
   getGuestWhatsappInviteContext,
-  listGuests,
   logGuestWhatsappShare,
   sendGuestInvite,
   sendGuestInvitesBulk,
@@ -64,6 +68,8 @@ import {
   invitationCardShareUrl,
   whatsappRsvpShareUrl,
 } from '@/lib/guests/whatsapp'
+import { regenerateInvitationCardForEmail } from '@/lib/invitation/regenerate-card-client'
+import { adminQueryKeys, guestsQueryOptions } from '@/lib/query/admin-queries'
 import { updateGuestRsvp } from '@/lib/rsvp/rsvp'
 import {
   RSVP_STATUS_LABELS,
@@ -75,12 +81,7 @@ import {
 } from '@/lib/rsvp/schema'
 import type { AdminRsvpFormValues } from '@/lib/rsvp/schema'
 import type { Guest } from '@/lib/supabase/types'
-import {
-  internalError,
-  raiseRouteError,
-  shouldRethrowRouteFailure,
-} from '@/lib/errors/route-error'
-import { regenerateInvitationCardForEmail } from '@/lib/invitation/regenerate-card-client'
+import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/guests')({
   beforeLoad: ({ context }) => {
@@ -88,9 +89,9 @@ export const Route = createFileRoute('/admin/guests')({
       throw redirect({ to: '/admin/onboarding' })
     }
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     try {
-      return await listGuests()
+      return await context.queryClient.ensureQueryData(guestsQueryOptions())
     } catch (cause) {
       if (shouldRethrowRouteFailure(cause)) {
         throw cause
@@ -201,11 +202,22 @@ function GuestDrawerForms({
 function AdminGuestsPage() {
   const initialGuests = Route.useLoaderData()
   const { session } = AdminRoute.useRouteContext()
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data: guestsQueryData = initialGuests } = useQuery(
+    guestsQueryOptions(),
+  )
   const coupleLabel = session?.wedding
     ? formatCoupleNames(session.wedding.groom_name, session.wedding.bride_name)
     : 'us'
-  const [guests, setGuests] = useState<Guest[]>(initialGuests)
+  const [guests, setGuests] = useState<Guest[]>(guestsQueryData)
+
+  useEffect(() => {
+    setGuests(guestsQueryData)
+  }, [guestsQueryData])
+
+  const refreshGuests = async () => {
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.guests })
+  }
   const [search, setSearch] = useState('')
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
@@ -639,7 +651,7 @@ function AdminGuestsPage() {
           }.${failedSample ? ` Failed: ${failedSample}` : ''}`,
         )
       }
-      await router.invalidate()
+      await refreshGuests()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to send invite emails.',

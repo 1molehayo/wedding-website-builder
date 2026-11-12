@@ -1,6 +1,6 @@
 import { Spinner } from '@/components/ui/spinner'
 
-/** Full-viewport pending state (FCP-style) while route beforeLoad/loaders run. */
+/** Full-viewport pending state while route beforeLoad/loaders run. */
 export function RoutePending() {
   return (
     <div className="bg-background text-foreground flex min-h-dvh w-full items-center justify-center">

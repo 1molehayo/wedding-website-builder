@@ -1,4 +1,5 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,11 +12,8 @@ import {
   feedbackCategoryLabel,
 } from '@/lib/feedback/categories'
 import type { FeedbackStatus } from '@/lib/feedback/categories'
-import {
-  listProductFeedback,
-  updateProductFeedbackStatus,
-} from '@/lib/feedback/feedback'
-import type { ProductFeedbackRow } from '@/lib/feedback/feedback'
+import { updateProductFeedbackStatus } from '@/lib/feedback/feedback'
+import { adminQueryKeys, feedbackQueryOptions } from '@/lib/query/admin-queries'
 
 export const Route = createFileRoute('/admin/feedback')({
   beforeLoad: ({ context }) => {
@@ -23,7 +21,8 @@ export const Route = createFileRoute('/admin/feedback')({
       throw redirect({ to: '/admin' })
     }
   },
-  loader: async () => listProductFeedback(),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(feedbackQueryOptions()),
   component: AdminFeedbackBacklogPage,
 })
 
@@ -44,20 +43,18 @@ function statusBadgeVariant(
 
 function AdminFeedbackBacklogPage() {
   const initial = Route.useLoaderData()
-  const router = useRouter()
-  const [items, setItems] = useState<ProductFeedbackRow[]>(initial.items)
-  const [counts, setCounts] = useState(initial.counts)
+  const queryClient = useQueryClient()
+  const { data = initial } = useQuery(feedbackQueryOptions())
+  const items = data.items
+  const counts = data.counts
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   const onStatusChange = async (feedbackId: string, status: FeedbackStatus) => {
     setUpdatingId(feedbackId)
     try {
       await updateProductFeedbackStatus({ data: { feedbackId, status } })
-      const next = await listProductFeedback()
-      setItems(next.items)
-      setCounts(next.counts)
+      await queryClient.invalidateQueries({ queryKey: adminQueryKeys.feedback })
       toast.success('Feedback updated.')
-      await router.invalidate()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to update feedback.',
@@ -140,11 +137,11 @@ function AdminFeedbackBacklogPage() {
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {item.message}
               </p>
-              {updatingId === item.id ? (
+              {updatingId === item.id && (
                 <Button type="button" size="sm" variant="outline" disabled>
                   Saving…
                 </Button>
-              ) : null}
+              )}
             </li>
           ))}
         </ul>

@@ -1,36 +1,11 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { createTtlCache, normalizeAddressQuery } from '@/lib/places/cache'
+import { normalizeAddressQuery } from '@/lib/places/cache'
 import type { AddressSuggestion } from '@/lib/places/cache'
-import { searchAddresses } from '@/lib/places/search'
+import { addressSearchQueryOptions } from '@/lib/query/places-queries'
 import { cn } from '@/lib/utils'
-
-const clientCache = createTtlCache<AddressSuggestion[]>(1000 * 60 * 30, 100)
-const clientInflight = new Map<string, Promise<AddressSuggestion[]>>()
-
-async function fetchSuggestions(query: string): Promise<AddressSuggestion[]> {
-  const key = normalizeAddressQuery(query)
-  if (key.length < 3) return []
-
-  const cached = clientCache.get(key)
-  if (cached) return cached
-
-  const existing = clientInflight.get(key)
-  if (existing) return existing
-
-  const request = searchAddresses({ data: { query } })
-    .then((result) => {
-      clientCache.set(key, result.suggestions)
-      return result.suggestions
-    })
-    .finally(() => {
-      clientInflight.delete(key)
-    })
-
-  clientInflight.set(key, request)
-  return request
-}
 
 export function AddressSearchField({
   value,
@@ -48,12 +23,10 @@ export function AddressSearchField({
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState(value)
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
-  const [isSearching, setIsSearching] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setQuery(value)
@@ -74,55 +47,47 @@ export function AddressSearchField({
   useEffect(() => {
     const normalized = normalizeAddressQuery(query)
     if (normalized.length < 3) {
-      setSuggestions([])
-      setIsSearching(false)
-      setError(null)
+      setDebouncedQuery('')
       return
     }
-
-    const cached = clientCache.get(normalized)
-    if (cached) {
-      setSuggestions(cached)
-      // Prefill on page load must not open the list — only while editing.
-      if (isFocused) setOpen(true)
-      setIsSearching(false)
-      setError(null)
-      return
-    }
-
-    setIsSearching(true)
     const timer = window.setTimeout(() => {
-      void fetchSuggestions(query)
-        .then((next) => {
-          if (normalizeAddressQuery(query) !== normalized) return
-          setSuggestions(next)
-          if (isFocused) setOpen(true)
-          setError(null)
-        })
-        .catch((err) => {
-          if (normalizeAddressQuery(query) !== normalized) return
-          setSuggestions([])
-          setError(
-            err instanceof Error ? err.message : 'Unable to search addresses.',
-          )
-        })
-        .finally(() => {
-          if (normalizeAddressQuery(query) === normalized) {
-            setIsSearching(false)
-          }
-        })
+      setDebouncedQuery(normalized)
     }, 300)
-
     return () => window.clearTimeout(timer)
-  }, [query, isFocused])
+  }, [query])
+
+  const searchKey = normalizeAddressQuery(debouncedQuery)
+  const searchEnabled = searchKey.length >= 3
+  const {
+    data,
+    isFetching,
+    isError,
+    error: queryError,
+  } = useQuery({
+    ...addressSearchQueryOptions(searchKey),
+    enabled: searchEnabled,
+  })
+
+  const suggestions = searchEnabled ? (data ?? []) : []
+  const isSearching = searchEnabled && isFetching && suggestions.length === 0
+  const error =
+    searchEnabled && isError
+      ? queryError instanceof Error
+        ? queryError.message
+        : 'Unable to search addresses.'
+      : null
+
+  useEffect(() => {
+    // Prefill on page load must not open the list — only while editing.
+    if (isFocused && suggestions.length > 0) setOpen(true)
+  }, [isFocused, suggestions])
 
   const selectSuggestion = (suggestion: AddressSuggestion) => {
     onChange(suggestion.label)
     setQuery(suggestion.label)
-    setSuggestions([])
+    setDebouncedQuery('')
     setOpen(false)
     setActiveIndex(-1)
-    setError(null)
   }
 
   return (

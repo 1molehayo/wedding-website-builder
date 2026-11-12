@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
 import {
   HeadContent,
   Scripts,
-  createRootRoute,
+  createRootRouteWithContext,
+  useRouter,
   useRouterState,
 } from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
@@ -47,7 +50,9 @@ function themeKeyForPath(pathname: string): string {
   return `wedding:${slug}`
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+}>()({
   // Reloading this route marks it pending and replaces the whole document,
   // including the admin sidebar. Only reload when the public theme scope changes.
   pendingMs: Number.POSITIVE_INFINITY,
@@ -123,6 +128,8 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const queryClient = router.options.context.queryClient
   const { publicTheme } = Route.useLoaderData()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
@@ -139,7 +146,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
         <Scripts />
       </body>
     </html>

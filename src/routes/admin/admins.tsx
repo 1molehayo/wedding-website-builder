@@ -1,4 +1,5 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -22,12 +23,12 @@ import { toast } from '@/components/ui/toaster'
 import {
   cancelAdminInvite,
   inviteAdmin,
-  listAdmins,
   reinviteAdmin,
   removeAdmin,
   resendAdminInvite,
   updateAdminNames,
 } from '@/lib/auth/admins'
+import { adminQueryKeys, adminsQueryOptions } from '@/lib/query/admin-queries'
 import type { AdminListItem } from '@/lib/auth/admins'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
@@ -50,9 +51,9 @@ export const Route = createFileRoute('/admin/admins')({
       throw redirect({ to: '/admin' })
     }
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     try {
-      return await listAdmins()
+      return await context.queryClient.ensureQueryData(adminsQueryOptions())
     } catch (cause) {
       if (shouldRethrowRouteFailure(cause)) {
         throw cause
@@ -91,8 +92,19 @@ function formatDateTime(value: string | null) {
 
 function AdminAdminsPage() {
   const initialAdmins = Route.useLoaderData()
-  const router = useRouter()
-  const [admins, setAdmins] = useState<AdminListItem[]>(initialAdmins)
+  const queryClient = useQueryClient()
+  const { data: adminsQueryData = initialAdmins } = useQuery(
+    adminsQueryOptions(),
+  )
+  const [admins, setAdmins] = useState<AdminListItem[]>(adminsQueryData)
+
+  useEffect(() => {
+    setAdmins(adminsQueryData)
+  }, [adminsQueryData])
+
+  const refreshAdmins = async () => {
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.admins })
+  }
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -154,7 +166,7 @@ function AdminAdminsPage() {
     try {
       await action()
       toast.success(successMessage)
-      await router.invalidate()
+      await refreshAdmins()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Action failed.')
     } finally {
@@ -344,7 +356,7 @@ function AdminAdminsPage() {
       setDrawerOpen(false)
       setIsCreating(false)
       toast.success('Invite sent. They’ll get an email with an accept link.')
-      await router.invalidate()
+      await refreshAdmins()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to invite admin.',
@@ -367,7 +379,7 @@ function AdminAdminsPage() {
         },
       })
       toast.success('Admin details updated.')
-      await router.invalidate()
+      await refreshAdmins()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to update admin.',
@@ -387,7 +399,7 @@ function AdminAdminsPage() {
       setDrawerOpen(false)
       setSelectedId(null)
       setIsCreating(false)
-      await router.invalidate()
+      await refreshAdmins()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to remove admin.',

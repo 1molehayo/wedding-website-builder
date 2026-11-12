@@ -1,4 +1,5 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   CopySimpleIcon,
   DownloadSimpleIcon,
@@ -27,8 +28,12 @@ import {
   createMediaUpload,
   deleteMediaAsset,
   finalizeMediaUpload,
-  listMediaAssets,
 } from '@/lib/media/media'
+import {
+  adminQueryKeys,
+  mediaAssetsQueryOptions,
+  photoSharesQueryOptions,
+} from '@/lib/query/admin-queries'
 import {
   downloadBlob,
   qrDataUrl,
@@ -39,7 +44,6 @@ import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
   createPhotoShareGroup,
   deletePhotoShareGroup,
-  listPhotoShareGroups,
   sendPhotoShareEmails,
   updatePhotoShareGroup,
 } from '@/lib/photo-shares/photo-shares'
@@ -56,10 +60,10 @@ export const Route = createFileRoute('/admin/media')({
       throw redirect({ to: '/admin/onboarding' })
     }
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     const [assets, shares] = await Promise.all([
-      listMediaAssets(),
-      listPhotoShareGroups(),
+      context.queryClient.ensureQueryData(mediaAssetsQueryOptions()),
+      context.queryClient.ensureQueryData(photoSharesQueryOptions()),
     ])
     return { assets, ...shares }
   },
@@ -199,11 +203,29 @@ async function copyTextSafe(value: string) {
 
 function AdminMediaPage() {
   const initial = Route.useLoaderData()
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data: assetsQueryData = initial.assets } = useQuery(
+    mediaAssetsQueryOptions(),
+  )
+  const { data: sharesQueryData } = useQuery(photoSharesQueryOptions())
   const [tab, setTab] = useState<TabId>('library')
-  const [assets, setAssets] = useState(initial.assets)
-  const [groups, setGroups] = useState(initial.groups)
-  const [guests, setGuests] = useState(initial.guests)
+  const [assets, setAssets] = useState(assetsQueryData)
+  const [groups, setGroups] = useState(
+    sharesQueryData?.groups ?? initial.groups,
+  )
+  const [guests, setGuests] = useState(
+    sharesQueryData?.guests ?? initial.guests,
+  )
+
+  useEffect(() => {
+    setAssets(assetsQueryData)
+  }, [assetsQueryData])
+
+  useEffect(() => {
+    if (!sharesQueryData) return
+    setGroups(sharesQueryData.groups)
+    setGuests(sharesQueryData.guests)
+  }, [sharesQueryData])
   const [uploads, setUploads] = useState<UploadJob[]>([])
   const uploadQueueRef = useRef<string[]>([])
   const activeUploadsRef = useRef(0)
@@ -452,7 +474,10 @@ function AdminMediaPage() {
   }
 
   const refresh = async () => {
-    await router.invalidate()
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.media }),
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.photoShares }),
+    ])
   }
 
   const emailShareGuests = async (groupId: string) => {

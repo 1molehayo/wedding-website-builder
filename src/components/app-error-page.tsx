@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { useQueryErrorResetBoundary } from '@tanstack/react-query'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import type { ErrorComponentProps } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -152,6 +153,7 @@ export function NotFoundPage() {
 export function AppRouteError({ error, reset }: ErrorComponentProps) {
   const router = useRouter()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const queryErrorResetBoundary = useQueryErrorResetBoundary()
 
   if (isAbortError(error)) {
     return null
@@ -160,6 +162,11 @@ export function AppRouteError({ error, reset }: ErrorComponentProps) {
   const isAdminPath =
     pathname.startsWith('/admin') && pathname !== '/admin/login'
   const reportedId = useRef<string | null>(null)
+
+  useEffect(() => {
+    // Clear Query error boundary so a failed query does not stick on the next nav.
+    queryErrorResetBoundary.reset()
+  }, [queryErrorResetBoundary])
 
   useEffect(() => {
     // Browser console (FE debugging)
@@ -183,6 +190,7 @@ export function AppRouteError({ error, reset }: ErrorComponentProps) {
   }, [error, pathname, routeError])
 
   const onRetry = () => {
+    queryErrorResetBoundary.reset()
     reset()
     void router.invalidate()
   }

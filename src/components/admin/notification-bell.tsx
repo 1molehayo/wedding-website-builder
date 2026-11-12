@@ -12,15 +12,19 @@ import {
   useRole,
 } from '@floating-ui/react'
 import { BellIcon } from '@phosphor-icons/react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from '@/lib/notifications/notifications'
 import type { AdminNotificationItem } from '@/lib/notifications/notifications'
+import {
+  adminQueryKeys,
+  notificationsQueryOptions,
+} from '@/lib/query/admin-queries'
 import { cn } from '@/lib/utils'
 
 function formatWhen(iso: string): string {
@@ -36,10 +40,16 @@ function formatWhen(iso: string): string {
 
 export function NotificationBell() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [items, setItems] = useState<AdminNotificationItem[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(false)
+
+  const { data, isPending, isFetching, refetch } = useQuery({
+    ...notificationsQueryOptions(),
+    refetchInterval: 60_000,
+  })
+  const items = data?.items ?? []
+  const unreadCount = data?.unreadCount ?? 0
+  const loading = isPending || (isFetching && items.length === 0)
 
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -58,37 +68,9 @@ export function NotificationBell() {
     role,
   ])
 
-  const applyResult = useCallback(
-    (result: { items: AdminNotificationItem[]; unreadCount: number }) => {
-      setItems(result.items)
-      setUnreadCount(result.unreadCount)
-    },
-    [],
-  )
-
-  const refresh = useCallback(async () => {
-    setLoading(true)
-    try {
-      const result = await listNotifications({ data: { limit: 30 } })
-      applyResult(result)
-    } catch {
-      // Keep the last good list if refresh fails.
-    } finally {
-      setLoading(false)
-    }
-  }, [applyResult])
-
   useEffect(() => {
-    void refresh()
-    const timer = window.setInterval(() => {
-      void refresh()
-    }, 60_000)
-    return () => window.clearInterval(timer)
-  }, [refresh])
-
-  useEffect(() => {
-    if (open) void refresh()
-  }, [open, refresh])
+    if (open) void refetch()
+  }, [open, refetch])
 
   const onSelect = async (item: AdminNotificationItem) => {
     setOpen(false)
@@ -97,7 +79,7 @@ export function NotificationBell() {
         const result = await markNotificationRead({
           data: { notificationId: item.id },
         })
-        applyResult(result)
+        queryClient.setQueryData(adminQueryKeys.notifications, result)
       } catch {
         // Navigation still proceeds.
       }
@@ -110,7 +92,7 @@ export function NotificationBell() {
   const onMarkAll = async () => {
     try {
       const result = await markAllNotificationsRead()
-      applyResult(result)
+      queryClient.setQueryData(adminQueryKeys.notifications, result)
     } catch {
       // Ignore; user can retry.
     }

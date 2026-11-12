@@ -1,9 +1,5 @@
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import {
   ArrowCounterClockwiseIcon,
   CaretDownIcon,
@@ -38,13 +34,13 @@ import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
   confirmPageBlockUpload,
   createPageBlockUpload,
-  getPageBlocks,
   getSignedPhotoUrl,
   listPageContentVersions,
   publishPageBlocks,
   restorePageContentVersion,
   savePageBlocksDraft,
 } from '@/lib/page-blocks/settings'
+import { adminQueryKeys, pageBlocksQueryOptions } from '@/lib/query/admin-queries'
 import {
   PAGE_BLOCK_TYPES,
   PAGE_BLOCK_TYPE_LABELS,
@@ -71,7 +67,8 @@ export const Route = createFileRoute('/admin/pages')({
       throw redirect({ to: '/admin/onboarding' })
     }
   },
-  loader: () => getPageBlocks(),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(pageBlocksQueryOptions()),
   component: AdminPagesPage,
 })
 
@@ -573,14 +570,19 @@ function AddItemMenu({
 function AdminPagesPage() {
   const initial = Route.useLoaderData()
   const { session } = AdminRoute.useRouteContext()
-  const router = useRouter()
-  const [blocks, setBlocks] = useState<PageBlock[]>(initial.draft)
+  const queryClient = useQueryClient()
+  const { data: pagesQueryData = initial } = useQuery(pageBlocksQueryOptions())
+  const [blocks, setBlocks] = useState<PageBlock[]>(pagesQueryData.draft)
   const [persistedDraft, setPersistedDraft] = useState<PageBlock[]>(
-    initial.draft,
+    pagesQueryData.draft,
   )
-  const [published, setPublished] = useState<PageBlock[]>(initial.published)
-  const [draftUpdatedAt, setDraftUpdatedAt] = useState(initial.draftUpdatedAt)
-  const [publishedAt, setPublishedAt] = useState(initial.publishedAt)
+  const [published, setPublished] = useState<PageBlock[]>(
+    pagesQueryData.published,
+  )
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState(
+    pagesQueryData.draftUpdatedAt,
+  )
+  const [publishedAt, setPublishedAt] = useState(pagesQueryData.publishedAt)
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set())
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
@@ -621,9 +623,13 @@ function AdminPagesPage() {
   }
 
   useEffect(() => {
-    applyEditor(initial)
+    applyEditor(pagesQueryData)
     setFieldErrors({})
-  }, [initial])
+  }, [pagesQueryData])
+
+  const refreshPages = async () => {
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.pages })
+  }
 
   const toggleOpen = (id: string) => {
     setOpenIds((current) => {
@@ -673,7 +679,7 @@ function AdminPagesPage() {
       applyEditor(data)
       setFieldErrors({})
       toast.success('Draft saved. Preview it, then publish to go live.')
-      await router.invalidate()
+      await refreshPages()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Unable to save draft.')
     } finally {
@@ -696,7 +702,7 @@ function AdminPagesPage() {
       applyEditor(data)
       setFieldErrors({})
       toast.success('Page content published.')
-      await router.invalidate()
+      await refreshPages()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to publish page content.',
@@ -730,7 +736,7 @@ function AdminPagesPage() {
       setFieldErrors({})
       setHistoryOpen(false)
       toast.success('Restored into draft. Publish to make it live.')
-      await router.invalidate()
+      await refreshPages()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to restore that version.',
@@ -751,7 +757,7 @@ function AdminPagesPage() {
       setFieldErrors({})
       setResetOpen(false)
       toast.success('Draft reset. Publish to replace the live page.')
-      await router.invalidate()
+      await refreshPages()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Unable to reset the draft.',

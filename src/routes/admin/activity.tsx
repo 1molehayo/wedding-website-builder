@@ -1,11 +1,13 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { ACTIVITY_AREAS, listActivityLogs } from '@/lib/activity/activity'
+import { ACTIVITY_AREAS } from '@/lib/activity/activity'
 import type { ListActivityLogsResult } from '@/lib/activity/activity'
+import { activityQueryOptions } from '@/lib/query/admin-queries'
 
 const ACTOR_ROLES = [
   { value: '', label: 'All actors' },
@@ -75,31 +77,17 @@ export const Route = createFileRoute('/admin/activity')({
           : 1,
   }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }): Promise<ListActivityLogsResult> => {
-    const limit = 50
-    const result = await listActivityLogs({
-      data: {
-        area: deps.area || null,
-        actorRole: deps.actorRole || null,
-        query: deps.q || null,
-        from: deps.from
-          ? new Date(`${deps.from}T00:00:00.000Z`).toISOString()
-          : null,
-        to: deps.to ? new Date(`${deps.to}T23:59:59.999Z`).toISOString() : null,
-        limit,
-        offset: (deps.page - 1) * limit,
-      },
-    })
-    return result
+  loader: async ({ context, deps }): Promise<ListActivityLogsResult> => {
+    return context.queryClient.ensureQueryData(activityQueryOptions(deps))
   },
   component: AdminActivityPage,
 })
 
 function AdminActivityPage() {
-  const data = Route.useLoaderData()
+  const initial = Route.useLoaderData()
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const router = useRouter()
+  const { data = initial } = useQuery(activityQueryOptions(search))
   const [area, setArea] = useState(search.area)
   const [actorRole, setActorRole] = useState(search.actorRole)
   const [query, setQuery] = useState(search.q)
@@ -276,7 +264,6 @@ function AdminActivityPage() {
                 void navigate({
                   search: { ...search, page: page - 1 },
                 })
-                void router.invalidate()
               }}
             >
               Previous
@@ -290,7 +277,6 @@ function AdminActivityPage() {
                 void navigate({
                   search: { ...search, page: page + 1 },
                 })
-                void router.invalidate()
               }}
             >
               Next

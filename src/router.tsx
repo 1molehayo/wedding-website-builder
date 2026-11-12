@@ -4,6 +4,7 @@ import {
 } from '@tanstack/react-router'
 import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
 import { AdminOutletPending, RoutePending } from '@/components/route-pending'
+import { createAppQueryClient } from '@/lib/query/query-client'
 import { routeTree } from './routeTree.gen'
 
 function DefaultPending() {
@@ -23,10 +24,15 @@ function DefaultPending() {
 }
 
 export function getRouter() {
+  const queryClient = createAppQueryClient()
+
   const router = createTanStackRouter({
     routeTree,
+    context: { queryClient },
     scrollRestoration: true,
     defaultPreload: false,
+    // Drop stale loader shells so revisits do not flash outdated error/pending UI.
+    defaultGcTime: 0,
     notFoundMode: 'root',
     defaultNotFoundComponent: NotFoundPage,
     defaultErrorComponent: AppRouteError,

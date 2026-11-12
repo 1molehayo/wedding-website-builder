@@ -1,6 +1,7 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { InfoIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ContributionAuditDrawer } from '@/components/admin/contribution-audit'
 import { RecordAmazonPurchaseDrawer } from '@/components/admin/record-amazon-purchase'
 import { AccountForm, GiftItemForm } from '@/components/admin/registry-forms'
@@ -8,11 +9,11 @@ import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
+import { adminQueryKeys, registryQueryOptions } from '@/lib/query/admin-queries'
 import { CONTRIBUTION_STATUS_LABELS } from '@/lib/registry/contribution-schema'
 import {
   deleteRegistryAccount,
   deleteRegistryItem,
-  listRegistryAdmin,
 } from '@/lib/registry/registry'
 import type {
   AdminContribution,
@@ -28,7 +29,8 @@ export const Route = createFileRoute('/admin/registry')({
       throw redirect({ to: '/admin/onboarding' })
     }
   },
-  loader: async () => listRegistryAdmin(),
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(registryQueryOptions()),
   component: AdminRegistryPage,
 })
 
@@ -38,12 +40,13 @@ type AdminGift = RegistryAdminData['items'][number]
 
 function AdminRegistryPage() {
   const initial = Route.useLoaderData()
-  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { data = initial } = useQuery(registryQueryOptions())
   const [tab, setTab] = useState<TabId>('gifts')
-  const [items, setItems] = useState(initial.items)
-  const [accounts, setAccounts] = useState(initial.accounts)
-  const [reservations, setReservations] = useState(initial.reservations)
-  const [contributions, setContributions] = useState(initial.contributions)
+  const items = data.items
+  const accounts = data.accounts
+  const reservations = data.reservations
+  const contributions = data.contributions
 
   const [itemDrawerOpen, setItemDrawerOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<AdminGift | null>(null)
@@ -61,13 +64,6 @@ function AdminRegistryPage() {
   const [editingTransfer, setEditingTransfer] =
     useState<AdminContribution | null>(null)
   const [amazonDrawerOpen, setAmazonDrawerOpen] = useState(false)
-
-  useEffect(() => {
-    setItems(initial.items)
-    setAccounts(initial.accounts)
-    setReservations(initial.reservations)
-    setContributions(initial.contributions)
-  }, [initial])
 
   const reservationCountByItem = useMemo(() => {
     const map = new Map<string, number>()
@@ -88,7 +84,7 @@ function AdminRegistryPage() {
   }, [accounts])
 
   const refresh = async () => {
-    await router.invalidate()
+    await queryClient.invalidateQueries({ queryKey: adminQueryKeys.registry })
   }
 
   const openCreateItem = () => {
@@ -400,9 +396,6 @@ function AdminRegistryPage() {
             }}
             onSaved={async (row) => {
               setEditingTransfer(row)
-              setContributions((current) =>
-                current.map((item) => (item.id === row.id ? row : item)),
-              )
               await refresh()
             }}
           />
@@ -414,9 +407,8 @@ function AdminRegistryPage() {
           <RecordAmazonPurchaseDrawer
             gifts={items}
             onClose={() => setAmazonDrawerOpen(false)}
-            onSaved={async (row) => {
+            onSaved={async () => {
               setAmazonDrawerOpen(false)
-              setContributions((current) => [row, ...current])
               await refresh()
             }}
           />

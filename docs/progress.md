@@ -89,10 +89,11 @@ each deployment rather than assuming that a successful code deploy applied it.
 
 ### Recent changes
 
-- Nov 12: FX pay-currency subscribe + unavailable alert (no fake 1:1); Amazon
-  optional docs/admin copy; mobile public nav auto-center + edge fades;
-  WhatsApp invite parity; Amazon guest-view; multi-account chooser; compact FX
-  equivalent UI.
+- Nov 12: TanStack Query for admin list pages (QueryClient +
+  `defaultGcTime: 0`) to stop stale-nav / 500 flashes; Phase 3 Query for
+  notification bell, contribute FX quotes, and address search; FX subscribe +
+  unavailable alert; Amazon optional docs; mobile nav auto-center; WhatsApp
+  invite parity; multi-account chooser.
 - Nov 9: registry contribution, FX, reminders, Amazon recording, activity log,
   notification inbox, legal pages, image lightbox, and rich-text block.
 - Nov 9: compact currency selector, nested modal/drawer fix, server sanitizer
@@ -317,7 +318,7 @@ Items 2, 5, and 7 below are **superseded by the Sep 27 list** (invitation design
 
 4. **New page block: text content**  
    Fields: **title** + **content** (not “description”). Reusable, not only “Our Story”. There is already a **Story** block (`title` + `body` textarea) with a hardcoded nav label “Story” — this is a new generic text block (multiple times; nav from title).  
-   **Editor:** rich text (not a textarea). FCP backoffice has a Lexical editor we can slim down.  
+   **Editor:** rich text (not a textarea).  
    **Allowed:** headings 4–6, paragraphs, text align, bold, italic, underline, bullets, numbered lists, quote, indent / outdent.  
    **Blocked (clash with site theme):** headings 1–3, media / images, text colour, highlight colour, font family/size. Sanitize on save so paste cannot sneak those in. Public render uses existing wedding typography/tokens only.
 
@@ -396,7 +397,7 @@ Status is from the chat plus a code check on Aug 28. Items marked **fixed in cod
 - Two “Feedback” entries: header = send feedback; sidebar (super admin only, last item) = **Backlog**.
 - Theme picker: hero + RSVP email **stacked vertically** (not side by side), labelled “Preview / not live”, hero taller than the email mock.
 - Preview Light/Dark **did not update**; full page refresh flashed admin into dark mode. Isolation was supposed to be complete.
-- **404 flash** when changing admin routes (auth gate). Router was changed toward FCP-style redirect + pending outlet — **re-test.**
+- **404 flash** when changing admin routes (auth gate). Router uses redirect + pending outlet — **re-test.**
 - Wedding settings: venue location dropdown **opened on load** without a click. Code now avoids opening on prefill.
 - Country dropdown missing chevron; extra country-code field on phone when the country field already shows the code.
 - Admins page briefly showed an error before loading.

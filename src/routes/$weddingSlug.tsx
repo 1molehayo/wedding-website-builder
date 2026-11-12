@@ -57,7 +57,7 @@ export const Route = createFileRoute('/$weddingSlug')({
   }),
   beforeLoad: ({ params }) => {
     // Prefer redirects for platform paths so a match race never flashes 404
-    // while navigating into /admin (same rule as FCP: notFound = missing resource only).
+    // while navigating into /admin (notFound = missing resource only).
     if (params.weddingSlug === 'admin') {
       throw redirect({ to: '/admin' })
     }
