@@ -393,10 +393,11 @@ export function GiftItemForm({
                             contentClassName="max-w-sm space-y-2 py-2.5"
                           >
                             <p className="font-medium">
-                              Use a link from your amazon.com wedding registry
-                              (Share, registry, or guest-view). Do not use a
-                              regular product page. Do not use amazon.es,
-                              amazon.co.uk, or any other Amazon site.
+                              Optional. Skip this for a normal bank-transfer
+                              gift. Only add a link if guests should also buy
+                              this item on your amazon.com wedding registry.
+                              Use Share, registry, or guest-view — not a regular
+                              product page, and not amazon.es / amazon.co.uk.
                             </p>
                             <ol className="list-decimal space-y-1.5 pl-4 text-left leading-relaxed">
                               <li>
@@ -439,9 +440,9 @@ export function GiftItemForm({
                         </Field.Control>
                         <Field.Error>{invalid ? error : null}</Field.Error>
                         <Field.Description>
-                          Optional. Paste an amazon.com wedding registry Share,
-                          registry, or guest-view link. Regular product links
-                          and other Amazon country sites are not accepted.
+                          Optional — leave blank unless you want Buy on Amazon.
+                          Paste an amazon.com wedding registry Share, registry,
+                          or guest-view link only.
                         </Field.Description>
                       </Field>
                     )

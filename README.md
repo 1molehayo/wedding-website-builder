@@ -340,6 +340,9 @@ When reusing this product for another wedding:
 | `APP_URL`                       | server                                     | Public origin for RSVP/photo/admin invite links in emails (defaults to `http://localhost:3000`)                                                                                                             |
 | `EMAIL_DELIVERY_ENABLED`        | server optional                            | Set `false` to skip outbound app emails (logs instead)                                                                                                                                                      |
 
+Registry live FX uses public rate providers (Frankfurter + open.er-api.com
+fallback). **No FX API key or extra Vercel env var is required.**
+
 Never put the secret key in a `VITE_` variable. Mark it Sensitive in Vercel.
 
 ### Local stack

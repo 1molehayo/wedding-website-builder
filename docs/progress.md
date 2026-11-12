@@ -89,9 +89,10 @@ each deployment rather than assuming that a successful code deploy applied it.
 
 ### Recent changes
 
-- Nov 12: mobile public nav auto-center + edge fades; WhatsApp invite parity
-  with email; Amazon guest-view accepted; registry multi-account chooser;
-  clearer gift form required/optional labels; compact FX equivalent UI.
+- Nov 12: FX pay-currency subscribe + unavailable alert (no fake 1:1); Amazon
+  optional docs/admin copy; mobile public nav auto-center + edge fades;
+  WhatsApp invite parity; Amazon guest-view; multi-account chooser; compact FX
+  equivalent UI.
 - Nov 9: registry contribution, FX, reminders, Amazon recording, activity log,
   notification inbox, legal pages, image lightbox, and rich-text block.
 - Nov 9: compact currency selector, nested modal/drawer fix, server sanitizer

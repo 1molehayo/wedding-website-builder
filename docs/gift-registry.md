@@ -12,14 +12,19 @@ The app does not take card payments. Guests send money by bank transfer, and adm
 
 ## Add a gift
 
+Most gifts only need a **title**, a **price**, and at least one **bank account**.
+Guests then use **Send money**. You do **not** need Amazon for the registry to
+work.
+
 1. Open **Gift items**.
 2. Select **Add gift**.
 3. Enter a clear **Title** (required).
-4. Description, product link, Amazon link, and photo are all optional.
-5. If guests should buy on Amazon, add the **Amazon link** using the steps below.
+4. Description, product link, and photo are optional.
+5. **Skip Amazon** unless you also want guests to buy that gift on Amazon (see
+   below). Leave the Amazon field empty for a normal bank-transfer gift.
 6. Enter a **Price** (required): one amount in a currency that matches an
    **enabled** bank account. Guests can still pay in another account currency;
-   the app converts with a live rate.
+   the app converts with a live rate when rates are available.
 7. Enter the **Desired qty**. This is how many you want.
 8. Keep **Claimed qty** at zero for a new gift.
 9. Choose a status:
@@ -31,15 +36,29 @@ The app does not take card payments. Guests send money by bank transfer, and adm
 
 On the public gift card:
 
-- **Buy on Amazon** appears when an Amazon link is saved.
 - **Send money** appears when the gift has a price and is still open.
+- **Buy on Amazon** appears only when an Amazon link is saved.
 - Both can appear together. Amazon opens the wedding list; the card reminds
   guests to find the gift by title.
 
 You can list multiple bank accounts, including more than one in the same
 currency. When a guest chooses that currency, they pick which account to use.
 
-## Add an Amazon link to a gift
+## Live exchange rates
+
+Guests may pay in a different currency from the gift price. The app fetches a
+live rate (Frankfurter, with a free public fallback). **No API key or Vercel
+env var is required** for FX.
+
+- When the rate works, guests see the equivalent in the gift currency.
+- When rates are down, the form shows a clear alert and blocks continue for a
+  cross-currency payment. Guests should pay in the gift currency or try again.
+
+## Add an Amazon link to a gift (optional)
+
+**Amazon is optional.** Leave this field empty if guests should only send money
+by bank transfer. Only fill it when the gift is also on your amazon.com wedding
+registry and you want a **Buy on Amazon** button.
 
 The Amazon field is **not** a normal product page. It must be an **amazon.com wedding registry** link so shipping uses the couple’s registry address. The app opens the **whole wedding list** (Amazon does not expose a reliable per-item deep link we can use).
 

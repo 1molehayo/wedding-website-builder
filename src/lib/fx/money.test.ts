@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { baseAmountToPay, payAmountToBase, roundMoney } from './money'
+import {
+  baseAmountToPay,
+  isUsableCrossCurrencyRate,
+  payAmountToBase,
+  roundMoney,
+} from './money'
 
 describe('money helpers', () => {
   it('rounds to two decimals', () => {
@@ -14,5 +19,12 @@ describe('money helpers', () => {
 
   it('converts base → pay with locked rate', () => {
     expect(baseAmountToPay(100, 1346.61)).toBe(134661)
+  })
+
+  it('rejects same-currency and exact 1:1 as usable cross rates', () => {
+    expect(isUsableCrossCurrencyRate('USD', 'USD', 1)).toBe(false)
+    expect(isUsableCrossCurrencyRate('USD', 'NGN', 1)).toBe(false)
+    expect(isUsableCrossCurrencyRate('USD', 'NGN', 0)).toBe(false)
+    expect(isUsableCrossCurrencyRate('USD', 'NGN', 1352.33)).toBe(true)
   })
 })

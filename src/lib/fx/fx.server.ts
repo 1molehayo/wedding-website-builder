@@ -5,7 +5,7 @@
  * Rates are cached in-process for one hour.
  */
 
-import { roundMoney } from '@/lib/fx/money'
+import { isUsableCrossCurrencyRate, roundMoney } from '@/lib/fx/money'
 
 export type LockedFxRate = {
   /** Pay-currency units per 1 base-currency unit. */
@@ -180,6 +180,12 @@ export async function lockFxRate(input: {
   const baseCurrency = normalizeCurrency(input.baseCurrency)
   const payCurrency = normalizeCurrency(input.payCurrency)
   const { rate, source } = await getPayPerBaseRate(baseCurrency, payCurrency)
+
+  if (baseCurrency !== payCurrency && !isUsableCrossCurrencyRate(baseCurrency, payCurrency, rate)) {
+    throw new Error(
+      'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.',
+    )
+  }
 
   return {
     rate: roundMoney(rate * 1e6) / 1e6,

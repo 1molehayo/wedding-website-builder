@@ -283,17 +283,24 @@ different days. Confirmation shows a thank-you page and sends a thank-you
 email. The visual celebration is skipped when the visitor prefers reduced
 motion.
 
-Admins may also add an Amazon listing to a gift and manually record an Amazon
-purchase. There is no Amazon API connection or automatic order tracking. The
-Amazon field accepts an **amazon.com wedding registry Share, registry, or
+Amazon on a gift is **optional**. A gift with only a title and price still works
+via **Send money**. Admins may also add an Amazon listing and manually record an
+Amazon purchase. There is no Amazon API connection or automatic order tracking.
+The Amazon field accepts an **amazon.com wedding registry Share, registry, or
 guest-view link**, not a normal product `dp` page. Guests open the whole list
-and find the gift by title. See [Gift registry](./gift-registry.md#add-an-amazon-link-to-a-gift)
+and find the gift by title. See [Gift registry](./gift-registry.md#add-an-amazon-link-to-a-gift-optional)
 for the exact steps.
+
+Live FX uses public rate APIs (no Vercel env key). When rates fail for a
+cross-currency payment, the guest must see an unavailable alert — never a fake
+1:1 conversion.
 
 What QA should check:
 
+- A gift without Amazon shows **Send money** only.
 - A gift with Amazon + price shows **Buy on Amazon** and **Send money**.
 - Multiple same-currency bank accounts require an explicit guest choice.
+- Changing pay currency refreshes the FX equivalent (or shows unavailable).
 - The selected contribution currency has a matching enabled bank account.
 - The bank details and unique reference belong to the contribution just made.
 - A contribution is not counted twice when confirmation is opened again.

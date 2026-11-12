@@ -1,5 +1,5 @@
-import { useForm } from '@tanstack/react-form'
-import { InfoIcon } from '@phosphor-icons/react'
+import { useForm, useStore } from '@tanstack/react-form'
+import { InfoIcon, WarningCircleIcon } from '@phosphor-icons/react'
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { PhoneField } from '@/components/phone-field'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
-import { payAmountToBase } from '@/lib/fx/money'
+import { isUsableCrossCurrencyRate, payAmountToBase } from '@/lib/fx/money'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import {
@@ -180,6 +180,7 @@ function ContributeDrawer({
   const [isSaving, setIsSaving] = useState(false)
   const [fxQuote, setFxQuote] = useState<ContributionFxQuote | null>(null)
   const [fxLoading, setFxLoading] = useState(false)
+  const [fxError, setFxError] = useState<string | null>(null)
 
   const currencies = useMemo(() => {
     return [
@@ -191,6 +192,7 @@ function ContributeDrawer({
   const giftId = target?.kind === 'gift' ? target.item.id : null
   const basePrice =
     target?.kind === 'gift' ? (target.item.prices[0] ?? null) : null
+  const giftBaseCurrency = basePrice?.currency.toUpperCase() ?? null
   const accountsForDefaultCurrency = accounts.filter(
     (account) => account.currency.toUpperCase() === defaultCurrency,
   )
@@ -215,6 +217,26 @@ function ContributeDrawer({
       },
     },
     onSubmit: async ({ value }) => {
+      const payCurrency = value.currency.toUpperCase()
+      if (
+        giftBaseCurrency &&
+        giftBaseCurrency !== payCurrency &&
+        !(
+          fxQuote &&
+          isUsableCrossCurrencyRate(
+            giftBaseCurrency,
+            payCurrency,
+            fxQuote.fxRate,
+          )
+        )
+      ) {
+        toast.error(
+          fxError ??
+            `Live exchange rates are unavailable. Pay in ${giftBaseCurrency}, or try again in a moment.`,
+        )
+        return
+      }
+
       setIsSaving(true)
       try {
         const result = await startBankContribution({
@@ -237,9 +259,31 @@ function ContributeDrawer({
     },
   })
 
+  const payCurrency = useStore(
+    form.store,
+    (state) => state.values.currency || defaultCurrency,
+  )
+
   const applyFxQuote = useEffectEvent((quote: ContributionFxQuote) => {
+    const cross = isUsableCrossCurrencyRate(
+      quote.baseCurrency,
+      quote.payCurrency,
+      quote.fxRate,
+    )
+    const same =
+      quote.baseCurrency.toUpperCase() === quote.payCurrency.toUpperCase()
+
+    if (!same && !cross) {
+      setFxQuote(null)
+      setFxError(
+        'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.',
+      )
+      return
+    }
+
+    setFxError(null)
     setFxQuote(quote)
-    if (quote.suggestedAmount != null && quote.suggestedAmount > 0) {
+    if (cross && quote.suggestedAmount != null && quote.suggestedAmount > 0) {
       form.setFieldValue('amount', String(quote.suggestedAmount))
     }
   })
@@ -255,19 +299,20 @@ function ContributeDrawer({
 
   useEffect(() => {
     if (!open || !target || started) return
-    const currency = form.state.values.currency || defaultCurrency
-    if (!currency) return
+    if (!payCurrency) return
 
-    syncAccountForCurrency(currency)
+    syncAccountForCurrency(payCurrency)
 
     let cancelled = false
     setFxLoading(true)
+    setFxError(null)
+    setFxQuote(null)
 
     void quoteContributionFx({
       data: {
         weddingSlug,
         giftId,
-        currency,
+        currency: payCurrency,
       },
     })
       .then((quote) => {
@@ -277,10 +322,10 @@ function ContributeDrawer({
       .catch((error) => {
         if (cancelled) return
         setFxQuote(null)
-        toast.error(
+        setFxError(
           error instanceof Error
             ? error.message
-            : 'Unable to load the exchange rate.',
+            : 'Live exchange rates are unavailable right now. Pay in the gift currency, or try again in a moment.',
         )
       })
       .finally(() => {
@@ -290,15 +335,22 @@ function ContributeDrawer({
     return () => {
       cancelled = true
     }
-  }, [
-    open,
-    target,
-    started,
-    weddingSlug,
-    giftId,
-    defaultCurrency,
-    form.state.values.currency,
-  ])
+  }, [open, target, started, weddingSlug, giftId, payCurrency])
+
+  const needsCrossCurrency = Boolean(
+    giftBaseCurrency &&
+      giftBaseCurrency !== payCurrency.toUpperCase(),
+  )
+  const usableFxQuote =
+    fxQuote &&
+    isUsableCrossCurrencyRate(
+      fxQuote.baseCurrency,
+      fxQuote.payCurrency,
+      fxQuote.fxRate,
+    )
+      ? fxQuote
+      : null
+  const fxBlocked = needsCrossCurrency && !fxLoading && !usableFxQuote
 
   const title =
     target?.kind === 'gift'
@@ -312,6 +364,7 @@ function ContributeDrawer({
         if (!next) {
           setStarted(null)
           setFxQuote(null)
+          setFxError(null)
           form.reset()
         }
         onOpenChange(next)
@@ -415,8 +468,11 @@ function ContributeDrawer({
                       {basePrice.remaining < basePrice.original
                         ? ` · ${basePrice.remaining} left`
                         : null}
-                      . Pick the currency you will send; we convert with a live
-                      rate and lock it when you continue.
+                      . Pick the currency you will send
+                      {needsCrossCurrency
+                        ? '; a live rate is required before you continue'
+                        : ''}
+                      .
                     </p>
                   ) : null}
 
@@ -467,8 +523,7 @@ function ContributeDrawer({
                     <p className="text-foreground-secondary text-sm">
                       Loading exchange rate…
                     </p>
-                  ) : fxQuote &&
-                    fxQuote.baseCurrency !== fxQuote.payCurrency ? (
+                  ) : usableFxQuote ? (
                     <form.Subscribe
                       selector={(state) => state.values.amount}
                     >
@@ -476,14 +531,14 @@ function ContributeDrawer({
                         const pay = Number(amount)
                         const baseEquivalent =
                           Number.isFinite(pay) && pay > 0
-                            ? payAmountToBase(pay, fxQuote.fxRate)
+                            ? payAmountToBase(pay, usableFxQuote.fxRate)
                             : null
                         return (
                           <div className="text-foreground-secondary flex items-center gap-2 text-sm">
                             <span>
                               {baseEquivalent != null
-                                ? `≈ ${baseEquivalent} ${fxQuote.baseCurrency}`
-                                : `≈ — ${fxQuote.baseCurrency}`}
+                                ? `≈ ${baseEquivalent} ${usableFxQuote.baseCurrency}`
+                                : `≈ — ${usableFxQuote.baseCurrency}`}
                             </span>
                             <Tooltip delayIn={200}>
                               <Tooltip.Trigger
@@ -495,14 +550,31 @@ function ContributeDrawer({
                                 <span className="text-xs">FX rates</span>
                               </Tooltip.Trigger>
                               <Tooltip.Content>
-                                1 {fxQuote.baseCurrency} = {fxQuote.fxRate}{' '}
-                                {fxQuote.payCurrency}
+                                1 {usableFxQuote.baseCurrency} ={' '}
+                                {usableFxQuote.fxRate}{' '}
+                                {usableFxQuote.payCurrency}
                               </Tooltip.Content>
                             </Tooltip>
                           </div>
                         )
                       }}
                     </form.Subscribe>
+                  ) : fxBlocked ? (
+                    <div
+                      role="alert"
+                      className="border-error/30 bg-error/5 text-error flex gap-2 rounded-xl border px-3 py-2.5 text-sm leading-relaxed"
+                    >
+                      <WarningCircleIcon className="mt-0.5 size-4 shrink-0" />
+                      <div className="space-y-1">
+                        <p className="font-medium">
+                          Live exchange rates unavailable
+                        </p>
+                        <p>
+                          {fxError ??
+                            `We could not convert to ${payCurrency.toUpperCase()} right now. Choose ${giftBaseCurrency} to continue, or try again in a moment.`}
+                        </p>
+                      </div>
+                    </div>
                   ) : null}
 
                   <form.Subscribe
@@ -690,7 +762,12 @@ function ContributeDrawer({
             >
               Cancel
             </Button>
-            <Button type="submit" size="sm" isLoading={isSaving}>
+            <Button
+              type="submit"
+              size="sm"
+              isLoading={isSaving}
+              disabled={fxLoading || fxBlocked}
+            >
               Continue
             </Button>
           </SideDrawer.Footer>

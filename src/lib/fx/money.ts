@@ -4,6 +4,26 @@ export function roundMoney(value: number): number {
 }
 
 /**
+ * True when `rate` is a usable cross-currency quote (pay units per 1 base).
+ * Same-currency and exact 1:1 cross rates are rejected so a failed FX lookup
+ * cannot be shown as a real conversion.
+ */
+export function isUsableCrossCurrencyRate(
+  baseCurrency: string,
+  payCurrency: string,
+  rate: number,
+): boolean {
+  const base = baseCurrency.trim().toUpperCase()
+  const pay = payCurrency.trim().toUpperCase()
+  if (!base || !pay || base === pay) return false
+  if (!Number.isFinite(rate) || rate <= 0) return false
+  // Exact 1:1 across different codes is treated as a failed/stale quote for
+  // our curated pairs (USD/EUR/GBP/NGN). Near-parity pairs use non-exact rates.
+  if (rate === 1) return false
+  return true
+}
+
+/**
  * Convert a payment amount into the gift base currency.
  * `fxRate` is pay-currency units per 1 base unit (e.g. 1346.61 NGN per 1 USD).
  */
