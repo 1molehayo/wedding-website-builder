@@ -77,6 +77,16 @@ function AdminRegistryPage() {
     return map
   }, [reservations])
 
+  const enabledAccountCurrencies = useMemo(() => {
+    return [
+      ...new Set(
+        accounts
+          .filter((account) => account.is_enabled)
+          .map((account) => account.currency.toUpperCase()),
+      ),
+    ]
+  }, [accounts])
+
   const refresh = async () => {
     await router.invalidate()
   }
@@ -349,6 +359,7 @@ function AdminRegistryPage() {
           <GiftItemForm
             key={editingItem?.id ?? 'new'}
             item={editingItem}
+            accountCurrencies={enabledAccountCurrencies}
             onClose={() => setItemDrawerOpen(false)}
             onSaved={async () => {
               setItemDrawerOpen(false)

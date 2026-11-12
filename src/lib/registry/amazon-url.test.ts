@@ -28,8 +28,18 @@ describe('amazon.com wedding registry URL checks', () => {
       ),
     ).toBe(true)
     expect(
+      isLikelyAmazonRegistryUrl(
+        'https://www.amazon.com/wedding/guest-view/22V8RM2V930SX',
+      ),
+    ).toBe(true)
+    expect(
       amazonRegistryUrlError(
         'https://www.amazon.com/wedding/registry/JUAVTEYXIA5A',
+      ),
+    ).toBeNull()
+    expect(
+      amazonRegistryUrlError(
+        'https://www.amazon.com/wedding/guest-view/22V8RM2V930SX',
       ),
     ).toBeNull()
   })

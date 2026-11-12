@@ -131,6 +131,18 @@ export const logGuestWhatsappShare = createServerFn({ method: 'POST' })
     return logGuestWhatsappShareHandler(data.guestId)
   })
 
+export const getGuestWhatsappInviteContext = createServerFn({ method: 'GET' })
+  .validator((data: { guestId: string }) => {
+    const guestId = String(data.guestId).trim()
+    if (!guestId) throw new Error('Guest id is required.')
+    return { guestId }
+  })
+  .handler(async ({ data }) => {
+    const { getGuestWhatsappInviteContextHandler } =
+      await import('./guests.server')
+    return getGuestWhatsappInviteContextHandler(data.guestId)
+  })
+
 export const sendGuestInvitesBulk = createServerFn({ method: 'POST' })
   .validator((data: { onlyPending?: boolean }) => ({
     onlyPending: Boolean(data.onlyPending),

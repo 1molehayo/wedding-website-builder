@@ -499,6 +499,44 @@ export async function logGuestWhatsappShareHandler(
   return { ok: true as const }
 }
 
+export type GuestWhatsappInviteContext = {
+  websiteUrl: string | null
+  weddingDateLabel: string
+  photosUrl: string | null
+}
+
+/** Extras so WhatsApp invite text can match the email essentials. */
+export async function getGuestWhatsappInviteContextHandler(
+  guestId: string,
+): Promise<GuestWhatsappInviteContext> {
+  const session = await requireWeddingSession()
+  const admin = createAdminSupabaseClient()
+  const result = await admin
+    .from('guests')
+    .select('id, rsvp_token')
+    .eq('id', guestId)
+    .eq('wedding_id', session.wedding.id)
+    .maybeSingle()
+
+  if (result.error) throw new Error(result.error.message)
+  if (!result.data) throw new Error('Guest not found.')
+
+  const origin = getAppUrl()
+  const websiteUrl = session.wedding.public_slug
+    ? `${origin}/${session.wedding.public_slug}`
+    : null
+  const weddingDateLabel = formatWeddingDate(
+    resolvePublicWeddingDate(session.wedding),
+  )
+  const photosUrl = await loadGuestPhotoShareUrl(
+    session.wedding.id,
+    result.data.id,
+    result.data.rsvp_token,
+  )
+
+  return { websiteUrl, weddingDateLabel, photosUrl }
+}
+
 export async function sendGuestInvitesBulkHandler(input: {
   onlyPending: boolean
 }): Promise<SendGuestInvitesBulkResult> {

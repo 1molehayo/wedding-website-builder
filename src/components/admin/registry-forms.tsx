@@ -201,13 +201,23 @@ function GiftPhotoPreview({ path }: { path: string }) {
 
 export function GiftItemForm({
   item,
+  accountCurrencies,
   onClose,
   onSaved,
 }: {
   item: AdminGift | null
+  /** Distinct currencies from enabled bank accounts (gift price picker). */
+  accountCurrencies: string[]
   onClose: () => void
   onSaved: () => Promise<void>
 }) {
+  const priceCurrencies = [
+    ...new Set(
+      accountCurrencies
+        .map((code) => code.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  ]
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -328,6 +338,7 @@ export function GiftItemForm({
                           }
                         />
                       </Field.Control>
+                      <Field.Description>Optional.</Field.Description>
                     </Field>
                   )}
                 </form.Field>
@@ -360,6 +371,7 @@ export function GiftItemForm({
                           />
                         </Field.Control>
                         <Field.Error>{invalid ? error : null}</Field.Error>
+                        <Field.Description>Optional.</Field.Description>
                       </Field>
                     )
                   }}
@@ -381,9 +393,10 @@ export function GiftItemForm({
                             contentClassName="max-w-sm space-y-2 py-2.5"
                           >
                             <p className="font-medium">
-                              Use a link from your amazon.com wedding registry.
-                              Do not use a regular product page. Do not use
-                              amazon.es, amazon.co.uk, or any other Amazon site.
+                              Use a link from your amazon.com wedding registry
+                              (Share, registry, or guest-view). Do not use a
+                              regular product page. Do not use amazon.es,
+                              amazon.co.uk, or any other Amazon site.
                             </p>
                             <ol className="list-decimal space-y-1.5 pl-4 text-left leading-relaxed">
                               <li>
@@ -392,19 +405,14 @@ export function GiftItemForm({
                                 there once. Guests never see it.
                               </li>
                               <li>
-                                Open this gift from that wedding list, not from
-                                Amazon search and not from a normal product
-                                page.
-                              </li>
-                              <li>
-                                Click Share on the registry, or copy the link
-                                from the address bar while you are on the
-                                wedding list or that registry gift.
+                                Copy the Share link, the registry URL, or the
+                                guest-view URL for the whole wedding list.
                               </li>
                               <li>
                                 Paste that amazon.com link here. Guests click
-                                Buy on Amazon, pay on Amazon, and shipping goes
-                                to your registry address.
+                                Buy on Amazon, open the list, find this gift by
+                                title, then pay on Amazon with shipping to your
+                                registry address.
                               </li>
                               <li>
                                 After someone buys or contributes, record it
@@ -431,9 +439,9 @@ export function GiftItemForm({
                         </Field.Control>
                         <Field.Error>{invalid ? error : null}</Field.Error>
                         <Field.Description>
-                          Optional. Paste an amazon.com wedding registry link
-                          only. Regular product links and other Amazon country
-                          sites are not accepted.
+                          Optional. Paste an amazon.com wedding registry Share,
+                          registry, or guest-view link. Regular product links
+                          and other Amazon country sites are not accepted.
                         </Field.Description>
                       </Field>
                     )
@@ -474,11 +482,17 @@ export function GiftItemForm({
 
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium">Price</p>
+                    <p className="text-sm font-medium">
+                      Price
+                      <span className="text-error ms-0.5" aria-hidden="true">
+                        *
+                      </span>
+                    </p>
                     <FieldHint label="About price">
-                      List one amount in one currency. Guests pick a bank
-                      account currency (including NGN) and we convert with a
-                      live rate locked when they start the transfer.
+                      Required. List one amount in a currency that matches an
+                      enabled bank account. Guests can still pay in another
+                      account currency; we convert with a live rate locked when
+                      they continue.
                     </FieldHint>
                   </div>
                   <form.Field name="prices">
@@ -517,9 +531,23 @@ export function GiftItemForm({
                               currency={currencyField.state.value}
                               amount={amountField.state.value}
                               invalid={invalid}
-                              error={invalid ? error : undefined}
+                              error={
+                                invalid
+                                  ? error
+                                  : priceCurrencies.length === 0
+                                    ? 'Add an enabled bank account first so you can pick a gift price currency.'
+                                    : undefined
+                              }
                               required
-                              includeCodes={[currencyField.state.value]}
+                              includeCodes={[
+                                currencyField.state.value,
+                                ...priceCurrencies,
+                              ]}
+                              allowedCodes={
+                                priceCurrencies.length > 0
+                                  ? priceCurrencies
+                                  : undefined
+                              }
                               onBlur={() => {
                                 currencyField.handleBlur()
                                 amountField.handleBlur()

@@ -44,6 +44,7 @@ import { formatCoupleNames } from '@/lib/constants'
 import {
   createGuest,
   deleteGuest,
+  getGuestWhatsappInviteContext,
   listGuests,
   logGuestWhatsappShare,
   sendGuestInvite,
@@ -484,12 +485,29 @@ function AdminGuestsPage() {
       )
     }
 
+    let websiteUrl: string | null = null
+    let weddingDateLabel: string | null = null
+    let photosUrl: string | null = null
+    try {
+      const context = await getGuestWhatsappInviteContext({
+        data: { guestId: guest.id },
+      })
+      websiteUrl = context.websiteUrl
+      weddingDateLabel = context.weddingDateLabel
+      photosUrl = context.photosUrl
+    } catch (err) {
+      console.error('[whatsapp invite context]', err)
+    }
+
     const url = whatsappRsvpShareUrl({
       phone: guest.phone ?? '',
       guestFirstName: guest.first_name,
       coupleLabel,
+      weddingDateLabel,
+      websiteUrl,
       rsvpUrl: `${window.location.origin}${guestRsvpPath(guest.rsvp_token)}`,
       invitationImageUrl,
+      photosUrl,
     })
     if (!url) {
       toast.error('Add a valid phone number before sharing on WhatsApp.')

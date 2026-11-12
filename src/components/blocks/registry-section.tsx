@@ -1,4 +1,5 @@
 import { useForm } from '@tanstack/react-form'
+import { InfoIcon } from '@phosphor-icons/react'
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { PhoneField } from '@/components/phone-field'
 import { Button } from '@/components/ui/button'
@@ -7,6 +8,8 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
+import { Tooltip } from '@/components/ui/tooltip'
+import { payAmountToBase } from '@/lib/fx/money'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import {
@@ -112,6 +115,11 @@ function GiftItemCard({
           </Button>
         ) : null}
       </div>
+      {item.listings.some((listing) => listing.provider === 'amazon') ? (
+        <p className="text-foreground-secondary text-sm leading-relaxed">
+          Amazon opens the wedding list. Find this gift: {item.title}.
+        </p>
+      ) : null}
       {!canContribute && item.prices.length > 0 ? (
         <p className="text-foreground-secondary text-sm">
           This gift is fully funded. Thank you.
@@ -183,10 +191,15 @@ function ContributeDrawer({
   const giftId = target?.kind === 'gift' ? target.item.id : null
   const basePrice =
     target?.kind === 'gift' ? (target.item.prices[0] ?? null) : null
+  const accountsForDefaultCurrency = accounts.filter(
+    (account) => account.currency.toUpperCase() === defaultCurrency,
+  )
+  const defaultAccountId = accountsForDefaultCurrency[0]?.id ?? ''
 
   const form = useForm({
     defaultValues: {
       ...emptyStartContributionForm(defaultCurrency),
+      accountId: defaultAccountId,
       weddingSlug,
       giftId: giftId ?? '',
     },
@@ -231,13 +244,25 @@ function ContributeDrawer({
     }
   })
 
+  const syncAccountForCurrency = useEffectEvent((currency: string) => {
+    const matches = accounts.filter(
+      (account) => account.currency.toUpperCase() === currency.toUpperCase(),
+    )
+    const current = form.state.values.accountId
+    if (matches.some((account) => account.id === current)) return
+    form.setFieldValue('accountId', matches[0]?.id ?? '')
+  })
+
   useEffect(() => {
     if (!open || !target || started) return
     const currency = form.state.values.currency || defaultCurrency
     if (!currency) return
 
+    syncAccountForCurrency(currency)
+
     let cancelled = false
     setFxLoading(true)
+
     void quoteContributionFx({
       data: {
         weddingSlug,
@@ -444,15 +469,137 @@ function ContributeDrawer({
                     </p>
                   ) : fxQuote &&
                     fxQuote.baseCurrency !== fxQuote.payCurrency ? (
-                    <p className="text-foreground-secondary text-sm leading-relaxed">
-                      About 1 {fxQuote.baseCurrency} = {fxQuote.fxRate}{' '}
-                      {fxQuote.payCurrency}
-                      {fxQuote.suggestedAmount != null
-                        ? ` · suggested ${fxQuote.suggestedAmount} ${fxQuote.payCurrency} to cover what is left`
-                        : null}
-                      . Exact rate locks when you continue.
-                    </p>
+                    <form.Subscribe
+                      selector={(state) => state.values.amount}
+                    >
+                      {(amount) => {
+                        const pay = Number(amount)
+                        const baseEquivalent =
+                          Number.isFinite(pay) && pay > 0
+                            ? payAmountToBase(pay, fxQuote.fxRate)
+                            : null
+                        return (
+                          <div className="text-foreground-secondary flex items-center gap-2 text-sm">
+                            <span>
+                              {baseEquivalent != null
+                                ? `≈ ${baseEquivalent} ${fxQuote.baseCurrency}`
+                                : `≈ — ${fxQuote.baseCurrency}`}
+                            </span>
+                            <Tooltip delayIn={200}>
+                              <Tooltip.Trigger
+                                type="button"
+                                className="hover:text-foreground inline-flex items-center gap-1"
+                                aria-label="FX rates"
+                              >
+                                <InfoIcon className="size-3.5" />
+                                <span className="text-xs">FX rates</span>
+                              </Tooltip.Trigger>
+                              <Tooltip.Content>
+                                1 {fxQuote.baseCurrency} = {fxQuote.fxRate}{' '}
+                                {fxQuote.payCurrency}
+                              </Tooltip.Content>
+                            </Tooltip>
+                          </div>
+                        )
+                      }}
+                    </form.Subscribe>
                   ) : null}
+
+                  <form.Subscribe
+                    selector={(state) => state.values.currency}
+                  >
+                    {(currency) => {
+                      const matches = accounts.filter(
+                        (account) =>
+                          account.currency.toUpperCase() ===
+                          currency.toUpperCase(),
+                      )
+                      if (matches.length === 0) return null
+                      return (
+                        <form.Field name="accountId">
+                          {(field) => {
+                            const error = fieldErrorMessage(
+                              field.state.meta.errors,
+                            )
+                            const invalid =
+                              !!error &&
+                              (field.state.meta.isTouched || submitted)
+                            return (
+                              <Field invalid={invalid}>
+                                <Field.Label required={matches.length > 1}>
+                                  {matches.length > 1
+                                    ? 'Bank account'
+                                    : 'Bank account for this currency'}
+                                </Field.Label>
+                                {matches.length === 1 ? (
+                                  <div className="border-border space-y-1 rounded-xl border p-3 text-sm">
+                                    <p className="font-medium">
+                                      {matches[0].label}
+                                    </p>
+                                    <p className="text-foreground-secondary">
+                                      {matches[0].bank_name
+                                        ? `${matches[0].bank_name} · `
+                                        : ''}
+                                      {matches[0].account_name}
+                                    </p>
+                                    <p className="font-mono tracking-wide">
+                                      {matches[0].account_number}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <Field.Control>
+                                    <div
+                                      role="radiogroup"
+                                      aria-label="Bank account"
+                                      className="flex flex-col gap-2"
+                                    >
+                                      {matches.map((account) => {
+                                        const selected =
+                                          field.state.value === account.id
+                                        return (
+                                          <button
+                                            key={account.id}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={selected}
+                                            className={cn(
+                                              'border-border rounded-xl border p-3 text-left text-sm transition',
+                                              selected
+                                                ? 'border-foreground bg-background-secondary'
+                                                : 'hover:border-foreground/40',
+                                            )}
+                                            onClick={() =>
+                                              field.handleChange(account.id)
+                                            }
+                                          >
+                                            <p className="font-medium">
+                                              {account.label}
+                                            </p>
+                                            <p className="text-foreground-secondary mt-1">
+                                              {account.bank_name
+                                                ? `${account.bank_name} · `
+                                                : ''}
+                                              {account.account_name}
+                                            </p>
+                                            <p className="mt-1 font-mono tracking-wide">
+                                              {account.account_number}
+                                            </p>
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  </Field.Control>
+                                )}
+                                <Field.Error>
+                                  {invalid ? error : null}
+                                </Field.Error>
+                              </Field>
+                            )
+                          }}
+                        </form.Field>
+                      )
+                    }}
+                  </form.Subscribe>
 
                   <form.Field name="payerName">
                     {(field) => {

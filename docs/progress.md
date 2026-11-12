@@ -14,14 +14,11 @@ fictional couple **Theo & Ada**.
 
 Do not add test data on production.
 
-## Current snapshot — Nov 9, 2026
+## Current snapshot — Nov 12, 2026
 
 - Branch: `main`
-- Base commit at snapshot: `ce37a33`
-- Worktree: **uncommitted changes present**
-- Verification: lint, typecheck, and admin-role tests passed after the
-  multi-super-admin change; production deployment state still needs a manual
-  check after the next deploy.
+- Demo / staging: [demo.igbeyawowa.app](https://demo.igbeyawowa.app)
+- Production: [igbeyawowa.app](https://www.igbeyawowa.app/)
 
 ### Shipped in the application
 
@@ -40,6 +37,8 @@ Do not add test data on production.
   privacy page, and cookie page.
 - Rich-text content blocks sanitized on save/render without a browser-only DOM
   dependency.
+- Comma-separated `PRODUCTION_SUPER_ADMIN_EMAIL` support for multiple bootstrap
+  super admins.
 
 ### On `main`; verify after deployment
 
@@ -48,12 +47,14 @@ Do not add test data on production.
   usable when opened from a side drawer.
 - Production HTML sanitization fix that avoids the previous server runtime
   `xhr-sync-worker.js` failure.
-
-### In progress in the current worktree
-
-- Comma-separated `PRODUCTION_SUPER_ADMIN_EMAIL` support. Every configured
-  address can bootstrap as a super admin, is protected from invite/removal,
-  and receives super-admin notification emails.
+- Public mobile section nav auto-centers the active item with edge fades and
+  skips yanking the strip while the guest is dragging it.
+- WhatsApp guest invites include the same essentials as email (website, date,
+  RSVP, optional invitation image and photos link).
+- Registry gift UX: Amazon Share/registry/guest-view URLs accepted; clear
+  required/optional labels; gift price currencies limited to enabled bank
+  account currencies; multi same-currency account chooser on Send money;
+  compact live FX equivalent under the amount field.
 
 ### Environment verification
 
@@ -88,6 +89,9 @@ each deployment rather than assuming that a successful code deploy applied it.
 
 ### Recent changes
 
+- Nov 12: mobile public nav auto-center + edge fades; WhatsApp invite parity
+  with email; Amazon guest-view accepted; registry multi-account chooser;
+  clearer gift form required/optional labels; compact FX equivalent UI.
 - Nov 9: registry contribution, FX, reminders, Amazon recording, activity log,
   notification inbox, legal pages, image lightbox, and rich-text block.
 - Nov 9: compact currency selector, nested modal/drawer fix, server sanitizer

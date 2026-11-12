@@ -358,10 +358,45 @@ body {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 1rem;
 }
 
 .public-section-nav-scroll::-webkit-scrollbar {
   display: none;
+}
+
+.public-section-nav-fade {
+  --public-nav-fade-size: 1.25rem;
+}
+
+.public-section-nav-fade--left::before,
+.public-section-nav-fade--right::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: var(--public-nav-fade-size);
+}
+
+.public-section-nav-fade--left::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-background),
+    transparent
+  );
+}
+
+.public-section-nav-fade--right::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--color-background),
+    transparent
+  );
 }
 
 .public-hero-atmosphere {

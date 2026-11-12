@@ -221,6 +221,7 @@ What QA should check:
 - A submitted RSVP cannot be silently changed by the guest.
 - Unlocking restores editing for the intended guest only.
 - Email, WhatsApp, and copied-link actions use the correct guest.
+- WhatsApp text includes website and date when available (parity with email).
 
 ### 5. Media library and private albums
 
@@ -284,12 +285,15 @@ motion.
 
 Admins may also add an Amazon listing to a gift and manually record an Amazon
 purchase. There is no Amazon API connection or automatic order tracking. The
-Amazon field needs an **amazon.com wedding registry Share/registry link**, not
-a normal product `dp` page. See [Gift registry](./gift-registry.md#add-an-amazon-link-to-a-gift)
+Amazon field accepts an **amazon.com wedding registry Share, registry, or
+guest-view link**, not a normal product `dp` page. Guests open the whole list
+and find the gift by title. See [Gift registry](./gift-registry.md#add-an-amazon-link-to-a-gift)
 for the exact steps.
 
 What QA should check:
 
+- A gift with Amazon + price shows **Buy on Amazon** and **Send money**.
+- Multiple same-currency bank accounts require an explicit guest choice.
 - The selected contribution currency has a matching enabled bank account.
 - The bank details and unique reference belong to the contribution just made.
 - A contribution is not counted twice when confirmation is opened again.

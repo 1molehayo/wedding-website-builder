@@ -310,7 +310,7 @@ export async function startBankContributionHandler(
     giftTitle = giftResult.data.title
   }
 
-  const accountResult = await admin
+  const accountsResult = await admin
     .from('registry_accounts')
     .select(
       'id, label, bank_name, currency, account_name, account_number, routing_number, notes',
@@ -319,13 +319,29 @@ export async function startBankContributionHandler(
     .eq('currency', currency)
     .eq('is_enabled', true)
     .order('sort_order', { ascending: true })
-    .limit(1)
-    .maybeSingle()
 
-  if (accountResult.error) throw new Error(accountResult.error.message)
-  if (!accountResult.data) {
+  if (accountsResult.error) throw new Error(accountsResult.error.message)
+  const matchingAccounts = accountsResult.data
+  if (matchingAccounts.length === 0) {
     throw new Error(
       `No bank account is set up for ${currency}. Choose another currency, or ask the couple to add one.`,
+    )
+  }
+
+  const accountResult = {
+    data: input.accountId
+      ? (matchingAccounts.find((account) => account.id === input.accountId) ??
+        null)
+      : matchingAccounts.length === 1
+        ? matchingAccounts[0]
+        : null,
+  }
+
+  if (!accountResult.data) {
+    throw new Error(
+      input.accountId
+        ? `That bank account is not available for ${currency}. Choose another account.`
+        : `Choose which ${currency} bank account to use.`,
     )
   }
 

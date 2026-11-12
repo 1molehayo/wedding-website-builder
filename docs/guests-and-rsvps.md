@@ -57,10 +57,13 @@ The email includes the themed invitation and the guest's private RSVP link. It m
 
 1. Make sure the guest has a valid phone number.
 2. Select **WhatsApp**.
-3. WhatsApp opens with a prepared message and RSVP link.
+3. WhatsApp opens with a prepared message.
 4. Review the message before sending it.
 
-The app tries to include the invitation image. If the image is not ready, you can still send the message and link.
+The WhatsApp text matches the email essentials: couple and date, wedding
+website URL when available, private RSVP link, optional invitation image, and
+a private photo album link when the guest is in a photo share. If the image is
+not ready, you can still send the message and links.
 
 ### Copy the RSVP link
 

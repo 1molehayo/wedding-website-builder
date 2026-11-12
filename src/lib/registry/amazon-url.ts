@@ -8,8 +8,13 @@
  * Path shapes confirmed from live Amazon.com wedding pages / share flows:
  * - https://www.amazon.com/wedding/share/{slug}
  * - https://www.amazon.com/wedding/registry/{id}
+ * - https://www.amazon.com/wedding/guest-view/{id}
  * - https://www.amazon.com/wedding/{custom-slug}  (Share link style)
  * - https://www.amazon.com/registry/wedding/{id}  (older / alternate share form)
+ *
+ * Guest-view and Share links open the whole wedding list (not a single ASIN).
+ * That is intentional: Amazon does not expose a stable cross-origin deep link
+ * into a registry item modal.
  */
 
 const AMAZON_COM_HOST = /^(www\.)?amazon\.com$/i
@@ -51,9 +56,10 @@ export function isLikelyAmazonRegistryUrl(url: string): boolean {
 
     const path = parsed.pathname.replace(/\/+$/, '') || '/'
 
-    // Live share / registry id forms
+    // Live share / registry / guest-view id forms
     if (/^\/wedding\/share\/[^/]+$/i.test(path)) return true
     if (/^\/wedding\/registry\/[^/]+$/i.test(path)) return true
+    if (/^\/wedding\/guest-view\/[^/]+$/i.test(path)) return true
     if (/^\/registry\/wedding\/[^/]+$/i.test(path)) return true
 
     // Custom share slug: /wedding/{names} (Wedibox / Amazon Share examples)
@@ -61,7 +67,13 @@ export function isLikelyAmazonRegistryUrl(url: string): boolean {
     if (custom) {
       const segment = custom[1].toLowerCase()
       if (WEDDING_HUB_SEGMENTS.has(segment)) return false
-      if (segment === 'share' || segment === 'registry') return false
+      if (
+        segment === 'share' ||
+        segment === 'registry' ||
+        segment === 'guest-view'
+      ) {
+        return false
+      }
       return true
     }
 

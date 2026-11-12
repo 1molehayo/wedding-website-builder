@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ColorModeToggle } from '@/components/color-mode-toggle'
 import { PublicRevealObserver } from '@/components/public-reveal-observer'
@@ -74,18 +74,99 @@ function SectionNav({
   ariaLabel,
   activeId,
   onSelect,
+  scrollActiveIntoView = false,
 }: {
   items: PublicSectionNavItem[]
   className?: string
   ariaLabel: string
   activeId: string | null
   onSelect: (id: string) => void
+  /** When true, keep the active link centered in the horizontal scroller. */
+  scrollActiveIntoView?: boolean
 }) {
-  return (
-    <nav aria-label={ariaLabel} className={className}>
+  const navRef = useRef<HTMLElement>(null)
+  const linkRefs = useRef(new Map<string, HTMLAnchorElement>())
+  const pointerActiveRef = useRef(false)
+  const skipAutoScrollUntilRef = useRef(0)
+  const [edgeFade, setEdgeFade] = useState({ left: false, right: false })
+
+  const updateEdgeFade = useEffectEvent(() => {
+    const nav = navRef.current
+    if (!nav || !scrollActiveIntoView) return
+    const maxScroll = nav.scrollWidth - nav.clientWidth
+    if (maxScroll <= 1) {
+      setEdgeFade({ left: false, right: false })
+      return
+    }
+    setEdgeFade({
+      left: nav.scrollLeft > 4,
+      right: nav.scrollLeft < maxScroll - 4,
+    })
+  })
+
+  const centerActiveLink = useEffectEvent((sectionId: string) => {
+    if (!scrollActiveIntoView) return
+    if (pointerActiveRef.current) return
+    if (Date.now() < skipAutoScrollUntilRef.current) return
+    const link = linkRefs.current.get(sectionId)
+    if (!link) return
+    link.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    })
+    window.requestAnimationFrame(() => updateEdgeFade())
+  })
+
+  useEffect(() => {
+    if (!activeId) return
+    centerActiveLink(activeId)
+  }, [activeId, items, centerActiveLink])
+
+  useEffect(() => {
+    if (!scrollActiveIntoView) return
+    const nav = navRef.current
+    if (!nav) return
+
+    updateEdgeFade()
+    const onScroll = () => updateEdgeFade()
+    nav.addEventListener('scroll', onScroll, { passive: true })
+    const observer = new ResizeObserver(() => updateEdgeFade())
+    observer.observe(nav)
+    return () => {
+      nav.removeEventListener('scroll', onScroll)
+      observer.disconnect()
+    }
+  }, [scrollActiveIntoView, items, updateEdgeFade])
+
+  const markPointerActive = () => {
+    pointerActiveRef.current = true
+  }
+
+  const clearPointerActive = () => {
+    if (!pointerActiveRef.current) return
+    pointerActiveRef.current = false
+    // Brief cooldown so scroll-spy updates during a drag do not yank the strip.
+    skipAutoScrollUntilRef.current = Date.now() + 450
+  }
+
+  const nav = (
+    <nav
+      ref={navRef}
+      aria-label={ariaLabel}
+      className={className}
+      onPointerDown={scrollActiveIntoView ? markPointerActive : undefined}
+      onPointerUp={scrollActiveIntoView ? clearPointerActive : undefined}
+      onPointerCancel={scrollActiveIntoView ? clearPointerActive : undefined}
+      onPointerLeave={scrollActiveIntoView ? clearPointerActive : undefined}
+    >
       {items.map((item) => (
         <a
           key={item.id}
+          ref={(node) => {
+            if (node) linkRefs.current.set(item.id, node)
+            else linkRefs.current.delete(item.id)
+          }}
           href={`#${item.id}`}
           data-active={activeId === item.id ? 'true' : 'false'}
           onClick={(event) => onSectionNavClick(event, item.id, onSelect)}
@@ -97,6 +178,20 @@ function SectionNav({
         </a>
       ))}
     </nav>
+  )
+
+  if (!scrollActiveIntoView) return nav
+
+  return (
+    <div
+      className={cn(
+        'public-section-nav-fade relative',
+        edgeFade.left && 'public-section-nav-fade--left',
+        edgeFade.right && 'public-section-nav-fade--right',
+      )}
+    >
+      {nav}
+    </div>
   )
 }
 
@@ -281,6 +376,7 @@ export function PublicShell({
               className="public-section-nav-scroll mx-auto flex max-w-5xl items-center gap-4"
               activeId={activeId}
               onSelect={selectSection}
+              scrollActiveIntoView
             />
           </div>
         ) : null}

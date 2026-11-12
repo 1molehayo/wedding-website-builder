@@ -42,13 +42,15 @@ type PublicHomeSearch = {
   preview?: boolean
 }
 
-function parsePreviewFlag(value: unknown) {
+function parseFlag(value: unknown) {
   return value === true || value === '1' || value === 'true'
 }
 
 export const Route = createFileRoute('/$weddingSlug')({
   validateSearch: (search: Record<string, unknown>): PublicHomeSearch => {
-    return parsePreviewFlag(search.preview) ? { preview: true } : {}
+    const next: PublicHomeSearch = {}
+    if (parseFlag(search.preview)) next.preview = true
+    return next
   },
   loaderDeps: ({ search }: { search: PublicHomeSearch }) => ({
     preview: Boolean(search.preview),
@@ -160,7 +162,10 @@ function WeddingPublicPage() {
               imageUrl={home.imageUrls[block.id]}
             />
           ))}
-          <RegistrySection initial={home.registry} weddingSlug={weddingSlug} />
+          <RegistrySection
+            initial={home.registry}
+            weddingSlug={weddingSlug}
+          />
         </main>
       </PublicShell>
     </>

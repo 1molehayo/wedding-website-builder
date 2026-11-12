@@ -133,6 +133,13 @@ export const startContributionFormSchema = z
     payerEmail: emailField,
     phoneCountry: z.string().min(1),
     phoneNational: z.string(),
+    accountId: z
+      .union([z.string(), z.null(), z.undefined()])
+      .transform((value) => {
+        if (value === null || value === undefined) return null
+        const trimmed = value.trim()
+        return trimmed.length === 0 ? null : trimmed
+      }),
   })
   .superRefine((value, context) => {
     if (!value.phoneNational.trim()) return
@@ -162,6 +169,7 @@ export type StartContributionInput = {
   payerName: string
   payerEmail: string
   payerPhone: string | null
+  accountId: string | null
 }
 
 export function parseStartContributionInput(
@@ -186,6 +194,7 @@ export function parseStartContributionInput(
     payerName: value.payerName,
     payerEmail: value.payerEmail.toLowerCase(),
     payerPhone,
+    accountId: value.accountId,
   }
 }
 
@@ -196,6 +205,7 @@ export function emptyStartContributionForm(currency = 'USD'): {
   payerEmail: string
   phoneCountry: CountryCode
   phoneNational: string
+  accountId: string
 } {
   return {
     amount: '',
@@ -204,5 +214,6 @@ export function emptyStartContributionForm(currency = 'USD'): {
     payerEmail: '',
     phoneCountry: defaultPhoneCountry(),
     phoneNational: '',
+    accountId: '',
   }
 }
