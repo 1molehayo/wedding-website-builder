@@ -160,7 +160,8 @@ function WeddingPublicPage() {
               key={block.id}
               block={block}
               wedding={home}
-              imageUrl={home.imageUrls[block.id]}
+              imageMediaUrls={home.imageMediaUrls[block.id]}
+              videoMediaUrls={home.videoMediaUrls[block.id]}
               heroMediaUrls={home.heroMediaUrls[block.id]}
             />
           ))}

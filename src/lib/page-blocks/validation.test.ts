@@ -83,6 +83,45 @@ describe('page blocks validation', () => {
     expect(result.fieldErrors['image-1'].imagePath).toBeTruthy()
   })
 
+  it('loads older image blocks with a desktop fallback', () => {
+    const [block] = parsePageBlocks([
+      {
+        id: 'image-1',
+        type: 'image',
+        fields: {
+          imagePath: 'page-blocks/photo.jpg',
+          title: null,
+          description: null,
+        },
+      },
+    ])
+
+    expect(block).toMatchObject({
+      type: 'image',
+      fields: { mobileImagePath: null },
+    })
+  })
+
+  it('requires a desktop video and keeps the mobile video optional', () => {
+    const video = createDefaultBlock('video')
+    const missingVideo = validatePageBlocksClient([video])
+    expect(missingVideo.ok).toBe(false)
+    if (!missingVideo.ok) {
+      expect(missingVideo.fieldErrors[video.id].videoPath).toMatch(/required/i)
+    }
+
+    const validVideo = validatePageBlocksClient([
+      {
+        ...video,
+        fields: {
+          ...video.fields,
+          videoPath: 'page-blocks/highlight.mp4',
+        },
+      },
+    ])
+    expect(validVideo.ok).toBe(true)
+  })
+
   it('loads older hero blocks without imagePath', () => {
     const blocks = parsePageBlocks([
       {
