@@ -25,13 +25,12 @@ function scrollToSection(sectionId: string, behavior?: ScrollBehavior) {
   return true
 }
 
-function writeHash(hash: string, mode: 'push' | 'replace') {
+function pushHash(hash: string) {
   const nextHash = hash.startsWith('#') ? hash : `#${hash}`
-  if (mode === 'replace' && window.location.hash === nextHash) return
+  if (window.location.hash === nextHash) return
 
   const url = `${window.location.pathname}${window.location.search}${nextHash}`
-  if (mode === 'push') window.history.pushState(null, '', url)
-  else window.history.replaceState(null, '', url)
+  window.history.pushState(null, '', url)
 }
 
 function onSectionNavClick(
@@ -197,7 +196,6 @@ export function PublicShell({
   const announcement = announcementText?.trim() || null
   const showSectionNav = sectionNav.length > 1
   const headerRef = useRef<HTMLElement>(null)
-  const urlSyncReady = useRef(false)
   const didApplyHash = useRef(false)
   const pendingScrollId = useRef<string | null>(null)
   const sectionIds = sectionNav.map((item) => item.id).join('|')
@@ -207,7 +205,7 @@ export function PublicShell({
   const selectSection = (sectionId: string) => {
     pendingScrollId.current = sectionId
     setActiveId(sectionId)
-    writeHash(sectionId, 'push')
+    pushHash(sectionId)
     window.setTimeout(() => {
       if (pendingScrollId.current === sectionId) pendingScrollId.current = null
     }, 1200)
@@ -245,7 +243,6 @@ export function PublicShell({
 
   useEffect(() => {
     if (didApplyHash.current) {
-      urlSyncReady.current = true
       return
     }
 
@@ -253,7 +250,6 @@ export function PublicShell({
     const known = Boolean(hash) && sectionIds.split('|').includes(hash)
     if (!known) {
       didApplyHash.current = true
-      urlSyncReady.current = true
       return
     }
 
@@ -261,17 +257,9 @@ export function PublicShell({
       scrollToSection(hash, 'auto')
       setActiveId(hash)
       didApplyHash.current = true
-      urlSyncReady.current = true
     })
     return () => window.cancelAnimationFrame(frame)
   }, [sectionIds])
-
-  useEffect(() => {
-    if (!urlSyncReady.current || !activeId) return
-    const nextHash = `#${activeId}`
-    if (window.location.hash === nextHash) return
-    writeHash(nextHash, 'replace')
-  }, [activeId])
 
   useEffect(() => {
     if (!showSectionNav) return
@@ -305,7 +293,9 @@ export function PublicShell({
         if (!entry) return
         setActiveId(entry.target.id)
       },
-      { rootMargin: '-30% 0px -55% 0px', threshold: [0.1, 0.35, 0.6] },
+      // A narrow activation band works for sections of every height. Ratio
+      // thresholds made tall sections impossible to activate.
+      { rootMargin: '-35% 0px -60% 0px', threshold: 0 },
     )
 
     for (const section of sections) observer.observe(section)
