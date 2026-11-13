@@ -14,6 +14,7 @@ import type {
   PageBlock,
   PageContentEditorData,
   PageContentVersion,
+  ResponsiveMediaUrls,
 } from '@/lib/page-blocks/types'
 import { parsePageBlocks } from '@/lib/page-blocks/validation'
 import type { PublicRegistryData } from '@/lib/registry/registry.server'
@@ -29,7 +30,8 @@ import {
 
 export type PublicHomeData = PublicWeddingSettings & {
   page_blocks: PageBlock[]
-  imageUrls: Record<string, string>
+  imageMediaUrls: Record<string, ResponsiveMediaUrls>
+  videoMediaUrls: Record<string, ResponsiveMediaUrls>
   heroMediaUrls: Record<string, HeroMediaUrls>
   /** Storage path for OG/social image (use /api/photo?path=… for durable URL). */
   ogImagePath: string | null
@@ -435,7 +437,8 @@ export async function getPublicHomeDataHandler(
     draftBlocks: weddingRow.page_blocks_draft ?? weddingRow.page_blocks,
     preview: servePreview,
   })
-  const imageUrls: Record<string, string> = {}
+  const imageMediaUrls: Record<string, ResponsiveMediaUrls> = {}
+  const videoMediaUrls: Record<string, ResponsiveMediaUrls> = {}
   const heroMediaUrls: Record<string, HeroMediaUrls> = {}
   let ogImagePath: string | null = null
 
@@ -468,11 +471,28 @@ export async function getPublicHomeDataHandler(
         return
       }
 
-      if (block.type !== 'image' || !block.fields.imagePath.trim()) return
-      if (!ogImagePath) ogImagePath = block.fields.imagePath.trim()
-      const url = await createPhotoSignedUrl(block.fields.imagePath)
-      if (url) {
-        imageUrls[block.id] = url
+      if (block.type === 'image') {
+        const desktopPath = block.fields.imagePath.trim()
+        const mobilePath = block.fields.mobileImagePath?.trim() || null
+        if (!desktopPath) return
+        if (!ogImagePath) ogImagePath = desktopPath
+        const [desktop, mobile] = await Promise.all([
+          createPhotoSignedUrl(desktopPath),
+          mobilePath ? createPhotoSignedUrl(mobilePath) : null,
+        ])
+        imageMediaUrls[block.id] = { desktop, mobile }
+        return
+      }
+
+      if (block.type === 'video') {
+        const desktopPath = block.fields.videoPath.trim()
+        const mobilePath = block.fields.mobileVideoPath?.trim() || null
+        if (!desktopPath) return
+        const [desktop, mobile] = await Promise.all([
+          createPhotoSignedUrl(desktopPath),
+          mobilePath ? createPhotoSignedUrl(mobilePath) : null,
+        ])
+        videoMediaUrls[block.id] = { desktop, mobile }
       }
     }),
   )
@@ -496,7 +516,8 @@ export async function getPublicHomeDataHandler(
   return {
     ...toPublicSettings(weddingRow),
     page_blocks,
-    imageUrls,
+    imageMediaUrls,
+    videoMediaUrls,
     heroMediaUrls,
     ogImagePath,
     registry,
