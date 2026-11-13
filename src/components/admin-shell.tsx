@@ -81,8 +81,7 @@ function SidebarFooter({
   onDonate: () => void
 }) {
   const wedding = session.wedding
-  const previewPath = publicWeddingPath(wedding?.public_slug)
-  const previewHref = previewPath ? `${previewPath}?preview=1` : null
+  const websiteHref = publicWeddingPath(wedding?.public_slug)
   const dateLabel = !wedding
     ? 'Wedding not set up'
     : wedding.wedding_date
@@ -114,16 +113,16 @@ function SidebarFooter({
         ) : null}
       </div>
       {wedding ? (
-        previewHref ? (
+        websiteHref ? (
           <Button
             asChild
             size="sm"
             variant="outline"
             className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/10"
           >
-            <a href={previewHref} target="_blank" rel="noreferrer">
+            <a href={websiteHref} target="_blank" rel="noreferrer">
               <ArrowSquareOutIcon />
-              Preview site
+              View website
             </a>
           </Button>
         ) : (

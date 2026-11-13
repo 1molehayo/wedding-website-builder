@@ -82,8 +82,7 @@ function AdminOverviewPage() {
     )
   }
 
-  const previewPath = publicWeddingPath(wedding.public_slug)
-  const previewHref = previewPath ? `${previewPath}?preview=1` : null
+  const websiteHref = publicWeddingPath(wedding.public_slug)
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -105,11 +104,11 @@ function AdminOverviewPage() {
             </Badge>
           </div>
         </div>
-        {previewHref ? (
+        {websiteHref ? (
           <Button asChild size="sm">
-            <a href={previewHref} target="_blank" rel="noreferrer">
+            <a href={websiteHref} target="_blank" rel="noreferrer">
               <ArrowSquareOutIcon />
-              Preview site
+              View website
             </a>
           </Button>
         ) : (

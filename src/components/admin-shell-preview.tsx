@@ -70,7 +70,7 @@ export function AdminShellPreview() {
             <div className="flex flex-wrap gap-2">
               <Button size="sm">Save changes</Button>
               <Button size="sm" variant="outline">
-                Preview website
+                View website
               </Button>
             </div>
           </div>

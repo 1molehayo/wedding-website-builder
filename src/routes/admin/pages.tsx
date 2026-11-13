@@ -1258,11 +1258,11 @@ function AdminPagesPage() {
               search={{ preview: true }}
               target="_blank"
               rel="noreferrer"
-              aria-label="Preview draft"
-              title="Preview draft"
+              aria-label="Preview website"
+              title="Preview website"
             >
               <EyeIcon />
-              <span className="hidden md:inline">Preview draft</span>
+              <span className="hidden md:inline">Preview website</span>
             </Link>
           </Button>
         ) : null}
