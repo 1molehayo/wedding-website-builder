@@ -1,19 +1,24 @@
 import { useState } from 'react'
 import { ImageLightbox } from '@/components/ui/image-lightbox'
-import type { ImagePageBlock } from '@/lib/page-blocks/types'
+import type {
+  ImagePageBlock,
+  ResponsiveMediaUrls,
+} from '@/lib/page-blocks/types'
 import { publicSectionId } from '@/lib/page-blocks/types'
 import { cn } from '@/lib/utils'
 
 export function ImageBlock({
   block,
-  imageUrl,
+  mediaUrls,
 }: {
   block: ImagePageBlock
-  imageUrl?: string | null
+  mediaUrls?: ResponsiveMediaUrls
 }) {
   const [failed, setFailed] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  const showImage = Boolean(imageUrl) && !failed
+  const desktopImage = mediaUrls?.desktop ?? null
+  const mobileImage = mediaUrls?.mobile ?? null
+  const showImage = Boolean(desktopImage) && !failed
   const alt = block.fields.title ?? 'Wedding photo'
 
   return (
@@ -43,22 +48,30 @@ export function ImageBlock({
             !showImage && 'flex items-center justify-center',
           )}
         >
-          {showImage && imageUrl ? (
+          {showImage && desktopImage ? (
             <button
               type="button"
               className="block h-full w-full cursor-zoom-in text-left"
               aria-label={`Open larger view of ${alt}`}
               onClick={() => setLightboxOpen(true)}
             >
-              <img
-                src={imageUrl}
-                alt={alt}
-                loading="lazy"
-                decoding="async"
-                sizes="(min-width: 1024px) 64rem, 100vw"
-                className="public-image h-full w-full object-contain"
-                onError={() => setFailed(true)}
-              />
+              <picture className="block h-full w-full">
+                {mobileImage ? (
+                  <source
+                    media="(max-width: 767px)"
+                    srcSet={mobileImage}
+                  />
+                ) : null}
+                <img
+                  src={desktopImage}
+                  alt={alt}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(min-width: 1024px) 64rem, 100vw"
+                  className="public-image h-full w-full object-contain"
+                  onError={() => setFailed(true)}
+                />
+              </picture>
             </button>
           ) : (
             <p className="text-foreground-secondary px-6 text-center text-sm tracking-[0.14em] uppercase">
@@ -70,7 +83,7 @@ export function ImageBlock({
 
       <ImageLightbox
         open={lightboxOpen}
-        src={imageUrl ?? null}
+        src={desktopImage}
         alt={alt}
         onClose={() => setLightboxOpen(false)}
       />

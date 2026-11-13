@@ -3,6 +3,7 @@ export const PAGE_BLOCK_TYPES = [
   'story',
   'text',
   'image',
+  'video',
   'details',
 ] as const
 
@@ -43,6 +44,16 @@ export type TextBlockFields = BlockNavFields & {
 
 export type ImageBlockFields = BlockNavFields & {
   imagePath: string
+  /** Optional small-screen override; desktop image remains the fallback. */
+  mobileImagePath: string | null
+  title: string | null
+  description: string | null
+}
+
+export type VideoBlockFields = BlockNavFields & {
+  videoPath: string
+  /** Optional small-screen override; desktop video remains the fallback. */
+  mobileVideoPath: string | null
   title: string | null
   description: string | null
 }
@@ -67,6 +78,11 @@ export type HeroMediaUrls = {
   mobileVideo: string | null
 }
 
+export type ResponsiveMediaUrls = {
+  desktop: string | null
+  mobile: string | null
+}
+
 export type StoryPageBlock = {
   id: string
   type: 'story'
@@ -85,6 +101,12 @@ export type ImagePageBlock = {
   fields: ImageBlockFields
 }
 
+export type VideoPageBlock = {
+  id: string
+  type: 'video'
+  fields: VideoBlockFields
+}
+
 export type DetailsPageBlock = {
   id: string
   type: 'details'
@@ -96,6 +118,7 @@ export type PageBlock =
   | StoryPageBlock
   | TextPageBlock
   | ImagePageBlock
+  | VideoPageBlock
   | DetailsPageBlock
 
 export const PAGE_BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
@@ -103,6 +126,7 @@ export const PAGE_BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
   story: 'Story',
   text: 'Text',
   image: 'Image',
+  video: 'Video',
   details: 'Details',
 }
 
@@ -152,6 +176,20 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         type: 'image',
         fields: {
           imagePath: '',
+          mobileImagePath: null,
+          title: null,
+          description: null,
+          useTitleInNav: true,
+          navLabel: null,
+        },
+      }
+    case 'video':
+      return {
+        id,
+        type: 'video',
+        fields: {
+          videoPath: '',
+          mobileVideoPath: null,
           title: null,
           description: null,
           useTitleInNav: true,
@@ -252,6 +290,8 @@ export function publicSectionId(block: PageBlock): string {
       return `text-${block.id}`
     case 'image':
       return `photo-${block.id}`
+    case 'video':
+      return `video-${block.id}`
     case 'details':
       return `details-${block.id}`
   }

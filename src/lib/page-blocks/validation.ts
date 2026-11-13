@@ -58,6 +58,16 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
   const imageFieldsSchema = z.object({
     imagePath:
       mode === 'strict' ? requiredTrimmedString('Image') : trimmedString,
+    mobileImagePath: nullableTrimmedString.default(null),
+    title: nullableTrimmedString,
+    description: nullableTrimmedString,
+    ...navFieldsSchema,
+  })
+
+  const videoFieldsSchema = z.object({
+    videoPath:
+      mode === 'strict' ? requiredTrimmedString('Video') : trimmedString,
+    mobileVideoPath: nullableTrimmedString.default(null),
     title: nullableTrimmedString,
     description: nullableTrimmedString,
     ...navFieldsSchema,
@@ -92,6 +102,11 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
       id: blockIdSchema(),
       type: z.literal('image'),
       fields: imageFieldsSchema,
+    }),
+    z.object({
+      id: blockIdSchema(),
+      type: z.literal('video'),
+      fields: videoFieldsSchema,
     }),
     z.object({
       id: blockIdSchema(),
