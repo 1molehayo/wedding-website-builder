@@ -103,6 +103,9 @@ export type GuestRsvpInviteEmailInput = {
   websiteUrl: string | null
   rsvpUrl: string
   photosUrl: string | null
+  partyName?: string | null
+  plusOnes?: number
+  inviteMessage?: string | null
   theme: PublicThemeId
   /** Preview can toggle; live sends default to light. */
   mode?: ColorMode
@@ -152,6 +155,27 @@ export function guestRsvpInviteEmailHtml(
       </table>`
     : ''
 
+  const partyBlock = input.partyName
+    ? `<p style="margin:0 0 8px;font-size:15px;line-height:1.55;color:${palette.foregroundSecondary};">
+        Party / household: <strong style="color:${palette.foreground};">${escapeHtml(input.partyName)}</strong>
+      </p>`
+    : ''
+  const plusOnes = input.plusOnes ?? 0
+  const attendanceLabel =
+    plusOnes > 0
+      ? `This invitation includes you and up to ${plusOnes} ${plusOnes === 1 ? 'guest' : 'guests'}.`
+      : 'This invitation is for you.'
+  const inviteMessageBlock = input.inviteMessage?.trim()
+    ? `<div style="margin:20px 0;padding:16px;border-left:3px solid ${palette.highlight};background:${palette.backgroundSecondary};">
+        <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:${palette.foregroundSecondary};">
+          A message from the couple
+        </p>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:${palette.foreground};">
+          ${escapeHtml(input.inviteMessage).replace(/\n/g, '<br/>')}
+        </p>
+      </div>`
+    : ''
+
   const body = `
     <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:${palette.foregroundSecondary};">
       You’re invited
@@ -169,6 +193,11 @@ export function guestRsvpInviteEmailHtml(
       <strong style="color:${palette.foreground};">${escapeHtml(input.coupleLabel)}</strong>
       on ${escapeHtml(input.weddingDateLabel)}.
     </p>
+    ${partyBlock}
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foregroundSecondary};">
+      ${attendanceLabel}
+    </p>
+    ${inviteMessageBlock}
     ${websiteBlock}
     <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${palette.foreground};">
       Please RSVP with your personal link:
@@ -200,6 +229,22 @@ export function guestRsvpInviteEmailText(
 
   if (input.websiteUrl) {
     lines.push(`Wedding website: ${input.websiteUrl}`, '')
+  }
+
+  if (input.partyName) {
+    lines.push(`Party / household: ${input.partyName}`)
+  }
+
+  const plusOnes = input.plusOnes ?? 0
+  lines.push(
+    plusOnes > 0
+      ? `This invitation includes you and up to ${plusOnes} ${plusOnes === 1 ? 'guest' : 'guests'}.`
+      : 'This invitation is for you.',
+    '',
+  )
+
+  if (input.inviteMessage?.trim()) {
+    lines.push('A message from the couple:', input.inviteMessage.trim(), '')
   }
 
   lines.push('Please RSVP with your personal link:', input.rsvpUrl, '')

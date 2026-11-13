@@ -56,6 +56,31 @@ describe('guest email templates', () => {
     expect(text).not.toContain('private photo album')
   })
 
+  it('includes the guest-facing invitation details in text and HTML', () => {
+    const input = {
+      guestName: 'Ada',
+      coupleLabel: 'Theo & Ada',
+      weddingDateLabel: 'August 15, 2026',
+      websiteUrl: null,
+      rsvpUrl: 'https://example.com/rsvp/token123',
+      photosUrl: null,
+      partyName: 'Lovelace household',
+      plusOnes: 2,
+      inviteMessage: 'Please arrive by 2pm.\nWe cannot wait to celebrate!',
+      theme: 'celeste' as const,
+    }
+
+    const text = guestRsvpInviteEmailText(input)
+    const html = guestRsvpInviteEmailHtml(input)
+
+    expect(text).toContain('Party / household: Lovelace household')
+    expect(text).toContain('you and up to 2 guests')
+    expect(text).toContain('Please arrive by 2pm.')
+    expect(html).toContain('Party / household')
+    expect(html).toContain('you and up to 2 guests')
+    expect(html).toContain('Please arrive by 2pm.<br/>')
+  })
+
   it('builds themed RSVP HTML with theme accent colors', () => {
     const html = guestRsvpInviteEmailHtml({
       guestName: 'Ada',

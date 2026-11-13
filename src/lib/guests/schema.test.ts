@@ -10,6 +10,7 @@ const base = {
   inviteChannel: 'none' as const,
   partyName: '',
   plusOnes: 0,
+  inviteMessage: '',
   notes: '',
 }
 
@@ -81,5 +82,17 @@ describe('guest form schema', () => {
         phone: '+2348031234567',
       }).email,
     ).toBe('')
+  })
+
+  it('keeps the guest message separate from private notes', () => {
+    const parsed = parseGuestInput({
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+      invite_message: 'Please join us for the ceremony.',
+      notes: 'Seat near the aisle.',
+    })
+
+    expect(parsed.invite_message).toBe('Please join us for the ceremony.')
+    expect(parsed.notes).toBe('Seat near the aisle.')
   })
 })

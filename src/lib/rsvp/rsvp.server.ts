@@ -19,7 +19,7 @@ import {
 } from '@/lib/wedding/public-settings'
 
 const GUEST_RSVP_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, invite_message, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'
 
 function guestCanEditRsvp(guest: {
   rsvp_status: Guest['rsvp_status']

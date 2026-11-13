@@ -242,6 +242,7 @@ export type Guest = {
   party_name: string | null
   plus_ones: number
   notes: string | null
+  invite_message: string | null
   admin_label: string | null
   rsvp_token: string
   rsvp_status: RsvpStatus
@@ -341,6 +342,7 @@ export type Database = {
           party_name?: string | null
           plus_ones?: number
           notes?: string | null
+          invite_message?: string | null
           admin_label?: string | null
           rsvp_token?: string
           rsvp_status?: RsvpStatus

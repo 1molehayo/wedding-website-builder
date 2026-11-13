@@ -63,6 +63,10 @@ const guestFormFields = {
     .int('Plus-ones must be a whole number.')
     .min(0, 'Plus-ones cannot be negative.')
     .max(20, 'Plus-ones must be 20 or fewer.'),
+  inviteMessage: z
+    .string()
+    .trim()
+    .max(2000, 'Message to guest must be 2000 characters or fewer.'),
   notes: z.string().trim().max(2000, 'Notes must be 2000 characters or fewer.'),
 }
 
@@ -123,6 +127,9 @@ export function guestFormSchemaFor(mode: 'create' | 'edit') {
       inviteChannel: value.inviteChannel,
       partyName: value.partyName.trim() ? value.partyName.trim() : null,
       plusOnes: value.plusOnes,
+      inviteMessage: value.inviteMessage.trim()
+        ? value.inviteMessage.trim()
+        : null,
       notes: value.notes.trim() ? value.notes.trim() : null,
     }))
 }
@@ -139,6 +146,7 @@ export type GuestFormValues = {
   inviteChannel: InviteChannel
   partyName: string
   plusOnes: number
+  inviteMessage: string
   notes: string
 }
 
@@ -149,6 +157,7 @@ export type GuestInput = {
   phone: string | null
   party_name: string | null
   plus_ones: number
+  invite_message: string | null
   notes: string | null
 }
 
@@ -165,6 +174,7 @@ const storedGuestSchema = z.object({
     .transform((value) => toStoredPhone(value)),
   partyName: optionalText('Party name', 120),
   plusOnes: guestFormFields.plusOnes,
+  inviteMessage: optionalText('Message to guest', 2000),
   notes: optionalText('Notes', 2000),
 })
 
@@ -181,6 +191,7 @@ export function parseGuestInput(data: unknown): GuestInput {
     phone: record.phone ?? '',
     partyName: record.party_name ?? record.partyName ?? '',
     plusOnes: record.plus_ones ?? record.plusOnes ?? 0,
+    inviteMessage: record.invite_message ?? record.inviteMessage ?? '',
     notes: record.notes ?? '',
   })
 
@@ -195,6 +206,7 @@ export function parseGuestInput(data: unknown): GuestInput {
     phone: parsed.data.phone,
     party_name: parsed.data.partyName,
     plus_ones: parsed.data.plusOnes,
+    invite_message: parsed.data.inviteMessage,
     notes: parsed.data.notes,
   }
 }
@@ -216,6 +228,7 @@ export function toGuestFormValues(guest: Guest): GuestFormValues {
     inviteChannel: 'none',
     partyName: guest.party_name ?? '',
     plusOnes: guest.plus_ones,
+    inviteMessage: guest.invite_message ?? '',
     notes: guest.notes ?? '',
   }
 }
@@ -230,6 +243,7 @@ export function emptyGuestFormValues(): GuestFormValues {
     inviteChannel: 'email',
     partyName: '',
     plusOnes: 0,
+    inviteMessage: '',
     notes: '',
   }
 }

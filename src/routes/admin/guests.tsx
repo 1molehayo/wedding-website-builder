@@ -293,6 +293,7 @@ function AdminGuestsPage() {
       phone: parsed.phone ?? '',
       party_name: parsed.partyName ?? '',
       plus_ones: parsed.plusOnes,
+      invite_message: parsed.inviteMessage ?? '',
       notes: parsed.notes ?? '',
       admin_label: adminLabelDraft.trim() || null,
     }
@@ -500,6 +501,9 @@ function AdminGuestsPage() {
     let websiteUrl: string | null = null
     let weddingDateLabel: string | null = null
     let photosUrl: string | null = null
+    let partyName = guest.party_name
+    let plusOnes = guest.plus_ones
+    let inviteMessage = guest.invite_message
     try {
       const context = await getGuestWhatsappInviteContext({
         data: { guestId: guest.id },
@@ -507,6 +511,9 @@ function AdminGuestsPage() {
       websiteUrl = context.websiteUrl
       weddingDateLabel = context.weddingDateLabel
       photosUrl = context.photosUrl
+      partyName = context.partyName
+      plusOnes = context.plusOnes
+      inviteMessage = context.inviteMessage
     } catch (err) {
       console.error('[whatsapp invite context]', err)
     }
@@ -520,6 +527,9 @@ function AdminGuestsPage() {
       rsvpUrl: `${window.location.origin}${guestRsvpPath(guest.rsvp_token)}`,
       invitationImageUrl,
       photosUrl,
+      partyName,
+      plusOnes,
+      inviteMessage,
     })
     if (!url) {
       toast.error('Add a valid phone number before sharing on WhatsApp.')
@@ -810,6 +820,7 @@ function AdminGuestsPage() {
         guest.email ?? '',
         guest.phone ?? '',
         guest.party_name ?? '',
+        guest.invite_message ?? '',
         guest.notes ?? '',
         RSVP_STATUS_LABELS[guest.rsvp_status],
       ]
@@ -942,7 +953,14 @@ function AdminGuestsPage() {
                   label="Plus-ones"
                   value={String(selectedGuest.plus_ones)}
                 />
-                <ReadValue label="Notes" value={selectedGuest.notes ?? ''} />
+                <ReadValue
+                  label="Message to guest"
+                  value={selectedGuest.invite_message ?? ''}
+                />
+                <ReadValue
+                  label="Private notes"
+                  value={selectedGuest.notes ?? ''}
+                />
                 <ReadValue
                   label="Admin label"
                   value={selectedGuest.admin_label ?? ''}
@@ -1365,6 +1383,37 @@ function AdminGuestsPage() {
                               }}
                             </form.Field>
 
+                            <form.Field name="inviteMessage">
+                              {(field) => {
+                                const error = fieldErrorMessage(
+                                  field.state.meta.errors,
+                                )
+                                const invalid =
+                                  !!error &&
+                                  (field.state.meta.isTouched || submitted)
+                                return (
+                                  <Field invalid={invalid}>
+                                    <Field.Label>Message to guest</Field.Label>
+                                    <Field.Control>
+                                      <Textarea
+                                        rows={3}
+                                        invalid={invalid}
+                                        value={field.state.value}
+                                        onBlur={field.handleBlur}
+                                        onChange={(event) =>
+                                          field.handleChange(event.target.value)
+                                        }
+                                        placeholder="Optional message included in email and WhatsApp invitations"
+                                      />
+                                    </Field.Control>
+                                    {invalid ? (
+                                      <Field.Error>{error}</Field.Error>
+                                    ) : null}
+                                  </Field>
+                                )
+                              }}
+                            </form.Field>
+
                             <form.Field name="notes">
                               {(field) => {
                                 const error = fieldErrorMessage(
@@ -1375,7 +1424,7 @@ function AdminGuestsPage() {
                                   (field.state.meta.isTouched || submitted)
                                 return (
                                   <Field invalid={invalid}>
-                                    <Field.Label>Notes</Field.Label>
+                                    <Field.Label>Private notes</Field.Label>
                                     <Field.Control>
                                       <Textarea
                                         rows={3}

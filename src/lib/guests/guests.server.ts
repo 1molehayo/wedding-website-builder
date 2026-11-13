@@ -15,7 +15,7 @@ import {
 } from '@/lib/wedding/public-settings'
 
 const GUEST_SELECT =
-  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'
+  'id, wedding_id, first_name, last_name, email, phone, party_name, plus_ones, notes, invite_message, admin_label, rsvp_token, rsvp_status, rsvp_responded_at, attending_count, dietary_notes, rsvp_message, allow_rsvp_update, invite_emailed_at, created_at, updated_at'
 
 export type GuestConflictMatch = {
   id: string
@@ -237,6 +237,7 @@ export async function updateGuestHandler(
       party_name: input.party_name,
       plus_ones: input.plus_ones,
       notes: input.notes,
+      invite_message: input.invite_message,
       admin_label: adminLabel,
     })
     .eq('id', guestId)
@@ -423,6 +424,9 @@ async function sendInviteForGuest(
     websiteUrl: wedding.public_slug ? `${origin}/${wedding.public_slug}` : null,
     rsvpUrl: `${origin}/rsvp/${encodeURIComponent(guest.rsvp_token)}`,
     photosUrl,
+    partyName: guest.party_name,
+    plusOnes: guest.plus_ones,
+    inviteMessage: guest.invite_message,
     theme: resolveEmailThemeId(wedding.active_public_theme),
     replyTo,
     invitationCard,
@@ -503,6 +507,9 @@ export type GuestWhatsappInviteContext = {
   websiteUrl: string | null
   weddingDateLabel: string
   photosUrl: string | null
+  partyName: string | null
+  plusOnes: number
+  inviteMessage: string | null
 }
 
 /** Extras so WhatsApp invite text can match the email essentials. */
@@ -513,7 +520,7 @@ export async function getGuestWhatsappInviteContextHandler(
   const admin = createAdminSupabaseClient()
   const result = await admin
     .from('guests')
-    .select('id, rsvp_token')
+    .select('id, rsvp_token, party_name, plus_ones, invite_message')
     .eq('id', guestId)
     .eq('wedding_id', session.wedding.id)
     .maybeSingle()
@@ -534,7 +541,14 @@ export async function getGuestWhatsappInviteContextHandler(
     result.data.rsvp_token,
   )
 
-  return { websiteUrl, weddingDateLabel, photosUrl }
+  return {
+    websiteUrl,
+    weddingDateLabel,
+    photosUrl,
+    partyName: result.data.party_name,
+    plusOnes: result.data.plus_ones,
+    inviteMessage: result.data.invite_message,
+  }
 }
 
 export async function sendGuestInvitesBulkHandler(input: {
