@@ -77,20 +77,30 @@ export const getSignedPhotoUrl = createServerFn({ method: 'POST' })
   })
 
 export const createPageBlockUpload = createServerFn({ method: 'POST' })
-  .validator((data: { name: string; type: string; byteSize: number }) => {
+  .validator(
+    (data: {
+      name: string
+      type: string
+      byteSize: number
+      mediaKind: 'image' | 'video'
+    }) => {
     const name = String(data.name).trim()
     const type = String(data.type).trim()
     const byteSize = Number(data.byteSize)
-    if (!name) throw new Error('Image name is required.')
+    const mediaKind: 'image' | 'video' =
+      data.mediaKind === 'video' ? 'video' : 'image'
+    if (!name) throw new Error('File name is required.')
     if (!Number.isFinite(byteSize) || byteSize <= 0) {
-      throw new Error('Image data is empty.')
+      throw new Error('File data is empty.')
     }
     return {
       name,
       type: type || 'application/octet-stream',
       byteSize,
+      mediaKind,
     }
-  })
+    },
+  )
   .handler(async ({ data }) => {
     const { createPageBlockUploadHandler } = await import('./settings.server')
     return createPageBlockUploadHandler(data)

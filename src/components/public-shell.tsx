@@ -29,34 +29,9 @@ function writeHash(hash: string, mode: 'push' | 'replace') {
   const nextHash = hash.startsWith('#') ? hash : `#${hash}`
   if (mode === 'replace' && window.location.hash === nextHash) return
 
-  const id = decodeURIComponent(nextHash.slice(1))
-  const target = document.getElementById(id)
-  // Drop the id while the URL fragment changes so the browser does not
-  // smooth-scroll to that section. `scroll-behavior: smooth` on <html>
-  // turns a hash update into a scroll animation.
-  if (target) target.removeAttribute('id')
-
   const url = `${window.location.pathname}${window.location.search}${nextHash}`
   if (mode === 'push') window.history.pushState(null, '', url)
   else window.history.replaceState(null, '', url)
-
-  if (target) target.id = id
-}
-
-function replaceHashWhileScrolling(hash: string) {
-  const root = document.documentElement
-  const previousBehavior = root.style.scrollBehavior
-  const x = window.scrollX
-  const y = window.scrollY
-  root.style.scrollBehavior = 'auto'
-  writeHash(hash, 'replace')
-  window.scrollTo(x, y)
-  window.requestAnimationFrame(() => {
-    const jumped =
-      Math.abs(window.scrollY - y) > 48 || Math.abs(window.scrollX - x) > 48
-    if (jumped) window.scrollTo(x, y)
-    root.style.scrollBehavior = previousBehavior
-  })
 }
 
 function onSectionNavClick(
@@ -109,11 +84,11 @@ function SectionNav({
     if (pointerActiveRef.current) return
     if (Date.now() < skipAutoScrollUntilRef.current) return
     const link = linkRefs.current.get(sectionId)
-    if (!link) return
-    link.scrollIntoView({
+    const nav = navRef.current
+    if (!link || !nav) return
+    nav.scrollTo({
+      left: link.offsetLeft - (nav.clientWidth - link.offsetWidth) / 2,
       behavior: prefersReducedMotion() ? 'auto' : 'smooth',
-      inline: 'center',
-      block: 'nearest',
     })
     window.requestAnimationFrame(() => updateEdgeFade())
   })
@@ -295,7 +270,7 @@ export function PublicShell({
     if (!urlSyncReady.current || !activeId) return
     const nextHash = `#${activeId}`
     if (window.location.hash === nextHash) return
-    replaceHashWhileScrolling(nextHash)
+    writeHash(nextHash, 'replace')
   }, [activeId])
 
   useEffect(() => {
@@ -307,17 +282,27 @@ export function PublicShell({
 
     if (sections.length === 0) return
 
+    const visibleSections = new Map<Element, IntersectionObserverEntry>()
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
+        for (const entry of entries) {
+          if (entry.isIntersecting) visibleSections.set(entry.target, entry)
+          else visibleSections.delete(entry.target)
+        }
+
+        const pending = pendingScrollId.current
+        if (pending) {
+          const target = sections.find((section) => section.id === pending)
+          if (!target || !visibleSections.has(target)) return
+          pendingScrollId.current = null
+          setActiveId(pending)
+          return
+        }
+
+        const visible = [...visibleSections.values()]
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
         const entry = visible.at(0)
         if (!entry) return
-        if (pendingScrollId.current) {
-          if (entry.target.id !== pendingScrollId.current) return
-          pendingScrollId.current = null
-        }
         setActiveId(entry.target.id)
       },
       { rootMargin: '-30% 0px -55% 0px', threshold: [0.1, 0.35, 0.6] },

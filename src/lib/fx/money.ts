@@ -23,6 +23,29 @@ export function isUsableCrossCurrencyRate(
   return true
 }
 
+export function isUsableSuggestedAmountQuote(
+  quote: {
+    baseCurrency: string
+    payCurrency: string
+    fxRate: number
+    suggestedAmount: number | null
+  },
+  selectedPayCurrency: string,
+): boolean {
+  const base = quote.baseCurrency.trim().toUpperCase()
+  const pay = quote.payCurrency.trim().toUpperCase()
+  if (pay !== selectedPayCurrency.trim().toUpperCase()) return false
+  if (
+    quote.suggestedAmount == null ||
+    !Number.isFinite(quote.suggestedAmount) ||
+    quote.suggestedAmount <= 0
+  ) {
+    return false
+  }
+  if (base === pay) return quote.fxRate === 1
+  return isUsableCrossCurrencyRate(base, pay, quote.fxRate)
+}
+
 /**
  * Convert a payment amount into the gift base currency.
  * `fxRate` is pay-currency units per 1 base unit (e.g. 1346.61 NGN per 1 USD).

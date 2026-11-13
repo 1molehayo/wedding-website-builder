@@ -14,6 +14,14 @@ describe('defaultPhoneCountry', () => {
     expect(defaultPhoneCountry()).toBe('GB')
   })
 
+  it('prefers a trusted visitor region over the browser locale', () => {
+    vi.stubGlobal('navigator', {
+      language: 'en-US',
+      languages: ['en-US'],
+    })
+    expect(defaultPhoneCountry('NG')).toBe('NG')
+  })
+
   it('prefers the first languages entry with a region', () => {
     vi.stubGlobal('navigator', {
       language: 'en',

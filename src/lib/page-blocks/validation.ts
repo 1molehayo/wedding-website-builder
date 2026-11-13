@@ -71,7 +71,11 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
         title: nullableTrimmedString,
         tagline: nullableTrimmedString,
         // Optional for older stored hero blocks that predate background photos.
+        mediaType: z.enum(['image', 'video']).default('image'),
         imagePath: nullableTrimmedString.default(null),
+        mobileImagePath: nullableTrimmedString.default(null),
+        videoPath: nullableTrimmedString.default(null),
+        mobileVideoPath: nullableTrimmedString.default(null),
       }),
     }),
     z.object({
@@ -116,6 +120,19 @@ function makePageBlocksSchema(mode: 'loose' | 'strict') {
           })
         }
         ids.add(block.id)
+
+        if (
+          mode === 'strict' &&
+          block.type === 'hero' &&
+          block.fields.mediaType === 'video' &&
+          !block.fields.videoPath
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [index, 'fields', 'videoPath'],
+            message: 'Desktop video is required when video is selected.',
+          })
+        }
       }
     })
 }

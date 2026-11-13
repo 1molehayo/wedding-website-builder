@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   baseAmountToPay,
   isUsableCrossCurrencyRate,
+  isUsableSuggestedAmountQuote,
   payAmountToBase,
   roundMoney,
 } from './money'
@@ -26,5 +27,30 @@ describe('money helpers', () => {
     expect(isUsableCrossCurrencyRate('USD', 'NGN', 1)).toBe(false)
     expect(isUsableCrossCurrencyRate('USD', 'NGN', 0)).toBe(false)
     expect(isUsableCrossCurrencyRate('USD', 'NGN', 1352.33)).toBe(true)
+  })
+
+  it('accepts a same-currency quote for resetting the suggested amount', () => {
+    expect(
+      isUsableSuggestedAmountQuote(
+        {
+          baseCurrency: 'USD',
+          payCurrency: 'USD',
+          fxRate: 1,
+          suggestedAmount: 24,
+        },
+        'USD',
+      ),
+    ).toBe(true)
+    expect(
+      isUsableSuggestedAmountQuote(
+        {
+          baseCurrency: 'USD',
+          payCurrency: 'EUR',
+          fxRate: 0.92,
+          suggestedAmount: 22.08,
+        },
+        'USD',
+      ),
+    ).toBe(false)
   })
 })

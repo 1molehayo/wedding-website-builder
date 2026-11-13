@@ -1,6 +1,8 @@
 import {
   ALLOWED_MEDIA_MIME_TYPES,
+  ALLOWED_VIDEO_MIME_TYPES,
   MAX_MEDIA_UPLOAD_BYTES,
+  MAX_VIDEO_UPLOAD_BYTES,
 } from '@/lib/media/constants'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
@@ -11,6 +13,7 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60 * 6
 const PROXY_SIGNED_URL_TTL_SECONDS = 60 * 10
 
 const ALLOWED_MIME = new Set<string>(ALLOWED_MEDIA_MIME_TYPES)
+const ALLOWED_VIDEO_MIME = new Set<string>(ALLOWED_VIDEO_MIME_TYPES)
 
 export function isAllowedPhotoStoragePath(imagePath: string): boolean {
   const path = imagePath.trim()
@@ -104,16 +107,26 @@ export async function createPageBlockSignedUpload(input: {
   name: string
   type: string
   byteSize: number
+  mediaKind: 'image' | 'video'
 }): Promise<PageBlockSignedUpload> {
   const contentType = input.type || 'application/octet-stream'
-  if (!ALLOWED_MIME.has(contentType)) {
-    throw new Error('Only JPEG, PNG, WebP, and GIF images are allowed.')
+  const isVideo = input.mediaKind === 'video'
+  const allowedTypes = isVideo ? ALLOWED_VIDEO_MIME : ALLOWED_MIME
+  const maxBytes = isVideo ? MAX_VIDEO_UPLOAD_BYTES : MAX_MEDIA_UPLOAD_BYTES
+  if (!allowedTypes.has(contentType)) {
+    throw new Error(
+      isVideo
+        ? 'Only MP4 and WebM videos are allowed.'
+        : 'Only JPEG, PNG, WebP, and GIF images are allowed.',
+    )
   }
   if (!Number.isFinite(input.byteSize) || input.byteSize <= 0) {
-    throw new Error('Image data is empty.')
+    throw new Error(`${isVideo ? 'Video' : 'Image'} data is empty.`)
   }
-  if (input.byteSize > MAX_MEDIA_UPLOAD_BYTES) {
-    throw new Error('Image must be 12MB or smaller.')
+  if (input.byteSize > maxBytes) {
+    throw new Error(
+      `${isVideo ? 'Video must be 25MB' : 'Image must be 12MB'} or smaller.`,
+    )
   }
 
   const filename = input.name.trim() || 'photo'

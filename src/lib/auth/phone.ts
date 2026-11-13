@@ -56,6 +56,16 @@ function isSupportedCountry(code: string): code is CountryCode {
   return getCountries().includes(code as CountryCode)
 }
 
+/** Use a trusted ISO country code when available, otherwise infer from locale. */
+export function phoneCountryForRegion(
+  region?: string | null,
+): CountryCode | null {
+  const normalized = region?.trim().toUpperCase() ?? ''
+  return normalized && isSupportedCountry(normalized)
+    ? (normalized)
+    : null
+}
+
 /** Region from a BCP 47 tag like `en-GB` → `GB`. */
 function regionFromLocaleTag(tag: string): string | null {
   try {
@@ -71,13 +81,16 @@ function regionFromLocaleTag(tag: string): string | null {
  * Best-effort default from the browser locale (no geolocation permission).
  * Falls back to NG when nothing valid can be inferred (SSR / unknown locale).
  */
-export function defaultPhoneCountry(): CountryCode {
+export function defaultPhoneCountry(requestedRegion?: string | null): CountryCode {
+  const detected = phoneCountryForRegion(requestedRegion)
+  if (detected) return detected
+
   if (typeof navigator !== 'undefined') {
     const tags = [...navigator.languages, navigator.language].filter(Boolean)
 
     for (const tag of tags) {
-      const region = regionFromLocaleTag(tag)
-      if (region && isSupportedCountry(region)) return region
+      const localeRegion = regionFromLocaleTag(tag)
+      if (localeRegion && isSupportedCountry(localeRegion)) return localeRegion
     }
   }
 

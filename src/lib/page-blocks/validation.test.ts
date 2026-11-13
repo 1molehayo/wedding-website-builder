@@ -93,8 +93,44 @@ describe('page blocks validation', () => {
     ])
     expect(blocks[0]).toMatchObject({
       type: 'hero',
-      fields: { imagePath: null },
+      fields: {
+        mediaType: 'image',
+        imagePath: null,
+        mobileImagePath: null,
+        videoPath: null,
+        mobileVideoPath: null,
+      },
     })
+  })
+
+  it('requires a desktop video only when video mode is selected', () => {
+    const hero = createDefaultBlock('hero')
+    const missingVideo = validatePageBlocksClient([
+      {
+        ...hero,
+        fields: {
+          ...hero.fields,
+          mediaType: 'video',
+        },
+      },
+    ])
+    expect(missingVideo.ok).toBe(false)
+    if (!missingVideo.ok) {
+      expect(missingVideo.fieldErrors[hero.id].videoPath).toMatch(/required/i)
+    }
+
+    const validVideo = validatePageBlocksClient([
+      {
+        ...hero,
+        fields: {
+          ...hero.fields,
+          mediaType: 'video',
+          videoPath: 'page-blocks/hero.mp4',
+          mobileVideoPath: 'page-blocks/hero-mobile.webm',
+        },
+      },
+    ])
+    expect(validVideo.ok).toBe(true)
   })
 
   it('loads older blocks and uses each title in the nav', () => {

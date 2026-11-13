@@ -10,7 +10,13 @@ import { Input } from '@/components/ui/input'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
-import { isUsableCrossCurrencyRate, payAmountToBase } from '@/lib/fx/money'
+import { defaultPhoneCountry } from '@/lib/auth/phone'
+import { pickContributionDefaultCurrency } from '@/lib/currency/currencies'
+import {
+  isUsableCrossCurrencyRate,
+  isUsableSuggestedAmountQuote,
+  payAmountToBase,
+} from '@/lib/fx/money'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
 import { contributionFxQuoteQueryOptions } from '@/lib/query/fx-queries'
@@ -129,7 +135,7 @@ function GiftItemCard({
           </p>
         ) : null}
         {line ? (
-          <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
+          <p className="text-foreground text-sm font-semibold tracking-[0.08em] uppercase md:text-base">
             {line}
           </p>
         ) : null}
@@ -208,7 +214,7 @@ function GiftDetailsDrawer({
             </p>
           ) : null}
           {line ? (
-            <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
+            <p className="text-foreground text-sm font-semibold tracking-[0.08em] uppercase md:text-base">
               {line}
             </p>
           ) : null}
@@ -289,12 +295,14 @@ function ContributeDrawer({
   weddingSlug,
   target,
   accounts,
+  visitorCountry,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   weddingSlug: string
   target: ContributeTarget | null
   accounts: PublicRegistryAccount[]
+  visitorCountry: string | null
 }) {
   const [started, setStarted] = useState<StartedContribution | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -309,11 +317,16 @@ function ContributeDrawer({
     ]
   }, [accounts])
 
-  const defaultCurrency = currencies[0] ?? 'USD'
   const giftId = target?.kind === 'gift' ? target.item.id : null
   const basePrice =
     target?.kind === 'gift' ? (target.item.prices[0] ?? null) : null
   const giftBaseCurrency = basePrice?.currency.toUpperCase() ?? null
+  const defaultCurrency = pickContributionDefaultCurrency({
+    availableCurrencies: currencies,
+    visitorCountry,
+    giftCurrency: giftBaseCurrency,
+  })
+  const detectedPhoneCountry = defaultPhoneCountry(visitorCountry)
   const accountsForDefaultCurrency = accounts.filter(
     (account) => account.currency.toUpperCase() === defaultCurrency,
   )
@@ -321,7 +334,7 @@ function ContributeDrawer({
 
   const form = useForm({
     defaultValues: {
-      ...emptyStartContributionForm(defaultCurrency),
+      ...emptyStartContributionForm(defaultCurrency, detectedPhoneCountry),
       accountId: defaultAccountId,
       weddingSlug,
       giftId: giftId ?? '',
@@ -409,6 +422,11 @@ function ContributeDrawer({
     )
       ? fxQuoteData
       : null
+  const amountQuote =
+    fxQuoteData &&
+    isUsableSuggestedAmountQuote(fxQuoteData, payCurrency)
+      ? fxQuoteData
+      : null
   const fxError = !needsCrossCurrency
     ? null
     : fxIsError
@@ -437,15 +455,34 @@ function ContributeDrawer({
     }
   })
 
+  const initializeForm = useEffectEvent(() => {
+    form.setFieldValue('currency', defaultCurrency)
+    form.setFieldValue('accountId', defaultAccountId)
+    form.setFieldValue('phoneCountry', detectedPhoneCountry)
+    form.setFieldValue('amount', '')
+  })
+
+  useEffect(() => {
+    if (!open || !target || started) return
+    initializeForm()
+  }, [
+    open,
+    target,
+    started,
+    defaultCurrency,
+    defaultAccountId,
+    detectedPhoneCountry,
+  ])
+
   useEffect(() => {
     if (!open || !target || started || !payCurrency) return
     syncAccountForCurrency(payCurrency)
   }, [open, target, started, payCurrency])
 
   useEffect(() => {
-    if (!usableFxQuote) return
-    applySuggestedAmount(usableFxQuote)
-  }, [usableFxQuote])
+    if (!amountQuote) return
+    applySuggestedAmount(amountQuote)
+  }, [amountQuote])
 
   const title =
     target?.kind === 'gift'
@@ -873,9 +910,11 @@ function ContributeDrawer({
 export function RegistrySection({
   initial,
   weddingSlug,
+  visitorCountry,
 }: {
   initial: PublicRegistryData
   weddingSlug: string
+  visitorCountry: string | null
 }) {
   const [items] = useState(initial.items)
   const accounts = initial.accounts
@@ -975,6 +1014,7 @@ export function RegistrySection({
         weddingSlug={weddingSlug}
         target={target}
         accounts={accounts}
+        visitorCountry={visitorCountry}
       />
     </section>
   )

@@ -25,11 +25,16 @@ import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
+import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { prepareImageForUpload } from '@/lib/media/compress-image'
-import { MAX_MEDIA_UPLOAD_BYTES } from '@/lib/media/constants'
+import {
+  ALLOWED_VIDEO_MIME_TYPES,
+  MAX_MEDIA_UPLOAD_BYTES,
+  MAX_VIDEO_UPLOAD_BYTES,
+} from '@/lib/media/constants'
 import { uploadFileToSignedUrl } from '@/lib/media/upload-client'
 import {
   confirmPageBlockUpload,
@@ -158,6 +163,93 @@ function NavLabelFields({
   )
 }
 
+type HeroMediaPathField =
+  | 'imagePath'
+  | 'mobileImagePath'
+  | 'videoPath'
+  | 'mobileVideoPath'
+
+function HeroMediaUploadField({
+  label,
+  path,
+  previewUrl,
+  mediaKind,
+  required,
+  isUploading,
+  error,
+  onUpload,
+  onRemove,
+}: {
+  label: string
+  path: string | null
+  previewUrl?: string
+  mediaKind: 'image' | 'video'
+  required?: boolean
+  isUploading: boolean
+  error?: string
+  onUpload: (file: File) => void
+  onRemove: () => void
+}) {
+  return (
+    <Field invalid={!!error}>
+      <Field.Label required={required}>{label}</Field.Label>
+      <PhotoDropzone
+        kind={mediaKind === 'video' ? 'video' : 'photo'}
+        accept={
+          mediaKind === 'video' ? ALLOWED_VIDEO_MIME_TYPES : undefined
+        }
+        maxBytes={
+          mediaKind === 'video'
+            ? MAX_VIDEO_UPLOAD_BYTES
+            : MAX_MEDIA_UPLOAD_BYTES
+        }
+        hint={
+          mediaKind === 'video'
+            ? 'MP4 or WebM. Upload a web-optimised file; videos are not compressed in the browser.'
+            : 'Images are resized and compressed before upload.'
+        }
+        error={error}
+        isUploading={isUploading}
+        replaceLabel={
+          path
+            ? `Drop a ${mediaKind} to replace`
+            : `Drop a ${mediaKind} here, or click to browse`
+        }
+        onFiles={(files) => onUpload(files[0])}
+      />
+      {previewUrl ? (
+        mediaKind === 'video' ? (
+          <video
+            src={previewUrl}
+            controls
+            muted
+            preload="metadata"
+            className="border-border mt-3 max-h-56 w-full rounded-lg border object-cover"
+          />
+        ) : (
+          <img
+            src={previewUrl}
+            alt={`${label} preview`}
+            className="border-border mt-3 max-h-56 w-full rounded-lg border object-cover"
+          />
+        )
+      ) : null}
+      {path ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="mt-3 w-fit"
+          onClick={onRemove}
+        >
+          <TrashIcon />
+          Remove {label.toLowerCase()}
+        </Button>
+      ) : null}
+    </Field>
+  )
+}
+
 function BlockEditor({
   block,
   onChange,
@@ -167,51 +259,83 @@ function BlockEditor({
   onChange: (block: PageBlock) => void
   fieldErrors?: Record<string, string>
 }) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [previewUrls, setPreviewUrls] = useState<
+    Partial<Record<HeroMediaPathField, string>>
+  >({})
+  const [uploadingField, setUploadingField] =
+    useState<HeroMediaPathField | null>(null)
+  const [uploadError, setUploadError] = useState<{
+    field: HeroMediaPathField
+    message: string
+  } | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    const loadPreview = async () => {
-      const imagePath =
-        block.type === 'image' || block.type === 'hero'
-          ? block.fields.imagePath
-          : null
-      if (!imagePath) {
-        setPreviewUrl(null)
-        return
-      }
-      try {
-        const url = await getSignedPhotoUrl({
-          data: { imagePath },
-        })
-        if (!cancelled) setPreviewUrl(url)
-      } catch {
-        if (!cancelled) setPreviewUrl(null)
-      }
+    const loadPreviews = async () => {
+      const paths: Array<[HeroMediaPathField, string | null]> =
+        block.type === 'hero'
+          ? [
+              ['imagePath', block.fields.imagePath],
+              ['mobileImagePath', block.fields.mobileImagePath],
+              ['videoPath', block.fields.videoPath],
+              ['mobileVideoPath', block.fields.mobileVideoPath],
+            ]
+          : block.type === 'image'
+            ? [['imagePath', block.fields.imagePath]]
+            : []
+
+      const entries = await Promise.all(
+        paths.map(async ([field, path]) => {
+          if (!path) return [field, null] as const
+          try {
+            const url = await getSignedPhotoUrl({
+              data: { imagePath: path },
+            })
+            return [field, url] as const
+          } catch {
+            return [field, null] as const
+          }
+        }),
+      )
+      if (cancelled) return
+      setPreviewUrls(
+        Object.fromEntries(entries.filter((entry) => Boolean(entry[1]))),
+      )
     }
 
-    void loadPreview()
+    void loadPreviews()
     return () => {
       cancelled = true
     }
   }, [block])
 
-  const uploadSelectedFile = async (file: File, successMessage: string) => {
+  const uploadSelectedFile = async (
+    file: File,
+    successMessage: string,
+    field: HeroMediaPathField,
+    mediaKind: 'image' | 'video',
+  ) => {
     setUploadError(null)
-    setIsUploading(true)
+    setUploadingField(field)
     try {
-      const prepared = await prepareImageForUpload(file)
-      if (prepared.size > MAX_MEDIA_UPLOAD_BYTES) {
-        throw new Error('Image must be 12MB or smaller after compression.')
+      const prepared =
+        mediaKind === 'image' ? await prepareImageForUpload(file) : file
+      const maxBytes =
+        mediaKind === 'video'
+          ? MAX_VIDEO_UPLOAD_BYTES
+          : MAX_MEDIA_UPLOAD_BYTES
+      if (prepared.size > maxBytes) {
+        throw new Error(
+          `${mediaKind === 'video' ? 'Video must be 25MB' : 'Image must be 12MB'} or smaller${mediaKind === 'image' ? ' after compression' : ''}.`,
+        )
       }
       const signed = await createPageBlockUpload({
         data: {
           name: prepared.name,
           type: prepared.type,
           byteSize: prepared.size,
+          mediaKind,
         },
       })
       await uploadFileToSignedUrl(signed.signedUrl, prepared)
@@ -221,22 +345,29 @@ function BlockEditor({
       if (block.type === 'hero') {
         onChange({
           ...block,
-          fields: { ...block.fields, imagePath: uploaded.path },
+          fields: { ...block.fields, [field]: uploaded.path },
         })
-      } else if (block.type === 'image') {
+      } else if (block.type === 'image' && field === 'imagePath') {
         onChange({
           ...block,
           fields: { ...block.fields, imagePath: uploaded.path },
         })
       }
-      setPreviewUrl(uploaded.signedUrl)
+      if (uploaded.signedUrl) {
+        setPreviewUrls((current) => ({
+          ...current,
+          [field]: uploaded.signedUrl!,
+        }))
+      }
       toast.success(successMessage)
     } catch (err) {
-      setUploadError(
-        err instanceof Error ? err.message : 'Unable to upload image.',
-      )
+      setUploadError({
+        field,
+        message:
+          err instanceof Error ? err.message : `Unable to upload ${mediaKind}.`,
+      })
     } finally {
-      setIsUploading(false)
+      setUploadingField(null)
     }
   }
 
@@ -278,45 +409,159 @@ function BlockEditor({
             />
           </Field.Control>
         </Field>
-        <Field invalid={!!uploadError}>
-          <Field.Label>Background photo</Field.Label>
-          <PhotoDropzone
-            hint="Optional. Skip to keep the theme background."
-            error={uploadError ?? undefined}
-            isUploading={isUploading}
-            replaceLabel={
-              block.fields.imagePath ? 'Drop a photo to replace' : undefined
-            }
-            onFiles={(files) => {
-              void uploadSelectedFile(files[0], 'Hero background uploaded.')
-            }}
-          />
+        <Field>
+          <Field.Label>Background type</Field.Label>
+          <Field.Control>
+            <Select
+              value={block.fields.mediaType}
+              onChange={(event) =>
+                onChange({
+                  ...block,
+                  fields: {
+                    ...block.fields,
+                    mediaType: event.target.value as 'image' | 'video',
+                  },
+                })
+              }
+            >
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </Select>
+          </Field.Control>
+          <Field.Description>
+            Desktop is the default. Mobile media is optional and falls back to
+            desktop.
+          </Field.Description>
         </Field>
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Hero background preview"
-            className="border-border max-h-56 w-full rounded-lg border object-cover"
-          />
-        ) : null}
-        {block.fields.imagePath ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="w-fit"
-            onClick={() => {
-              onChange({
-                ...block,
-                fields: { ...block.fields, imagePath: null },
-              })
-              setPreviewUrl(null)
-            }}
-          >
-            <TrashIcon />
-            Remove background photo
-          </Button>
-        ) : null}
+
+        {block.fields.mediaType === 'image' ? (
+          <>
+            <HeroMediaUploadField
+              label="Desktop image"
+              path={block.fields.imagePath}
+              previewUrl={previewUrls.imagePath}
+              mediaKind="image"
+              isUploading={uploadingField === 'imagePath'}
+              error={
+                uploadError?.field === 'imagePath'
+                  ? uploadError.message
+                  : undefined
+              }
+              onUpload={(file) =>
+                void uploadSelectedFile(
+                  file,
+                  'Desktop hero image uploaded.',
+                  'imagePath',
+                  'image',
+                )
+              }
+              onRemove={() => {
+                onChange({
+                  ...block,
+                  fields: { ...block.fields, imagePath: null },
+                })
+                setPreviewUrls((current) => ({
+                  ...current,
+                  imagePath: undefined,
+                }))
+              }}
+            />
+            <HeroMediaUploadField
+              label="Mobile image"
+              path={block.fields.mobileImagePath}
+              previewUrl={previewUrls.mobileImagePath}
+              mediaKind="image"
+              isUploading={uploadingField === 'mobileImagePath'}
+              error={
+                uploadError?.field === 'mobileImagePath'
+                  ? uploadError.message
+                  : undefined
+              }
+              onUpload={(file) =>
+                void uploadSelectedFile(
+                  file,
+                  'Mobile hero image uploaded.',
+                  'mobileImagePath',
+                  'image',
+                )
+              }
+              onRemove={() => {
+                onChange({
+                  ...block,
+                  fields: { ...block.fields, mobileImagePath: null },
+                })
+                setPreviewUrls((current) => ({
+                  ...current,
+                  mobileImagePath: undefined,
+                }))
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <HeroMediaUploadField
+              label="Desktop video"
+              path={block.fields.videoPath}
+              previewUrl={previewUrls.videoPath}
+              mediaKind="video"
+              required
+              isUploading={uploadingField === 'videoPath'}
+              error={
+                uploadError?.field === 'videoPath'
+                  ? uploadError.message
+                  : fieldErrors?.videoPath
+              }
+              onUpload={(file) =>
+                void uploadSelectedFile(
+                  file,
+                  'Desktop hero video uploaded.',
+                  'videoPath',
+                  'video',
+                )
+              }
+              onRemove={() => {
+                onChange({
+                  ...block,
+                  fields: { ...block.fields, videoPath: null },
+                })
+                setPreviewUrls((current) => ({
+                  ...current,
+                  videoPath: undefined,
+                }))
+              }}
+            />
+            <HeroMediaUploadField
+              label="Mobile video"
+              path={block.fields.mobileVideoPath}
+              previewUrl={previewUrls.mobileVideoPath}
+              mediaKind="video"
+              isUploading={uploadingField === 'mobileVideoPath'}
+              error={
+                uploadError?.field === 'mobileVideoPath'
+                  ? uploadError.message
+                  : undefined
+              }
+              onUpload={(file) =>
+                void uploadSelectedFile(
+                  file,
+                  'Mobile hero video uploaded.',
+                  'mobileVideoPath',
+                  'video',
+                )
+              }
+              onRemove={() => {
+                onChange({
+                  ...block,
+                  fields: { ...block.fields, mobileVideoPath: null },
+                })
+                setPreviewUrls((current) => ({
+                  ...current,
+                  mobileVideoPath: undefined,
+                }))
+              }}
+            />
+          </>
+        )}
       </div>
     )
   }
@@ -413,24 +658,31 @@ function BlockEditor({
 
   if (block.type === 'image') {
     const imageInvalid = !!fieldErrors?.imagePath
+    const imageUploadError =
+      uploadError?.field === 'imagePath' ? uploadError.message : undefined
     return (
       <div className="space-y-4">
-        <Field invalid={imageInvalid || !!uploadError}>
+        <Field invalid={imageInvalid || !!imageUploadError}>
           <Field.Label required>Image</Field.Label>
           <PhotoDropzone
-            error={uploadError ?? fieldErrors?.imagePath}
-            isUploading={isUploading}
+            error={imageUploadError ?? fieldErrors?.imagePath}
+            isUploading={uploadingField === 'imagePath'}
             replaceLabel={
               block.fields.imagePath ? 'Drop a photo to replace' : undefined
             }
             onFiles={(files) => {
-              void uploadSelectedFile(files[0], 'Image uploaded.')
+              void uploadSelectedFile(
+                files[0],
+                'Image uploaded.',
+                'imagePath',
+                'image',
+              )
             }}
           />
         </Field>
-        {previewUrl ? (
+        {previewUrls.imagePath ? (
           <img
-            src={previewUrl}
+            src={previewUrls.imagePath}
             alt={block.fields.title ?? 'Block preview'}
             className="border-border max-h-56 w-full rounded-lg border object-cover"
           />
@@ -968,6 +1220,13 @@ function AdminPagesPage() {
                           next.fields.imagePath.trim()
                         ) {
                           clearBlockFieldError(next.id, 'imagePath')
+                        }
+                        if (
+                          next.type === 'hero' &&
+                          (next.fields.mediaType === 'image' ||
+                            next.fields.videoPath)
+                        ) {
+                          clearBlockFieldError(next.id, 'videoPath')
                         }
                       }}
                     />

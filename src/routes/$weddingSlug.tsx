@@ -161,11 +161,13 @@ function WeddingPublicPage() {
               block={block}
               wedding={home}
               imageUrl={home.imageUrls[block.id]}
+              heroMediaUrls={home.heroMediaUrls[block.id]}
             />
           ))}
           <RegistrySection
             initial={home.registry}
             weddingSlug={weddingSlug}
+            visitorCountry={home.visitorCountry}
           />
         </main>
       </PublicShell>

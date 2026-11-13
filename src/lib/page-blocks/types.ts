@@ -11,8 +11,15 @@ export type PageBlockType = (typeof PAGE_BLOCK_TYPES)[number]
 export type HeroBlockFields = {
   title: string | null
   tagline: string | null
+  mediaType: 'image' | 'video'
   /** Optional full-bleed background photo (storage path). */
   imagePath: string | null
+  /** Optional small-screen override; desktop image remains the fallback. */
+  mobileImagePath: string | null
+  /** Full-bleed desktop background video. */
+  videoPath: string | null
+  /** Optional small-screen override; desktop video remains the fallback. */
+  mobileVideoPath: string | null
 }
 
 /** Shown in the nav instead of the block title when the checkbox is off. */
@@ -51,6 +58,13 @@ export type HeroPageBlock = {
   id: string
   type: 'hero'
   fields: HeroBlockFields
+}
+
+export type HeroMediaUrls = {
+  desktopImage: string | null
+  mobileImage: string | null
+  desktopVideo: string | null
+  mobileVideo: string | null
 }
 
 export type StoryPageBlock = {
@@ -103,7 +117,11 @@ export function createDefaultBlock(type: PageBlockType): PageBlock {
         fields: {
           title: null,
           tagline: "We're getting married",
+          mediaType: 'image',
           imagePath: null,
+          mobileImagePath: null,
+          videoPath: null,
+          mobileVideoPath: null,
         },
       }
     case 'story':

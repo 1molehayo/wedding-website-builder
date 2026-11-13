@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react'
-import { ImageIcon } from '@phosphor-icons/react'
+import { ImageIcon, VideoCameraIcon } from '@phosphor-icons/react'
 import { Spinner } from '@/components/ui/spinner'
 import {
   ALLOWED_MEDIA_MIME_TYPES,
@@ -20,6 +20,7 @@ export function PhotoDropzone({
   disabled = false,
   isUploading = false,
   replaceLabel,
+  kind = 'photo',
   onFiles,
 }: {
   id?: string
@@ -32,6 +33,7 @@ export function PhotoDropzone({
   disabled?: boolean
   isUploading?: boolean
   replaceLabel?: string
+  kind?: 'photo' | 'video'
   onFiles: (files: File[]) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -145,6 +147,8 @@ export function PhotoDropzone({
       />
       {isUploading ? (
         <Spinner size="lg" className="text-foreground-secondary" />
+      ) : kind === 'video' ? (
+        <VideoCameraIcon className="text-foreground-secondary size-8" />
       ) : (
         <ImageIcon className="text-foreground-secondary size-8" />
       )}
@@ -154,7 +158,9 @@ export function PhotoDropzone({
           : (replaceLabel ??
             (multiple
               ? 'Drop photos here, or click to browse'
-              : 'Drop a photo here, or click to browse'))}
+              : kind === 'video'
+                ? 'Drop a video here, or click to browse'
+                : 'Drop a photo here, or click to browse'))}
       </p>
       <p className="text-foreground-secondary mt-1 text-xs">
         {typeLabel} · up to {sizeLabel}

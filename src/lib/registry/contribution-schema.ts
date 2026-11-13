@@ -198,7 +198,10 @@ export function parseStartContributionInput(
   }
 }
 
-export function emptyStartContributionForm(currency = 'USD'): {
+export function emptyStartContributionForm(
+  currency = 'USD',
+  phoneCountry: CountryCode = defaultPhoneCountry(),
+): {
   amount: string
   currency: string
   payerName: string
@@ -212,7 +215,7 @@ export function emptyStartContributionForm(currency = 'USD'): {
     currency,
     payerName: '',
     payerEmail: '',
-    phoneCountry: defaultPhoneCountry(),
+    phoneCountry,
     phoneNational: '',
     accountId: '',
   }

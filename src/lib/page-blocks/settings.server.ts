@@ -1,4 +1,5 @@
 import { recordAdminActivity } from '@/lib/activity/activity.server'
+import { getRequestHeader } from '@tanstack/react-start/server'
 import {
   getAdminSessionHandler,
   requireWeddingSession,
@@ -9,6 +10,7 @@ import {
 } from '@/lib/page-blocks/schema-error'
 import { PAGE_CONTENT_VERSION_LIMIT } from '@/lib/page-blocks/types'
 import type {
+  HeroMediaUrls,
   PageBlock,
   PageContentEditorData,
   PageContentVersion,
@@ -28,10 +30,13 @@ import {
 export type PublicHomeData = PublicWeddingSettings & {
   page_blocks: PageBlock[]
   imageUrls: Record<string, string>
+  heroMediaUrls: Record<string, HeroMediaUrls>
   /** Storage path for OG/social image (use /api/photo?path=… for durable URL). */
   ogImagePath: string | null
   registry: PublicRegistryData
   isPreview: boolean
+  /** Best-effort ISO country from the hosting edge request. */
+  visitorCountry: string | null
 }
 
 type PageContentRow = {
@@ -47,6 +52,15 @@ function readStoredPageBlocks(value: unknown): PageBlock[] {
   } catch {
     return []
   }
+}
+
+function visitorCountryFromRequest(): string | null {
+  const value =
+    getRequestHeader('x-vercel-ip-country') ??
+    getRequestHeader('cf-ipcountry') ??
+    ''
+  const country = value.trim().toUpperCase()
+  return /^[A-Z]{2}$/.test(country) && country !== 'XX' ? country : null
 }
 
 function readVersionPageBlocks(value: unknown): PageBlock[] {
@@ -422,21 +436,41 @@ export async function getPublicHomeDataHandler(
     preview: servePreview,
   })
   const imageUrls: Record<string, string> = {}
+  const heroMediaUrls: Record<string, HeroMediaUrls> = {}
   let ogImagePath: string | null = null
 
   await Promise.all(
     page_blocks.map(async (block) => {
-      const imagePath =
-        block.type === 'image'
-          ? block.fields.imagePath
-          : block.type === 'hero'
-            ? block.fields.imagePath
-            : null
-      if (!imagePath?.trim()) return
-      if (!ogImagePath) {
-        ogImagePath = imagePath.trim()
+      if (block.type === 'hero') {
+        const desktopImagePath = block.fields.imagePath?.trim() || null
+        const mobileImagePath = block.fields.mobileImagePath?.trim() || null
+        const desktopVideoPath = block.fields.videoPath?.trim() || null
+        const mobileVideoPath = block.fields.mobileVideoPath?.trim() || null
+        if (!ogImagePath && desktopImagePath) {
+          ogImagePath = desktopImagePath
+        }
+
+        const [desktopImage, mobileImage, desktopVideo, mobileVideo] =
+          await Promise.all(
+            [
+              desktopImagePath,
+              mobileImagePath,
+              desktopVideoPath,
+              mobileVideoPath,
+            ].map((path) => (path ? createPhotoSignedUrl(path) : null)),
+          )
+        heroMediaUrls[block.id] = {
+          desktopImage,
+          mobileImage,
+          desktopVideo,
+          mobileVideo,
+        }
+        return
       }
-      const url = await createPhotoSignedUrl(imagePath)
+
+      if (block.type !== 'image' || !block.fields.imagePath.trim()) return
+      if (!ogImagePath) ogImagePath = block.fields.imagePath.trim()
+      const url = await createPhotoSignedUrl(block.fields.imagePath)
       if (url) {
         imageUrls[block.id] = url
       }
@@ -463,9 +497,11 @@ export async function getPublicHomeDataHandler(
     ...toPublicSettings(weddingRow),
     page_blocks,
     imageUrls,
+    heroMediaUrls,
     ogImagePath,
     registry,
     isPreview,
+    visitorCountry: visitorCountryFromRequest(),
   }
 }
 
@@ -480,6 +516,7 @@ export async function createPageBlockUploadHandler(input: {
   name: string
   type: string
   byteSize: number
+  mediaKind: 'image' | 'video'
 }) {
   await requireWeddingSession()
   return createPageBlockSignedUpload(input)
