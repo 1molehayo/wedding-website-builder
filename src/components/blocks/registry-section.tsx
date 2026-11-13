@@ -48,90 +48,211 @@ function priceLine(
   return priceLabel
 }
 
-function GiftItemCard({
+function giftPhotoUrl(path: string) {
+  return `/api/photo?path=${encodeURIComponent(path)}`
+}
+
+function GiftItemActions({
   item,
+  canContribute,
   onContribute,
 }: {
   item: PublicRegistryItem
+  canContribute: boolean
   onContribute: () => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {item.listings.map((listing) => (
+        <Button key={listing.provider} type="button" size="sm" asChild>
+          <a href={listing.url} target="_blank" rel="noopener noreferrer">
+            {listing.provider === 'amazon' ? 'Buy on Amazon' : listing.label}
+          </a>
+        </Button>
+      ))}
+      {canContribute ? (
+        <Button
+          type="button"
+          size="sm"
+          variant={item.listings.length > 0 ? 'outline' : undefined}
+          onClick={onContribute}
+        >
+          Send money
+        </Button>
+      ) : null}
+    </div>
+  )
+}
+
+function GiftItemCard({
+  item,
+  onContribute,
+  onViewDetails,
+}: {
+  item: PublicRegistryItem
+  onContribute: () => void
+  onViewDetails: () => void
 }) {
   const canContribute = item.is_open && item.prices.length > 0
   const line = priceLine(item.prices, item.price_label)
 
   return (
-    <article className="border-border space-y-4 border-b py-8 last:border-b-0">
+    <article className="flex h-full flex-col gap-3">
       {item.photo_path ? (
-        <img
-          src={`/api/photo?path=${encodeURIComponent(item.photo_path)}`}
-          alt={item.title}
-          className="h-48 w-full max-w-md rounded-md object-cover"
-        />
+        <button
+          type="button"
+          className="block w-full overflow-hidden rounded-md text-left"
+          onClick={onViewDetails}
+          aria-label={`View details for ${item.title}`}
+        >
+          <img
+            src={giftPhotoUrl(item.photo_path)}
+            alt=""
+            className="aspect-[4/3] w-full object-cover transition hover:opacity-95"
+          />
+        </button>
       ) : null}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 max-w-xl">
+
+      <div className="min-w-0 space-y-2">
+        <button
+          type="button"
+          className="w-full text-left"
+          onClick={onViewDetails}
+        >
+          <h3 className="font-serif line-clamp-2 text-xl italic md:text-2xl">
+            {item.title}
+          </h3>
+        </button>
+        {item.description ? (
+          <p className="text-foreground-secondary line-clamp-3 text-sm leading-relaxed">
+            {item.description}
+          </p>
+        ) : null}
+        {line ? (
+          <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
+            {line}
+          </p>
+        ) : null}
+        {!canContribute && item.prices.length > 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            This gift is fully funded. Thank you.
+          </p>
+        ) : null}
+        {!canContribute &&
+        item.prices.length === 0 &&
+        item.listings.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            This gift is not open for contributions yet.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="mt-auto flex flex-wrap items-center gap-3 pt-1">
+        <GiftItemActions
+          item={item}
+          canContribute={canContribute}
+          onContribute={onContribute}
+        />
+        <button
+          type="button"
+          className="text-foreground text-xs tracking-[0.14em] uppercase underline-offset-4 transition hover:underline"
+          onClick={onViewDetails}
+        >
+          View details
+        </button>
+      </div>
+    </article>
+  )
+}
+
+function GiftDetailsDrawer({
+  open,
+  onOpenChange,
+  item,
+  onContribute,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  item: PublicRegistryItem | null
+  onContribute: () => void
+}) {
+  if (!item) return null
+
+  const canContribute = item.is_open && item.prices.length > 0
+  const line = priceLine(item.prices, item.price_label)
+  const hasAmazon = item.listings.some(
+    (listing) => listing.provider === 'amazon',
+  )
+
+  return (
+    <SideDrawer open={open} onOpenChange={onOpenChange}>
+      <SideDrawer.Header
+        title="Gift details"
+        drawerDescription={item.title}
+      />
+      <SideDrawer.Content className="space-y-5">
+        {item.photo_path ? (
+          <img
+            src={giftPhotoUrl(item.photo_path)}
+            alt=""
+            className="aspect-[4/3] w-full rounded-md object-cover"
+          />
+        ) : null}
+        <div className="space-y-3">
           <h3 className="font-serif text-2xl italic md:text-3xl">
             {item.title}
           </h3>
           {item.description ? (
-            <p className="text-foreground-secondary mt-3 text-sm leading-relaxed md:text-base">
+            <p className="text-foreground-secondary text-sm leading-relaxed md:text-base">
               {item.description}
             </p>
           ) : null}
           {line ? (
-            <p className="text-foreground-secondary mt-3 text-xs tracking-[0.14em] uppercase">
+            <p className="text-foreground-secondary text-xs tracking-[0.14em] uppercase">
               {line}
             </p>
           ) : null}
-        </div>
-        {item.store_url ? (
-          <a
-            href={item.store_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-foreground text-xs tracking-[0.14em] uppercase underline-offset-4 transition hover:underline"
-          >
-            View product
-          </a>
-        ) : null}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {item.listings.map((listing) => (
-          <Button key={listing.provider} type="button" size="sm" asChild>
-            <a href={listing.url} target="_blank" rel="noopener noreferrer">
-              {listing.provider === 'amazon' ? 'Buy on Amazon' : listing.label}
+          {item.store_url ? (
+            <a
+              href={item.store_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground inline-block text-xs tracking-[0.14em] uppercase underline-offset-4 transition hover:underline"
+            >
+              View product
             </a>
-          </Button>
-        ))}
-        {canContribute ? (
-          <Button
-            type="button"
-            size="sm"
-            variant={item.listings.length > 0 ? 'outline' : undefined}
-            onClick={onContribute}
-          >
-            Send money
-          </Button>
+          ) : null}
+        </div>
+
+        <GiftItemActions
+          item={item}
+          canContribute={canContribute}
+          onContribute={() => {
+            onOpenChange(false)
+            onContribute()
+          }}
+        />
+
+        {hasAmazon ? (
+          <p className="text-foreground-secondary text-sm leading-relaxed">
+            Amazon opens the wedding list. Find this gift: {item.title}.
+          </p>
         ) : null}
-      </div>
-      {item.listings.some((listing) => listing.provider === 'amazon') ? (
-        <p className="text-foreground-secondary text-sm leading-relaxed">
-          Amazon opens the wedding list. Find this gift: {item.title}.
-        </p>
-      ) : null}
-      {!canContribute && item.prices.length > 0 ? (
-        <p className="text-foreground-secondary text-sm">
-          This gift is fully funded. Thank you.
-        </p>
-      ) : null}
-      {!canContribute &&
-      item.prices.length === 0 &&
-      item.listings.length === 0 ? (
-        <p className="text-foreground-secondary text-sm">
-          This gift is not open for contributions yet.
-        </p>
-      ) : null}
-    </article>
+
+        {!canContribute && item.prices.length > 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            This gift is fully funded. Thank you.
+          </p>
+        ) : null}
+        {!canContribute &&
+        item.prices.length === 0 &&
+        item.listings.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            This gift is not open for contributions yet.
+          </p>
+        ) : null}
+      </SideDrawer.Content>
+    </SideDrawer>
   )
 }
 
@@ -760,6 +881,10 @@ export function RegistrySection({
   const accounts = initial.accounts
   const [target, setTarget] = useState<ContributeTarget | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [detailsItem, setDetailsItem] = useState<PublicRegistryItem | null>(
+    null,
+  )
+  const [detailsOpen, setDetailsOpen] = useState(false)
 
   if (!initial.hasContent) return null
 
@@ -768,12 +893,17 @@ export function RegistrySection({
     setDrawerOpen(true)
   }
 
+  const openDetails = (item: PublicRegistryItem) => {
+    setDetailsItem(item)
+    setDetailsOpen(true)
+  }
+
   return (
     <section
       id="registry"
       className="public-section border-border scroll-mt-28 border-t px-6 sm:scroll-mt-24"
     >
-      <div className="public-reveal mx-auto max-w-3xl">
+      <div className="public-reveal mx-auto max-w-6xl">
         <div className="mb-10 text-center md:mb-14">
           <p className="public-kicker mb-4">Registry</p>
           <h2 className="public-section-title">With love</h2>
@@ -785,14 +915,17 @@ export function RegistrySection({
 
         {items.length > 0 ? (
           <div className={cn(accounts.length > 0 && 'mb-12')}>
-            <p className="public-kicker mb-2">Gift ideas</p>
-            {items.map((item) => (
-              <GiftItemCard
-                key={item.id}
-                item={item}
-                onContribute={() => openContribute({ kind: 'gift', item })}
-              />
-            ))}
+            <p className="public-kicker mb-4">Gift ideas</p>
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10 lg:gap-x-10">
+              {items.map((item) => (
+                <GiftItemCard
+                  key={item.id}
+                  item={item}
+                  onViewDetails={() => openDetails(item)}
+                  onContribute={() => openContribute({ kind: 'gift', item })}
+                />
+              ))}
+            </div>
           </div>
         ) : null}
 
@@ -815,6 +948,19 @@ export function RegistrySection({
           </div>
         ) : null}
       </div>
+
+      <GiftDetailsDrawer
+        open={detailsOpen}
+        onOpenChange={(open) => {
+          setDetailsOpen(open)
+          if (!open) setDetailsItem(null)
+        }}
+        item={detailsItem}
+        onContribute={() => {
+          if (!detailsItem) return
+          openContribute({ kind: 'gift', item: detailsItem })
+        }}
+      />
 
       <ContributeDrawer
         key={
