@@ -46,6 +46,8 @@ export type Wedding = {
   venue_name: string | null
   venue_location: string | null
   dress_code: string | null
+  /** Public site strip; null/empty hides the bar. */
+  announcement_text: string | null
   active_public_theme: PublicThemeId
   public_slug: string
   /** Selected e-invitation catalog id (e.g. wreath). */

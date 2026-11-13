@@ -11,6 +11,7 @@ export type PublicWeddingSettings = {
   venue_name: string | null
   venue_location: string | null
   dress_code: string | null
+  announcement_text: string | null
   active_public_theme: PublicThemeId
   status: WeddingStatus
   public_slug: string | null
@@ -28,6 +29,7 @@ export const FALLBACK_PUBLIC_WEDDING: PublicWeddingSettings = {
   venue_name: null,
   venue_location: null,
   dress_code: null,
+  announcement_text: null,
   active_public_theme: FALLBACK_PUBLIC_THEME,
   status: 'planning',
   public_slug: null,
@@ -71,6 +73,7 @@ export function toPublicSettings(
     | 'venue_name'
     | 'venue_location'
     | 'dress_code'
+    | 'announcement_text'
     | 'active_public_theme'
     | 'status'
     | 'public_slug'
@@ -81,6 +84,7 @@ export function toPublicSettings(
   }
 
   const publicDate = resolvePublicWeddingDate(wedding)
+  const announcement = wedding.announcement_text?.trim() || null
 
   return {
     groom_name: wedding.groom_name,
@@ -90,6 +94,7 @@ export function toPublicSettings(
     venue_name: wedding.venue_name,
     venue_location: wedding.venue_location,
     dress_code: wedding.dress_code,
+    announcement_text: announcement,
     active_public_theme: wedding.active_public_theme,
     status: wedding.status,
     public_slug: wedding.public_slug,

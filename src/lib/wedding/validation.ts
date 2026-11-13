@@ -30,6 +30,7 @@ export type UpdateWeddingInput = {
   venue_name: string | null
   venue_location: string | null
   dress_code: string | null
+  announcement_text: string | null
   active_public_theme: PublicThemeId
   public_slug: string
   invitation_design_id: InvitationDesignId
@@ -152,6 +153,10 @@ export function parseUpdateWeddingInput(data: unknown): UpdateWeddingInput {
     venue_name: optionalText(input.venue_name, 'Venue name'),
     venue_location: optionalText(input.venue_location, 'Venue location'),
     dress_code: optionalText(input.dress_code, 'Dress code'),
+    announcement_text: optionalText(
+      input.announcement_text,
+      'Announcement',
+    ),
     active_public_theme: parseTheme(input.active_public_theme),
     // Empty is allowed here; update handler restores the saved create-time slug.
     public_slug:

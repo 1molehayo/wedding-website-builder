@@ -202,6 +202,7 @@ export function PublicShell({
   coupleLabel = 'Wedding',
   weddingDate = null,
   showWeddingDate = true,
+  announcementText = null,
   sectionNav = [],
   homePath = '/',
 }: {
@@ -212,10 +213,13 @@ export function PublicShell({
   weddingDate?: string | null
   /** When false, footer omits the date line (e.g. RSVP error). */
   showWeddingDate?: boolean
+  /** Slim top strip; hidden when empty. */
+  announcementText?: string | null
   sectionNav?: PublicSectionNavItem[]
   /** Couple brand link target (wedding slug path). */
   homePath?: string
 }) {
+  const announcement = announcementText?.trim() || null
   const showSectionNav = sectionNav.length > 1
   const headerRef = useRef<HTMLElement>(null)
   const urlSyncReady = useRef(false)
@@ -262,7 +266,7 @@ export function PublicShell({
       observer.disconnect()
       document.documentElement.style.removeProperty('--public-header-height')
     }
-  }, [showSectionNav])
+  }, [showSectionNav, announcement])
 
   useEffect(() => {
     if (didApplyHash.current) {
@@ -341,6 +345,14 @@ export function PublicShell({
             : 'border-b border-transparent bg-transparent',
         )}
       >
+        {announcement ? (
+          <div
+            role="status"
+            className="bg-accent text-background px-4 py-2 text-center text-sm leading-snug"
+          >
+            {announcement}
+          </div>
+        ) : null}
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-6">
           <a
             href={homePath}

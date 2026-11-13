@@ -54,6 +54,7 @@ type FormState = {
   venue_name: string
   venue_location: string
   dress_code: string
+  announcement_text: string
   active_public_theme: PublicThemeId
   public_slug: string
   invitation_design_id: InvitationDesignId
@@ -69,6 +70,7 @@ function weddingToForm(wedding: Wedding): FormState {
     venue_name: wedding.venue_name ?? '',
     venue_location: wedding.venue_location ?? '',
     dress_code: wedding.dress_code ?? '',
+    announcement_text: wedding.announcement_text ?? '',
     active_public_theme: wedding.active_public_theme,
     public_slug: wedding.public_slug,
     invitation_design_id: isInvitationDesignId(wedding.invitation_design_id)
@@ -284,6 +286,7 @@ function AdminWeddingSettingsPage() {
           venue_name: form.venue_name || null,
           venue_location: form.venue_location || null,
           dress_code: form.dress_code || null,
+          announcement_text: form.announcement_text || null,
           active_public_theme: form.active_public_theme,
           public_slug: publicSlug,
           invitation_design_id: form.invitation_design_id,
@@ -315,8 +318,8 @@ function AdminWeddingSettingsPage() {
       <div>
         <h1 className="admin-page-title">Wedding settings</h1>
         <p className="text-foreground-secondary mt-2 text-sm">
-          Couple details, venue, dress code, public theme, and status. Edit page
-          sections under Page content.
+          Couple details, venue, announcement, dress code, public theme, and
+          status. Edit page sections under Page content.
         </p>
       </div>
 
@@ -501,6 +504,29 @@ function AdminWeddingSettingsPage() {
                 onChange={(event) => setField('dress_code', event.target.value)}
               />
             </Field.Control>
+          </Field>
+        </div>
+
+        <div className="bg-surface border-border space-y-4 rounded-xl border p-5">
+          <p className="text-foreground-secondary text-xs tracking-[0.16em] uppercase">
+            Public announcement
+          </p>
+          <Field>
+            <Field.Label>Announcement bar</Field.Label>
+            <Field.Control>
+              <Input
+                value={form.announcement_text}
+                maxLength={200}
+                placeholder="e.g. Ceremony starts promptly at 3pm"
+                onChange={(event) =>
+                  setField('announcement_text', event.target.value)
+                }
+              />
+            </Field.Control>
+            <Field.Description>
+              Shown as a slim strip at the top of the public website. Leave
+              blank to hide it.
+            </Field.Description>
           </Field>
         </div>
 

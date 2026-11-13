@@ -150,6 +150,7 @@ function WeddingPublicPage() {
         theme={home.active_public_theme}
         coupleLabel={formatCoupleNames(home.groom_name, home.bride_name)}
         weddingDate={home.wedding_date}
+        announcementText={home.announcement_text}
         sectionNav={sectionNav}
         homePath={`/${weddingSlug}`}
       >

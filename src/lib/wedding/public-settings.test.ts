@@ -46,12 +46,14 @@ describe('toPublicSettings', () => {
       venue_name: null,
       venue_location: null,
       dress_code: null,
+      announcement_text: '  Parking at the side gate  ',
       active_public_theme: 'celeste',
       status: 'planning',
       public_slug: 'ada-theo-2026',
     })
 
     expect(publicSettings.wedding_date).toBeNull()
+    expect(publicSettings.announcement_text).toBe('Parking at the side gate')
     expect(formatWeddingDate(publicSettings.wedding_date)).toBe(
       'Date to be announced',
     )

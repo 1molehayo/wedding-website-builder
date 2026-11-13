@@ -113,7 +113,8 @@ What QA should check:
 
 ### 2. Wedding settings and design
 
-Admins can manage the couple's names, wedding date, venue, dress code, public
+Admins can manage the couple's names, wedding date, venue, announcement bar,
+dress code, public
 URL, invitation-card design, and public theme.
 
 There are four public themes:
@@ -340,7 +341,6 @@ shortest create-invite-RSVP journey:
 ### Useful additions under discussion
 
 - More descriptive plus-one policies instead of only a number.
-- An announcement bar on the public wedding site.
 - Choosing an existing Media image while editing Page Content.
 - More public-site motion, while respecting reduced-motion settings.
 

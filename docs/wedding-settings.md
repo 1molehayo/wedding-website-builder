@@ -75,6 +75,15 @@ Publishing the wedding date automatically changes **Planning** to **Date confirm
 
 These details appear on the public site only when a **Details** block is included and its venue or dress-code options are switched on.
 
+## Add a public announcement
+
+1. Find the **Public announcement** section.
+2. Enter a short message for the top strip on the public website (for example a ceremony time note).
+3. Leave the field blank if you do not want a strip.
+4. Select **Save settings**.
+
+The strip appears on the public wedding website only when the message is not empty.
+
 ## Choose the website theme
 
 The theme controls the public website's colours and overall style.
@@ -105,5 +114,6 @@ Check that:
 - the public website address is available;
 - the date is correct before publishing;
 - the venue and dress code are easy to understand;
+- the announcement bar text is correct or blank to hide it;
 - the selected theme is readable; and
 - you selected **Save settings**.

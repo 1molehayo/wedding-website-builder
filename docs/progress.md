@@ -33,8 +33,8 @@ Do not add test data on production.
 - Gift registry with multi-currency gift prices, accepted bank accounts, direct
   donations, live FX with a locked contribution rate, guest confirmation,
   reminders, transfer audit, and manually recorded Amazon purchases.
-- Activity history, admin notification inbox, feedback backlog, support email,
-  privacy page, and cookie page.
+- Activity history, admin notification inbox, optional public announcement bar,
+  feedback backlog, support email, privacy page, and cookie page.
 - Rich-text content blocks sanitized on save/render without a browser-only DOM
   dependency.
 - Comma-separated `PRODUCTION_SUPER_ADMIN_EMAIL` support for multiple bootstrap
@@ -65,8 +65,9 @@ Do not add test data on production.
 | Production  | [igbeyawowa.app](https://www.igbeyawowa.app/)      | Do not infer from local/demo state                | Keep free of test data                             |
 
 Relevant migrations include registry contributions/activity, Amazon listings,
-and admin notifications. Record the actual applied migration state here after
-each deployment rather than assuming that a successful code deploy applied it.
+admin notifications, and `weddings.announcement_text`. Record the actual
+applied migration state here after each deployment rather than assuming that a
+successful code deploy applied it.
 
 ### Remaining product work
 
@@ -80,7 +81,6 @@ each deployment rather than assuming that a successful code deploy applied it.
 ### Optional backlog
 
 - Richer plus-one policy types (today it is a number).
-- Public announcement bar.
 - Pick an existing Media item from Page Content.
 - Additional public-site motion, with reduced-motion support.
 - Later platform work: typography picker, subscriptions, multi-wedding
@@ -89,11 +89,10 @@ each deployment rather than assuming that a successful code deploy applied it.
 
 ### Recent changes
 
-- Nov 12: TanStack Query for admin list pages (QueryClient +
-  `defaultGcTime: 0`) to stop stale-nav / 500 flashes; Phase 3 Query for
-  notification bell, contribute FX quotes, and address search; FX subscribe +
-  unavailable alert; Amazon optional docs; mobile nav auto-center; WhatsApp
-  invite parity; multi-account chooser.
+- Nov 12: Public announcement bar (`weddings.announcement_text`); TanStack
+  Query for admin lists, notification bell, contribute FX quotes, and address
+  search; FX subscribe + unavailable alert; Amazon optional docs; mobile nav
+  auto-center; WhatsApp invite parity; multi-account chooser.
 - Nov 9: registry contribution, FX, reminders, Amazon recording, activity log,
   notification inbox, legal pages, image lightbox, and rich-text block.
 - Nov 9: compact currency selector, nested modal/drawer fix, server sanitizer
@@ -359,9 +358,7 @@ You asked to ship these while you slept. They exist in the repo. They were **not
 ### 2. Discussed, not built (still open)
 
 - **Plus-one policy types** — you asked to discuss later: no extras / one plus-one / nuclear family only / any extras with a cap. Today it is only a **number** (`plus_ones`).
-- **Announcement bar** — admin setting; hide when empty. Requested Aug 10.
 - **Pick from Media** in Page Content (hero/image blocks still upload on their own).
-- **Real header notifications** — bell is a placeholder.
 - **Launch checklist** — production smoke test, Auth OTP templates, Resend domain, env, content freeze.
 
 ### 3. Explicitly deferred

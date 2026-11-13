@@ -24,7 +24,7 @@ export async function getPublicWeddingSettingsHandler(
     let query = admin
       .from('weddings')
       .select(
-        'groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug',
+        'groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, announcement_text, active_public_theme, status, public_slug',
       )
 
     if (weddingSlug) {
@@ -154,6 +154,7 @@ export async function updateWeddingHandler(
       venue_name: data.venue_name,
       venue_location: data.venue_location,
       dress_code: data.dress_code,
+      announcement_text: data.announcement_text,
       active_public_theme: data.active_public_theme,
       public_slug: publicSlug,
       invitation_design_id: data.invitation_design_id,

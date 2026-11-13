@@ -361,9 +361,9 @@ export async function getPublicHomeDataHandler(
 ): Promise<PublicHomeData> {
   const admin = createAdminSupabaseClient()
   const liveSelect =
-    'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks' as const
+    'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, announcement_text, active_public_theme, status, public_slug, page_blocks' as const
   const previewSelect =
-    'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, active_public_theme, status, public_slug, page_blocks, page_blocks_draft' as const
+    'id, groom_name, bride_name, wedding_date, date_published_at, venue_name, venue_location, dress_code, announcement_text, active_public_theme, status, public_slug, page_blocks, page_blocks_draft' as const
   let servePreview = preview
   let result = servePreview
     ? await admin
@@ -409,6 +409,7 @@ export async function getPublicHomeDataHandler(
     venue_name: string | null
     venue_location: string | null
     dress_code: string | null
+    announcement_text: string | null
     active_public_theme: PublicWeddingSettings['active_public_theme']
     status: PublicWeddingSettings['status']
     public_slug: string

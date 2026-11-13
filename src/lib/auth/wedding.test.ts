@@ -13,6 +13,7 @@ describe('wedding date contract', () => {
       venue_name: null,
       venue_location: 'Chicago',
       dress_code: 'Formal attire',
+      announcement_text: null,
       active_public_theme: 'celeste',
       public_slug: 'ada-theo-2026',
       invitation_design_id: 'wreath',
