@@ -14,7 +14,7 @@ fictional couple **Theo & Ada**.
 
 Do not add test data on production.
 
-## Current snapshot — Nov 12, 2026
+## Current snapshot — Nov 14, 2026
 
 - Branch: `main`
 - Demo / staging: [demo.igbeyawowa.app](https://demo.igbeyawowa.app)
@@ -22,8 +22,9 @@ Do not add test data on production.
 
 ### Shipped in the application
 
-- Four themed public wedding sites with configurable page blocks, draft
-  preview, publishing, SEO metadata, and image lightboxes.
+- Four themed public wedding sites with configurable page blocks, saved-draft
+  preview, publishing, SEO metadata, responsive images and videos, and image
+  lightboxes.
 - Passwordless admin sign-in, onboarding, `super_admin` and `admin` roles,
   invitations, profile management, and account deletion requests.
 - Guest management, individual/bulk invitation email, WhatsApp sharing,
@@ -39,6 +40,9 @@ Do not add test data on production.
   dependency.
 - Comma-separated `PRODUCTION_SUPER_ADMIN_EMAIL` support for multiple bootstrap
   super admins.
+- Page content supports Hero, Story, Text, Image, Video, and Details blocks.
+  Hero media supports desktop/mobile images or videos; Image and Video remain
+  separate responsive block types.
 
 ### On `main`; verify after deployment
 
@@ -55,6 +59,15 @@ Do not add test data on production.
   required/optional labels; gift price currencies limited to enabled bank
   account currencies; multi same-currency account chooser on Send money;
   compact live FX equivalent under the amount field.
+- Gift contribution currency and phone-country defaults use the visitor's
+  location when a matching enabled account exists. Returning to a gift's base
+  currency restores its original amount.
+- Guest invitation email and WhatsApp copy include all captured guest details,
+  including private notes where appropriate.
+- Sidebar and Overview use **View website** for the live site. Saved-draft
+  **Preview website** is available only from Page content.
+- Public section tracking no longer rewrites the URL during natural scrolling,
+  and tall sections can become active without viewport jumps.
 
 ### Environment verification
 
@@ -65,9 +78,10 @@ Do not add test data on production.
 | Production  | [igbeyawowa.app](https://www.igbeyawowa.app/)      | Do not infer from local/demo state                | Keep free of test data                             |
 
 Relevant migrations include registry contributions/activity, Amazon listings,
-admin notifications, and `weddings.announcement_text`. Record the actual
-applied migration state here after each deployment rather than assuming that a
-successful code deploy applied it.
+admin notifications, `weddings.announcement_text`, and
+`20261113030000_hero_video_storage.sql` for MP4/WebM page media. Record the
+actual applied migration state here after each deployment rather than assuming
+that a successful code deploy applied it.
 
 ### Remaining product work
 
@@ -89,6 +103,11 @@ successful code deploy applied it.
 
 ### Recent changes
 
+- Nov 14: responsive Image and separate Video blocks; responsive hero media;
+  location-aware contribution defaults; gift base-currency reset; more
+  prominent gift prices; live-site versus draft-preview action separation;
+  complete guest details in email/WhatsApp invites; stable public section
+  scrolling.
 - Nov 12: Public announcement bar (`weddings.announcement_text`); TanStack
   Query for admin lists, notification bell, contribute FX quotes, and address
   search; FX subscribe + unavailable alert; Amazon optional docs; mobile nav
