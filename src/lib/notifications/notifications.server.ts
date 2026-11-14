@@ -1,7 +1,9 @@
 import {
   notificationHrefForAction,
+  parseNotificationHref,
   shouldNotifyAction,
 } from '@/lib/notifications/notify-rules'
+import type { NotificationHref } from '@/lib/notifications/notify-rules'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 
 export type AdminNotificationItem = {
@@ -9,7 +11,7 @@ export type AdminNotificationItem = {
   wedding_id: string | null
   action: string
   summary: string
-  href: string | null
+  href: NotificationHref
   read_at: string | null
   created_at: string
 }
@@ -17,6 +19,7 @@ export type AdminNotificationItem = {
 export type ListNotificationsResult = {
   items: AdminNotificationItem[]
   unreadCount: number
+  total: number
 }
 
 async function listRecipientIds(input: {
@@ -89,19 +92,23 @@ export async function fanOutNotifications(input: {
 
 export async function listNotificationsHandler(input: {
   limit?: number
+  offset?: number
 }): Promise<ListNotificationsResult> {
   const { requireAdminSession } = await import('@/lib/auth/session.server')
   const session = await requireAdminSession()
   const admin = createAdminSupabaseClient()
   const limit = Math.min(50, Math.max(1, input.limit ?? 30))
+  const offset = Math.max(0, input.offset ?? 0)
 
   const [listResult, unreadResult] = await Promise.all([
     admin
       .from('admin_notifications')
-      .select('id, wedding_id, action, summary, href, read_at, created_at')
+      .select('id, wedding_id, action, summary, href, read_at, created_at', {
+        count: 'exact',
+      })
       .eq('recipient_id', session.user.id)
       .order('created_at', { ascending: false })
-      .limit(limit),
+      .range(offset, offset + limit - 1),
     admin
       .from('admin_notifications')
       .select('id', { count: 'exact', head: true })
@@ -118,11 +125,12 @@ export async function listNotificationsHandler(input: {
       wedding_id: row.wedding_id,
       action: row.action,
       summary: row.summary,
-      href: row.href,
+      href: parseNotificationHref(row.href),
       read_at: row.read_at,
       created_at: row.created_at,
     })),
     unreadCount: unreadResult.count ?? 0,
+    total: listResult.count ?? 0,
   }
 }
 

@@ -939,9 +939,6 @@ function AdminPagesPage() {
   const queryClient = useQueryClient()
   const { data: pagesQueryData = initial } = useQuery(pageBlocksQueryOptions())
   const [blocks, setBlocks] = useState<PageBlock[]>(pagesQueryData.draft)
-  const [persistedDraft, setPersistedDraft] = useState<PageBlock[]>(
-    pagesQueryData.draft,
-  )
   const [published, setPublished] = useState<PageBlock[]>(
     pagesQueryData.published,
   )
@@ -971,19 +968,10 @@ function AdminPagesPage() {
     draftUpdatedAt,
     publishedAt,
   })
-  const canPreviewDraft =
-    Boolean(publicSlug) &&
-    !isPageContentLive({
-      draft: persistedDraft,
-      published,
-      draftUpdatedAt,
-      publishedAt,
-    })
   const busy = isSavingDraft || isPublishing || isResetting || isRestoring
 
   const applyEditor = (data: PageContentEditorData) => {
     setBlocks(data.draft)
-    setPersistedDraft(data.draft)
     setPublished(data.published)
     setDraftUpdatedAt(data.draftUpdatedAt)
     setPublishedAt(data.publishedAt)
@@ -1177,39 +1165,60 @@ function AdminPagesPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="admin-page-title">Page content</h1>
-            <Badge size="sm" variant={isLive ? 'success' : 'draft'}>
-              {isLive ? 'Published' : 'Draft'}
-            </Badge>
-          </div>
-          <p className="text-foreground-secondary mt-2 max-w-xl text-sm leading-relaxed">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="admin-page-title">Page content</h1>
+          <Badge size="sm" variant={isLive ? 'success' : 'draft'}>
+            {isLive ? 'Published' : 'Draft'}
+          </Badge>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-foreground-secondary max-w-xl text-sm leading-relaxed">
             Sections on the public home page. Save a draft to preview, then
             publish to go live.
           </p>
+          <div className="flex items-center gap-3">
+            {publicSlug ? (
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  to="/$weddingSlug"
+                  params={{ weddingSlug: publicSlug }}
+                  search={{ preview: true }}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Preview saved draft website"
+                >
+                  <EyeIcon />
+                  Preview website
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="sm" variant="outline">
+                <Link to="/admin/settings">Set public URL</Link>
+              </Button>
+            )}
+            {blocks.length > 0 ? (
+              <button
+                type="button"
+                className="text-foreground-secondary hover:text-foreground text-sm"
+                onClick={() => {
+                  if (allOpen) setOpenIds(new Set())
+                  else setOpenIds(new Set(blocks.map((block) => block.id)))
+                }}
+              >
+                {allOpen ? 'Collapse all' : 'Expand all'}
+              </button>
+            ) : null}
+          </div>
         </div>
-        {blocks.length > 0 ? (
-          <button
-            type="button"
-            className="text-foreground-secondary hover:text-foreground text-sm"
-            onClick={() => {
-              if (allOpen) setOpenIds(new Set())
-              else setOpenIds(new Set(blocks.map((block) => block.id)))
-            }}
-          >
-            {allOpen ? 'Collapse all' : 'Expand all'}
-          </button>
-        ) : null}
       </div>
 
       {blocks.length === 0 ? (
         <div className="border-border bg-surface rounded-xl border border-dashed px-6 py-12 text-center">
           <p className="text-lg font-medium">No sections yet</p>
           <p className="text-foreground-secondary mx-auto mt-2 max-w-md text-sm leading-relaxed">
-            Add a hero, story, text, photo, or details block. This draft stays
-            off the live site until you publish.
+            Add a hero, story, text, image, video, or details block. This draft
+            stays off the live site until you publish.
           </p>
           <div className="mt-6 flex justify-center">
             <AddItemButton
@@ -1377,27 +1386,6 @@ function AdminPagesPage() {
       />
 
       <PageActionBar lastUpdatedAt={draftUpdatedAt}>
-        {canPreviewDraft && publicSlug ? (
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="max-md:w-(--button-height) max-md:px-0"
-          >
-            <Link
-              to="/$weddingSlug"
-              params={{ weddingSlug: publicSlug }}
-              search={{ preview: true }}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Preview website"
-              title="Preview website"
-            >
-              <EyeIcon />
-              <span className="hidden md:inline">Preview website</span>
-            </Link>
-          </Button>
-        ) : null}
         <Button
           type="button"
           size="sm"
