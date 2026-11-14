@@ -4,7 +4,7 @@ Open **Page content** to build the sections on the public wedding website.
 
 The page is made from small sections called **blocks**. You can add, edit, copy, remove, and rearrange these blocks.
 
-## Understand the five block types
+## Understand the six block types
 
 ### Hero
 
@@ -14,9 +14,13 @@ Use it to:
 
 - show the couple's names, or enter a different title;
 - add a short tagline such as “We're getting married”; and
-- add an optional full-width background photo.
+- choose an image or video background;
+- upload a required desktop version and an optional mobile version.
 
-Leave **Title override** empty to use the names from Wedding settings. One Hero block is usually enough.
+Mobile media falls back to the desktop upload. Switching between image and
+video keeps both uploads; video is shown when Video is selected. Leave **Title
+override** empty to use the names from Wedding settings. One Hero block is
+usually enough.
 
 ### Story
 
@@ -50,11 +54,26 @@ A photo section inside the public website.
 
 It has:
 
-- one required image;
+- one required desktop image;
+- an optional mobile image that falls back to desktop;
 - an optional title; and
 - an optional description.
 
 This is different from **Media**. An Image block appears on the public wedding website. Photos in Media are used for private guest albums.
+
+### Video
+
+A video section with guest-controlled playback.
+
+It has:
+
+- one required desktop MP4 or WebM video;
+- an optional mobile video that falls back to desktop;
+- an optional title; and
+- an optional description.
+
+Videos can be up to 25 MB and are not compressed in the browser. Upload a
+web-optimised file.
 
 ### Details
 
@@ -74,10 +93,12 @@ The gift registry is managed on the separate **Registry** page. It is not a Page
 ## Add a block
 
 1. Select **Add item**.
-2. Choose **Hero**, **Story**, **Text**, **Image**, or **Details**.
-3. The new block opens automatically.
-4. Fill in its information.
-5. Select **Save draft**.
+2. Review the visual previews and descriptions.
+3. Choose **Hero**, **Story**, **Text**, **Image**, **Video**, or **Details**.
+4. Read the confirmation notification explaining what was added.
+5. The new block opens automatically.
+6. Fill in its information.
+7. Select **Save draft**.
 
 Saving the draft does not change the live website.
 
@@ -87,7 +108,7 @@ Select a block's name to open or close it. Use **Expand all** to open every bloc
 
 ## Change the website menu name
 
-Story, Text, Image, and Details blocks can appear in the public website's menu.
+Story, Text, Image, Video, and Details blocks can appear in the public website's menu.
 
 - Keep **Use title in nav** switched on to use the block title.
 - Switch it off and enter a **Nav label** to use a shorter menu name.
@@ -125,18 +146,20 @@ The live website stays unchanged until you publish.
 
 1. Finish editing.
 2. Select **Save draft**.
-3. Select **Preview draft**.
+3. Select **Preview website**.
 4. Check the page on both a phone and a computer if possible.
 5. Return to Page content and correct anything that looks wrong.
 
-The preview button appears after a changed draft has been saved and a public website address exists.
+The preview button appears only on Page content, after a changed draft has been
+saved and a public website address exists. **View website** in the sidebar and
+Overview always opens the live published site.
 
 ## Publish changes
 
 1. Save and preview the draft.
 2. Select **Publish**.
 3. Wait for the **Page content published** message.
-4. Open **Preview site** and check the live page.
+4. Open **View website** and check the live page.
 
 Publishing replaces the current live page with the draft.
 

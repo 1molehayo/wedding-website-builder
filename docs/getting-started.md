@@ -55,7 +55,8 @@ The wedding date and venue can be added later. Do not enter a made-up date.
 
 ## Preview the wedding website
 
-Select **Preview site** near the bottom of the menu or at the top of the Overview page. The public website opens in a new tab.
+Select **View website** near the bottom of the menu or at the top of the
+Overview page. The live published website opens in a new tab.
 
 If you see **Set public URL** instead, open it and choose the website address first.
 
@@ -64,7 +65,8 @@ If you see **Set public URL** instead, open it and choose the website address fi
 Some pages use both **Save** and **Publish**.
 
 - **Save draft** keeps your work in the admin area. Guests do not see it yet.
-- **Preview draft** lets you check saved changes privately.
+- **Preview website** on Page content lets you check saved draft changes
+  privately.
 - **Publish** makes the saved page content live for guests.
 - Saving a wedding date also keeps it private until you select **Publish date**.
 

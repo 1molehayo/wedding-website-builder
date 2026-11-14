@@ -148,13 +148,15 @@ includes:
 - hero banner;
 - story;
 - rich text;
-- image;
+- responsive image;
+- responsive video;
 - event details;
 - gift registry.
 
 Blocks can be added, edited, duplicated, removed, and reordered. Admins work on
 a draft, preview it, and publish when ready. Previous published versions can be
-restored.
+restored. **Add item** opens a visual block picker; choosing a block opens it
+and confirms what the new block is for.
 
 Rich text supports limited wedding-safe formatting such as smaller headings,
 lists, quotes, links, and alignment. Pasted content is cleaned so it cannot
@@ -162,7 +164,7 @@ silently override the site's fonts, colours, or security rules.
 
 ```mermaid
 flowchart LR
-  Edit["Edit draft blocks"] --> Preview["Preview draft"]
+  Edit["Edit draft blocks"] --> Preview["Preview website"]
   Preview --> Decision{"Ready?"}
   Decision -->|No| Edit
   Decision -->|Yes| Publish["Publish"]
@@ -175,7 +177,10 @@ What QA should check:
 
 - Reordering blocks changes the public page order after publishing.
 - Draft changes do not leak onto the live site.
+- Every block picker card has a useful visual preview and description.
 - Block titles create sensible in-page navigation labels.
+- Desktop/mobile images and videos use the mobile upload when available and
+  otherwise fall back to desktop.
 - Uploaded images retain a useful crop and open in the full-screen viewer.
 - Unsafe or heavily styled pasted text is reduced to the supported formatting.
 - Restoring a previous version produces the expected draft/live content.
@@ -376,10 +381,11 @@ guest submits an RSVP. The product does not currently send a separate “guest
 RSVPed” email to the couple. Guests receive invitation/reminder/thank-you
 emails on their own flows (invite, registry confirm, and so on).
 
-### Preview site
+### View website and Preview website
 
-**Preview site** opens the wedding’s public URL with `?preview=1` so signed-in
-admins can see draft page content. If the public slug is missing, the button
+**View website** in the sidebar and Overview opens the live published site.
+**Preview website** appears only on Page content and opens the saved draft for
+the signed-in admin. If the public slug is missing, the live-site action
 becomes **Set public URL** instead. Prefer Demo for testing:
 [demo.igbeyawowa.app](https://demo.igbeyawowa.app).
 

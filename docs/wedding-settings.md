@@ -92,7 +92,8 @@ The theme controls the public website's colours and overall style.
 2. Select a theme.
 3. Check the example shown on the page.
 4. Select **Save settings**.
-5. Use **Preview site** to check the complete website.
+5. Use **View website** to check the complete live website. Use **Preview
+   website** on Page content when you need to check a saved draft.
 
 Changing the theme does not remove your page content.
 
