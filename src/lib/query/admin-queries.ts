@@ -19,6 +19,8 @@ export const adminQueryKeys = {
   pages: ['admin', 'pages'] as const,
   feedback: ['admin', 'feedback'] as const,
   notifications: ['admin', 'notifications'] as const,
+  notificationsPage: (page: number) =>
+    ['admin', 'notifications', 'page', page] as const,
   activity: (filters: AdminActivityFilters) =>
     ['admin', 'activity', filters] as const,
 }
@@ -76,6 +78,17 @@ export function notificationsQueryOptions() {
   return queryOptions({
     queryKey: adminQueryKeys.notifications,
     queryFn: () => listNotifications({ data: { limit: 30 } }),
+  })
+}
+
+export function notificationsPageQueryOptions(page: number) {
+  const limit = 50
+  return queryOptions({
+    queryKey: adminQueryKeys.notificationsPage(page),
+    queryFn: () =>
+      listNotifications({
+        data: { limit, offset: (page - 1) * limit },
+      }),
   })
 }
 

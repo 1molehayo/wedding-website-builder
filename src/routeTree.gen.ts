@@ -22,6 +22,7 @@ import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
 import { Route as AdminGuestsRouteImport } from './routes/admin/guests'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminOnboardingRouteImport } from './routes/admin/onboarding'
 import { Route as AdminPagesRouteImport } from './routes/admin/pages'
 import { Route as AdminProfileRouteImport } from './routes/admin/profile'
@@ -100,6 +101,11 @@ const AdminMediaRoute = AdminMediaRouteImport.update({
   path: '/media',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminOnboardingRoute = AdminOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/onboarding': typeof AdminOnboardingRoute
   '/admin/pages': typeof AdminPagesRoute
   '/admin/profile': typeof AdminProfileRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin/guests'
     | '/admin/login'
     | '/admin/media'
+    | '/admin/notifications'
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/admin/guests'
     | '/admin/login'
     | '/admin/media'
+    | '/admin/notifications'
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/admin/guests'
     | '/admin/login'
     | '/admin/media'
+    | '/admin/notifications'
     | '/admin/onboarding'
     | '/admin/pages'
     | '/admin/profile'
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMediaRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/onboarding': {
       id: '/admin/onboarding'
       path: '/onboarding'
@@ -527,6 +546,7 @@ interface AdminRouteRouteChildren {
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMediaRoute: typeof AdminMediaRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOnboardingRoute: typeof AdminOnboardingRoute
   AdminPagesRoute: typeof AdminPagesRoute
   AdminProfileRoute: typeof AdminProfileRoute
@@ -544,6 +564,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminGuestsRoute: AdminGuestsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMediaRoute: AdminMediaRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOnboardingRoute: AdminOnboardingRoute,
   AdminPagesRoute: AdminPagesRoute,
   AdminProfileRoute: AdminProfileRoute,

@@ -66,6 +66,8 @@ Do not add test data on production.
   including private notes where appropriate.
 - Sidebar and Overview use **View website** for the live site. Saved-draft
   **Preview website** is available only from Page content.
+- The notification bell links to a paginated Notifications page containing
+  both read and unread updates.
 - Public section tracking no longer rewrites the URL during natural scrolling,
   and tall sections can become active without viewport jumps.
 

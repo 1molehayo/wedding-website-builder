@@ -8,11 +8,16 @@ export type {
 
 export const listNotifications = createServerFn({ method: 'GET' })
   .validator((data: unknown) => {
-    const value = (data ?? {}) as { limit?: unknown }
+    const value = (data ?? {}) as { limit?: unknown; offset?: unknown }
     const limit = value.limit == null ? undefined : Number(value.limit)
+    const offset = value.offset == null ? undefined : Number(value.offset)
     return {
       limit:
         limit != null && Number.isFinite(limit) ? Math.floor(limit) : undefined,
+      offset:
+        offset != null && Number.isFinite(offset)
+          ? Math.floor(offset)
+          : undefined,
     }
   })
   .handler(async ({ data }): Promise<ListNotificationsResult> => {

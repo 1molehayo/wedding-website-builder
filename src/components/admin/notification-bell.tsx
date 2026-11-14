@@ -84,9 +84,7 @@ export function NotificationBell() {
         // Navigation still proceeds.
       }
     }
-    if (item.href) {
-      void navigate({ to: item.href })
-    }
+    void navigate({ to: item.href })
   }
 
   const onMarkAll = async () => {
@@ -175,6 +173,23 @@ export function NotificationBell() {
                   </ul>
                 )}
               </div>
+              {items.length > 0 ? (
+                <div className="border-border border-t p-2">
+                  <button
+                    type="button"
+                    className="hover:bg-background-secondary w-full rounded-lg px-3 py-2 text-center text-sm font-medium transition"
+                    onClick={() => {
+                      setOpen(false)
+                      void navigate({
+                        to: '/admin/notifications',
+                        search: { page: 1 },
+                      })
+                    }}
+                  >
+                    View all notifications
+                  </button>
+                </div>
+              ) : null}
             </div>
           </FloatingFocusManager>
         </FloatingPortal>
