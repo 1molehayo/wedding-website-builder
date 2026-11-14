@@ -17,6 +17,10 @@ import {
   PageActionBar,
   formatLastUpdated,
 } from '@/components/admin/page-action-bar'
+import {
+  PAGE_BLOCK_DESCRIPTIONS,
+  PageBlockPicker,
+} from '@/components/admin/page-block-picker'
 import { RichTextEditor } from '@/components/admin/rich-text-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -47,9 +51,8 @@ import {
 } from '@/lib/page-blocks/settings'
 import { adminQueryKeys, pageBlocksQueryOptions } from '@/lib/query/admin-queries'
 import {
-  PAGE_BLOCK_TYPES,
-  PAGE_BLOCK_TYPE_LABELS,
   NAV_LABEL_MAX_LENGTH,
+  PAGE_BLOCK_TYPE_LABELS,
   createDefaultBlock,
   isPageContentLive,
   pageBlocksEqual,
@@ -909,37 +912,24 @@ function BlockEditor({
   )
 }
 
-function AddItemMenu({
-  onAdd,
+function AddItemButton({
+  onClick,
   className,
-  triggerClassName,
 }: {
-  onAdd: (type: PageBlockType) => void
+  onClick: () => void
   className?: string
-  triggerClassName?: string
 }) {
   return (
-    <DropdownMenu
-      label="Add item"
-      align="start"
-      className={className}
-      trigger={
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className={cn('border-dashed', triggerClassName)}
-        >
-          <PlusIcon />
-          Add item
-        </Button>
-      }
-      items={PAGE_BLOCK_TYPES.map((type) => ({
-        id: type,
-        label: PAGE_BLOCK_TYPE_LABELS[type],
-        onSelect: () => onAdd(type),
-      }))}
-    />
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      className={cn('border-dashed', className)}
+      onClick={onClick}
+    >
+      <PlusIcon />
+      Add item
+    </Button>
   )
 }
 
@@ -969,6 +959,7 @@ function AdminPagesPage() {
   const [resetOpen, setResetOpen] = useState(false)
   const [versions, setVersions] = useState<PageContentVersion[]>([])
   const [versionsLoading, setVersionsLoading] = useState(false)
+  const [blockPickerOpen, setBlockPickerOpen] = useState(false)
   const dragIdRef = useRef<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragEnabled, setDragEnabled] = useState(false)
@@ -1147,6 +1138,9 @@ function AdminPagesPage() {
     const block = createDefaultBlock(type)
     setBlocks((current) => [...current, block])
     setOpenIds((current) => new Set(current).add(block.id))
+    toast.success(`${PAGE_BLOCK_TYPE_LABELS[type]} block added.`, {
+      description: PAGE_BLOCK_DESCRIPTIONS[type],
+    })
   }
 
   const onDuplicate = (id: string) => {
@@ -1218,7 +1212,10 @@ function AdminPagesPage() {
             off the live site until you publish.
           </p>
           <div className="mt-6 flex justify-center">
-            <AddItemMenu onAdd={onAdd} triggerClassName="px-4" />
+            <AddItemButton
+              onClick={() => setBlockPickerOpen(true)}
+              className="px-4"
+            />
           </div>
         </div>
       ) : (
@@ -1256,7 +1253,7 @@ function AdminPagesPage() {
                   })
                 }}
                 className={cn(
-                  'bg-surface border-border rounded-xl border',
+                  'bg-surface border-border rounded-lg border',
                   draggingId === block.id && 'opacity-50',
                   hasError && 'border-error',
                 )}
@@ -1366,13 +1363,18 @@ function AdminPagesPage() {
             )
           })}
 
-          <AddItemMenu
-            onAdd={onAdd}
+          <AddItemButton
+            onClick={() => setBlockPickerOpen(true)}
             className="w-full"
-            triggerClassName="w-full"
           />
         </div>
       )}
+
+      <PageBlockPicker
+        open={blockPickerOpen}
+        onOpenChange={setBlockPickerOpen}
+        onSelect={onAdd}
+      />
 
       <PageActionBar lastUpdatedAt={draftUpdatedAt}>
         {canPreviewDraft && publicSlug ? (

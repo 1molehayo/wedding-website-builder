@@ -2,7 +2,9 @@
 
 Open **Media** to upload photos and share private albums with selected guests.
 
-Photos here do not appear on the public wedding website. To place a photo on the public website, use an Image or Hero block under **Page content**.
+Photos here do not appear on the public wedding website. To place responsive
+images or videos on the public website, use a Hero, Image, or Video block under
+**Page content**.
 
 ## Upload photos to the Library
 

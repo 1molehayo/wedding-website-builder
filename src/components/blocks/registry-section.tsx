@@ -114,7 +114,7 @@ function GiftItemCard({
           <img
             src={giftPhotoUrl(item.photo_path)}
             alt=""
-            className="aspect-[4/3] w-full object-cover transition hover:opacity-95"
+            className="aspect-4/3 w-full object-cover transition hover:opacity-95"
           />
         </button>
       ) : null}
@@ -192,16 +192,13 @@ function GiftDetailsDrawer({
 
   return (
     <SideDrawer open={open} onOpenChange={onOpenChange}>
-      <SideDrawer.Header
-        title="Gift details"
-        drawerDescription={item.title}
-      />
+      <SideDrawer.Header title="Gift details" drawerDescription={item.title} />
       <SideDrawer.Content className="space-y-5">
         {item.photo_path ? (
           <img
             src={giftPhotoUrl(item.photo_path)}
             alt=""
-            className="aspect-[4/3] w-full rounded-md object-cover"
+            className="aspect-4/3 w-full rounded-md object-cover"
           />
         ) : null}
         <div className="space-y-3">
@@ -423,8 +420,7 @@ function ContributeDrawer({
       ? fxQuoteData
       : null
   const amountQuote =
-    fxQuoteData &&
-    isUsableSuggestedAmountQuote(fxQuoteData, payCurrency)
+    fxQuoteData && isUsableSuggestedAmountQuote(fxQuoteData, payCurrency)
       ? fxQuoteData
       : null
   const fxError = !needsCrossCurrency
@@ -654,9 +650,7 @@ function ContributeDrawer({
                       Loading exchange rate…
                     </p>
                   ) : usableFxQuote ? (
-                    <form.Subscribe
-                      selector={(state) => state.values.amount}
-                    >
+                    <form.Subscribe selector={(state) => state.values.amount}>
                       {(amount) => {
                         const pay = Number(amount)
                         const baseEquivalent =
@@ -707,9 +701,7 @@ function ContributeDrawer({
                     </div>
                   ) : null}
 
-                  <form.Subscribe
-                    selector={(state) => state.values.currency}
-                  >
+                  <form.Subscribe selector={(state) => state.values.currency}>
                     {(currency) => {
                       const matches = accounts.filter(
                         (account) =>
