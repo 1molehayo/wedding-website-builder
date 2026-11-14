@@ -322,7 +322,8 @@ What QA should check:
 These features improve operations and experience but are not required for the
 shortest create-invite-RSVP journey:
 
-- In-app admin notification bell with unread state and links to relevant work.
+- In-app admin notification bell with unread state, relevant-work links, and a
+  **View all notifications** page containing both read and unread history.
 - Append-only activity history with filters for area, actor, email, and date.
 - Product feedback form and a super-admin feedback backlog.
 - Regular-admin support email with an optional screenshot.

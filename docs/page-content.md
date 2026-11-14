@@ -150,8 +150,9 @@ The live website stays unchanged until you publish.
 4. Check the page on both a phone and a computer if possible.
 5. Return to Page content and correct anything that looks wrong.
 
-The preview button appears only on Page content, after a changed draft has been
-saved and a public website address exists. **View website** in the sidebar and
+The preview button stays beside the Page content description when a public
+website address exists. It previews the last saved draft, so save before
+opening it; unsaved edits are not included. **View website** in the sidebar and
 Overview always opens the live published site.
 
 ## Publish changes

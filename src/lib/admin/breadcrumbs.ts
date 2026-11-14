@@ -15,6 +15,7 @@ const EXACT_LABELS: Record<string, string> = {
   '/admin/profile': 'Profile',
   '/admin/support': 'Support',
   '/admin/feedback': 'Backlog',
+  '/admin/notifications': 'Notifications',
 }
 
 export function adminBreadcrumbs(pathname: string): AdminBreadcrumb[] {

@@ -47,7 +47,37 @@ export function shouldNotifyAction(action: string): boolean {
   return NOTIFY_ACTIONS.has(action)
 }
 
-export function notificationHrefForAction(action: string): string | null {
+export type NotificationHref =
+  | '/admin/guests'
+  | '/admin/registry'
+  | '/admin/pages'
+  | '/admin/media'
+  | '/admin/settings'
+  | '/admin/profile'
+  | '/admin/admins'
+  | '/admin/feedback'
+  | '/admin/activity'
+
+export function parseNotificationHref(value: string | null): NotificationHref {
+  switch (value) {
+    case '/admin/guests':
+    case '/admin/registry':
+    case '/admin/pages':
+    case '/admin/media':
+    case '/admin/settings':
+    case '/admin/profile':
+    case '/admin/admins':
+    case '/admin/feedback':
+    case '/admin/activity':
+      return value
+    default:
+      return '/admin/activity'
+  }
+}
+
+export function notificationHrefForAction(
+  action: string,
+): NotificationHref {
   const area = action.split('.')[0]
   switch (area) {
     case 'guest':
