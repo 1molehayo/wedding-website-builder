@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { toast } from '@/components/ui/toaster'
 import {
   markAllNotificationsRead,
@@ -51,8 +52,6 @@ function AdminNotificationsPage() {
   const { data = initial } = useQuery(
     notificationsPageQueryOptions(search.page),
   )
-  const totalPages = Math.max(1, Math.ceil(data.total / 50))
-
   const refreshNotifications = async () => {
     await queryClient.invalidateQueries({
       queryKey: adminQueryKeys.notifications,
@@ -171,34 +170,15 @@ function AdminNotificationsPage() {
         </ul>
       )}
 
-      {totalPages > 1 ? (
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={search.page <= 1}
-            onClick={() =>
-              void navigate({ search: { page: Math.max(1, search.page - 1) } })
-            }
-          >
-            Previous
-          </Button>
-          <p className="text-foreground-secondary text-sm">
-            Page {search.page} of {totalPages}
-          </p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={search.page >= totalPages}
-            onClick={() =>
-              void navigate({ search: { page: search.page + 1 } })
-            }
-          >
-            Next
-          </Button>
-        </div>
+      {data.total > 50 ? (
+        <TablePagination
+          page={search.page}
+          pageSize={50}
+          totalRows={data.total}
+          itemLabel="notifications"
+          showPageSize={false}
+          onPageChange={(page) => void navigate({ search: { page } })}
+        />
       ) : null}
     </div>
   )

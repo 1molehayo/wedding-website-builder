@@ -73,7 +73,17 @@ function AdminOverviewPage() {
             </Button>
             {isSuper ? (
               <Button asChild size="md" variant="outline">
-                <Link to="/admin/admins">Invite admin</Link>
+                <Link
+                  to="/admin/admins"
+                  search={{
+                    q: '',
+                    showCancelled: false,
+                    page: 1,
+                    pageSize: 10,
+                  }}
+                >
+                  Invite admin
+                </Link>
               </Button>
             ) : null}
           </div>

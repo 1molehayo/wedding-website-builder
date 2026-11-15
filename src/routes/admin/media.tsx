@@ -17,6 +17,7 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
 import { SideDrawer } from '@/components/ui/side-drawer'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { toast } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
 import { prepareImageForUpload } from '@/lib/media/compress-image'
@@ -53,8 +54,17 @@ import type {
 } from '@/lib/photo-shares/photo-shares'
 import { cn } from '@/lib/utils'
 import { guestFullName } from '@/lib/guests/schema'
+import { paginateItems, parsePage, parsePageSize } from '@/lib/pagination'
 
 export const Route = createFileRoute('/admin/media')({
+  validateSearch: (search: Record<string, unknown>) => {
+    const tab: TabId = search.tab === 'shares' ? 'shares' : 'library'
+    return {
+      tab,
+      page: parsePage(search.page),
+      pageSize: parsePageSize(search.pageSize),
+    }
+  },
   beforeLoad: ({ context }) => {
     if (!context.session?.wedding) {
       throw redirect({ to: '/admin/onboarding' })
@@ -203,12 +213,14 @@ async function copyTextSafe(value: string) {
 
 function AdminMediaPage() {
   const initial = Route.useLoaderData()
+  const routeSearch = Route.useSearch()
+  const navigate = Route.useNavigate()
   const queryClient = useQueryClient()
   const { data: assetsQueryData = initial.assets } = useQuery(
     mediaAssetsQueryOptions(),
   )
   const { data: sharesQueryData } = useQuery(photoSharesQueryOptions())
-  const [tab, setTab] = useState<TabId>('library')
+  const tab: TabId = routeSearch.tab
   const [assets, setAssets] = useState(assetsQueryData)
   const [groups, setGroups] = useState(
     sharesQueryData?.groups ?? initial.groups,
@@ -216,6 +228,29 @@ function AdminMediaPage() {
   const [guests, setGuests] = useState(
     sharesQueryData?.guests ?? initial.guests,
   )
+  const pagedAssets = paginateItems(
+    assets,
+    routeSearch.page,
+    routeSearch.pageSize,
+  )
+  const pagedGroups = paginateItems(
+    groups,
+    routeSearch.page,
+    routeSearch.pageSize,
+  )
+  const currentTotal = tab === 'library' ? assets.length : groups.length
+  const currentPageCount = Math.max(
+    1,
+    Math.ceil(currentTotal / routeSearch.pageSize),
+  )
+
+  useEffect(() => {
+    if (routeSearch.page <= currentPageCount) return
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, page: currentPageCount }),
+    })
+  }, [currentPageCount, navigate, routeSearch.page])
 
   useEffect(() => {
     setAssets(assetsQueryData)
@@ -353,6 +388,14 @@ function AdminMediaPage() {
         asset,
         ...current.filter((a) => a.id !== asset.id),
       ])
+      void navigate({
+        replace: true,
+        search: (previous) => ({
+          ...previous,
+          tab: 'library',
+          page: 1,
+        }),
+      })
       abortControllersRef.current.delete(id)
       removeUpload(id)
     } catch (err) {
@@ -562,7 +605,15 @@ function AdminMediaPage() {
           <button
             key={id}
             type="button"
-            onClick={() => setTab(id)}
+            onClick={() =>
+              void navigate({
+                search: (previous) => ({
+                  ...previous,
+                  tab: id,
+                  page: 1,
+                }),
+              })
+            }
             className={cn(
               'px-3 py-2 text-sm tracking-wide uppercase transition',
               tab === id
@@ -666,7 +717,7 @@ function AdminMediaPage() {
                   </figcaption>
                 </figure>
               ))}
-              {assets.map((asset) => (
+              {pagedAssets.map((asset) => (
                 <figure
                   key={asset.id}
                   className="border-border bg-surface overflow-hidden rounded-xl border"
@@ -723,7 +774,7 @@ function AdminMediaPage() {
         </p>
       ) : (
         <div className="space-y-3">
-          {groups.map((group) => (
+          {pagedGroups.map((group) => (
             <div
               key={group.id}
               className="border-border bg-surface flex flex-col gap-3 rounded-xl border p-4 md:flex-row md:items-center md:justify-between"
@@ -784,6 +835,25 @@ function AdminMediaPage() {
           ))}
         </div>
       )}
+
+      {currentTotal > 0 ? (
+        <TablePagination
+          page={routeSearch.page}
+          pageSize={routeSearch.pageSize}
+          totalRows={currentTotal}
+          itemLabel={tab === 'library' ? 'photos' : 'shares'}
+          onPageChange={(page) =>
+            void navigate({
+              search: (previous) => ({ ...previous, page }),
+            })
+          }
+          onPageSizeChange={(pageSize) =>
+            void navigate({
+              search: (previous) => ({ ...previous, pageSize, page: 1 }),
+            })
+          }
+        />
+      ) : null}
 
       <SideDrawer
         open={drawerOpen}
