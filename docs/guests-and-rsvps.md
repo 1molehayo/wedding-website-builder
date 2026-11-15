@@ -8,6 +8,15 @@ The summary cards show:
 - the total number attending, including approved plus-ones; and
 - the number who have not responded.
 
+Select a summary card to filter the list to all, attending, or pending guests.
+The **Filters** menu also includes **Not attending**. Search text and the RSVP
+filter are stored in the page URL, so refresh, back, and forward preserve the
+current view.
+
+**Contribution thank-you**, beside **Add guest**, opens the wedding-wide
+message template used after an admin confirms a registry payment. Saving the
+template does not send an email.
+
 ## Add a guest
 
 1. Select **Add guest**.

@@ -24,6 +24,11 @@ export const updateContributionAmountSchema = z.object({
 export const setContributionStatusSchema = z.object({
   contributionId: z.string().trim().min(1, 'Contribution is required.'),
   status: z.enum(['pending', 'received', 'not_received']),
+  thankYouMessage: z
+    .string()
+    .trim()
+    .max(5000, 'Keep the message to 5,000 characters or fewer.')
+    .optional(),
 })
 
 export function parseUpdateContributionAmount(data: unknown) {

@@ -2,8 +2,10 @@ import {
   CopySimpleIcon,
   EnvelopeSimpleIcon,
   EyeIcon,
+  FunnelIcon,
   LinkSimpleIcon,
   LockOpenIcon,
+  NotePencilIcon,
   PencilSimpleIcon,
   PlusIcon,
   QuestionIcon,
@@ -20,9 +22,10 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { OverviewCard } from '@/components/admin/overview-card'
+import { RegistryThankYouTemplateModal } from '@/components/admin/registry-thank-you-template-modal'
 import { PhoneField } from '@/components/phone-field'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -71,6 +74,7 @@ import {
 import { regenerateInvitationCardForEmail } from '@/lib/invitation/regenerate-card-client'
 import { adminQueryKeys, guestsQueryOptions } from '@/lib/query/admin-queries'
 import { updateGuestRsvp } from '@/lib/rsvp/rsvp'
+import { DEFAULT_REGISTRY_THANK_YOU_TEMPLATE } from '@/lib/registry/thank-you-template'
 import {
   RSVP_STATUS_LABELS,
   RSVP_STATUSES,
@@ -84,6 +88,18 @@ import type { Guest } from '@/lib/supabase/types'
 import { Route as AdminRoute } from './route'
 
 export const Route = createFileRoute('/admin/guests')({
+  validateSearch: (search: Record<string, unknown>) => {
+    const status: GuestStatusFilter =
+      search.status === 'attending' ||
+      search.status === 'pending' ||
+      search.status === 'not-attending'
+        ? search.status
+        : 'all'
+    return {
+      q: typeof search.q === 'string' ? search.q.slice(0, 120) : '',
+      status,
+    }
+  },
   beforeLoad: ({ context }) => {
     if (!context.session?.wedding) {
       throw redirect({ to: '/admin/onboarding' })
@@ -111,6 +127,7 @@ export const Route = createFileRoute('/admin/guests')({
 const emptyGuestForm: GuestFormValues = emptyGuestFormValues()
 
 type GuestDrawerMode = 'create' | 'edit' | 'view'
+type GuestStatusFilter = 'all' | 'attending' | 'pending' | 'not-attending'
 
 function FieldHint({ label, children }: { label: string; children: string }) {
   return (
@@ -201,6 +218,8 @@ function GuestDrawerForms({
 
 function AdminGuestsPage() {
   const initialGuests = Route.useLoaderData()
+  const routeSearch = Route.useSearch()
+  const navigate = Route.useNavigate()
   const { session } = AdminRoute.useRouteContext()
   const queryClient = useQueryClient()
   const { data: guestsQueryData = initialGuests } = useQuery(
@@ -210,6 +229,15 @@ function AdminGuestsPage() {
     ? formatCoupleNames(session.wedding.groom_name, session.wedding.bride_name)
     : 'us'
   const [guests, setGuests] = useState<Guest[]>(guestsQueryData)
+  const [thankYouTemplate, setThankYouTemplate] = useState(
+    session?.wedding?.registry_thank_you_template ??
+      DEFAULT_REGISTRY_THANK_YOU_TEMPLATE,
+  )
+  const [thankYouTemplateOpen, setThankYouTemplateOpen] = useState(false)
+  const [draftStatus, setDraftStatus] = useState<GuestStatusFilter>(
+    routeSearch.status,
+  )
+  const filterDetailsRef = useRef<HTMLDetailsElement>(null)
 
   useEffect(() => {
     setGuests(guestsQueryData)
@@ -218,7 +246,6 @@ function AdminGuestsPage() {
   const refreshGuests = async () => {
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.guests })
   }
-  const [search, setSearch] = useState('')
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
   ])
@@ -684,6 +711,25 @@ function AdminGuestsPage() {
     void emailGuestInvite(guest)
   }
 
+  useEffect(() => {
+    setDraftStatus(routeSearch.status)
+  }, [routeSearch.status])
+
+  const applyStatusFilter = (status: GuestStatusFilter) => {
+    void navigate({
+      search: (previous) => ({ ...previous, status }),
+    })
+  }
+
+  const filteredGuests = useMemo(() => {
+    if (routeSearch.status === 'all') return guests
+    const status =
+      routeSearch.status === 'not-attending'
+        ? 'declined'
+        : routeSearch.status
+    return guests.filter((guest) => guest.rsvp_status === status)
+  }, [guests, routeSearch.status])
+
   const columns = useMemo<ColumnDef<Guest>[]>(
     () => [
       {
@@ -802,11 +848,18 @@ function AdminGuestsPage() {
   )
 
   const table = useReactTable({
-    data: guests,
+    data: filteredGuests,
     columns,
-    state: { sorting, globalFilter: search },
+    state: { sorting, globalFilter: routeSearch.q },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setSearch,
+    onGlobalFilterChange: (next) => {
+      const q =
+        typeof next === 'function' ? String(next(routeSearch.q)) : String(next)
+      void navigate({
+        replace: true,
+        search: (previous) => ({ ...previous, q }),
+      })
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -867,16 +920,42 @@ function AdminGuestsPage() {
             private RSVP links.
           </p>
         </div>
-        <Button type="button" size="sm" onClick={openCreate}>
-          <PlusIcon />
-          Add guest
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setThankYouTemplateOpen(true)}
+          >
+            <NotePencilIcon />
+            Contribution thank-you
+          </Button>
+          <Button type="button" size="sm" onClick={openCreate}>
+            <PlusIcon />
+            Add guest
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <OverviewCard label="Guests" value={guests.length} />
-        <OverviewCard label="Attending" value={attendingSummary} />
-        <OverviewCard label="Pending" value={pendingCount}>
+        <OverviewCard
+          label="Guests"
+          value={guests.length}
+          active={routeSearch.status === 'all'}
+          onClick={() => applyStatusFilter('all')}
+        />
+        <OverviewCard
+          label="Attending"
+          value={attendingSummary}
+          active={routeSearch.status === 'attending'}
+          onClick={() => applyStatusFilter('attending')}
+        />
+        <OverviewCard
+          label="Pending"
+          value={pendingCount}
+          active={routeSearch.status === 'pending'}
+          onClick={() => applyStatusFilter('pending')}
+        >
           <Button
             className="mt-3"
             type="button"
@@ -893,12 +972,75 @@ function AdminGuestsPage() {
       </div>
 
       <div className="space-y-3">
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <details ref={filterDetailsRef} className="relative">
+            <summary className="border-border bg-surface hover:bg-background-secondary flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg border px-3 text-sm font-medium transition">
+              <FunnelIcon />
+              Filters
+              {routeSearch.status !== 'all' ? (
+                <Badge size="sm" variant="info">
+                  1
+                </Badge>
+              ) : null}
+            </summary>
+            <div className="border-border bg-surface absolute top-full right-0 z-20 mt-2 w-64 rounded-xl border p-4 shadow-lg">
+              <Field>
+                <Field.Label>RSVP status</Field.Label>
+                <Field.Control>
+                  <Select
+                    value={draftStatus}
+                    onChange={(event) =>
+                      setDraftStatus(
+                        event.target.value as GuestStatusFilter,
+                      )
+                    }
+                  >
+                    <option value="all">All guests</option>
+                    <option value="attending">Attending</option>
+                    <option value="pending">Pending</option>
+                    <option value="not-attending">Not attending</option>
+                  </Select>
+                </Field.Control>
+              </Field>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setDraftStatus('all')
+                    applyStatusFilter('all')
+                    filterDetailsRef.current?.removeAttribute('open')
+                  }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    applyStatusFilter(draftStatus)
+                    filterDetailsRef.current?.removeAttribute('open')
+                  }}
+                >
+                  Apply
+                </Button>
+              </div>
+            </div>
+          </details>
           <Input
             size="sm"
             className="w-full max-w-xs"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            value={routeSearch.q}
+            onChange={(event) =>
+              void navigate({
+                replace: true,
+                search: (previous) => ({
+                  ...previous,
+                  q: event.target.value,
+                }),
+              })
+            }
             placeholder="Search name, email, RSVP"
             aria-label="Search guests"
           />
@@ -910,6 +1052,19 @@ function AdminGuestsPage() {
           onRowClick={openView}
         />
       </div>
+
+      <RegistryThankYouTemplateModal
+        open={thankYouTemplateOpen}
+        initialTemplate={thankYouTemplate}
+        coupleLabel={coupleLabel}
+        onOpenChange={setThankYouTemplateOpen}
+        onSaved={(template) => {
+          setThankYouTemplate(template)
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.registry,
+          })
+        }}
+      />
 
       <SideDrawer
         open={drawerOpen}

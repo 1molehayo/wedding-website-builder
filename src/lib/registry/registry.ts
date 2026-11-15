@@ -21,6 +21,7 @@ import type {
   StartedContribution,
 } from '@/lib/registry/contribution.server'
 import type { RegistryAccount, RegistryItem } from '@/lib/supabase/types'
+import { registryThankYouTemplateSchema } from '@/lib/registry/thank-you-template'
 
 export type {
   PublicRegistryAccount,
@@ -42,6 +43,16 @@ export const listRegistryAdmin = createServerFn({ method: 'GET' }).handler(
     return listRegistryAdminHandler()
   },
 )
+
+export const saveRegistryThankYouTemplate = createServerFn({ method: 'POST' })
+  .validator((data: { template: string }) => ({
+    template: registryThankYouTemplateSchema.parse(data.template),
+  }))
+  .handler(async ({ data }): Promise<{ template: string }> => {
+    const { saveRegistryThankYouTemplateHandler } =
+      await import('./registry.server')
+    return saveRegistryThankYouTemplateHandler(data.template)
+  })
 
 export const createRegistryItem = createServerFn({ method: 'POST' })
   .validator((data: unknown) => parseRegistryItemInput(data))

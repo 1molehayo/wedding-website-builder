@@ -162,6 +162,28 @@ A transfer appears after a guest starts a contribution on the public registry.
 
 Mark a payment as received only after checking the bank account.
 
+The first time you mark a contribution **Received**, the app opens **Confirm
+payment and send thank-you**. Review or customise the message for that
+contributor, then send it. The exact sent message and delivery time remain in
+the transfer audit. Changing the status later does not send a duplicate. If
+delivery fails, the transfer stays Received and **Retry thank-you** lets you try
+again.
+
+The guest also receives a separate, fixed confirmation email immediately after
+they confirm that they sent a bank transfer. That system confirmation is not
+the editable acknowledgement above.
+
+## Edit the contribution thank-you template
+
+Open **Guests** and select **Contribution thank-you** beside **Add guest**.
+Saving this template does not send an email; it affects future contributions
+when an admin marks them Received.
+
+Use `{name}`, `{amount}`, `{gift}`, and `{couple}` in the template. The live
+preview shows how the placeholders will be filled. You can still overwrite the
+message for one contributor in the payment confirmation dialog without
+changing the wedding-wide template.
+
 If a transfer is marked **Not received**, the app offers email and WhatsApp follow-up options where contact details are available.
 
 ## Understand transfer wording
