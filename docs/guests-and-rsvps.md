@@ -11,7 +11,8 @@ The summary cards show:
 Select a summary card to filter the list to all, attending, or pending guests.
 The **Filters** menu also includes **Not attending**. Search text and the RSVP
 filter are stored in the page URL, so refresh, back, and forward preserve the
-current view.
+current view. Use the page-size menu and first, previous, next, or last controls
+below the list to move through larger guest lists.
 
 **Contribution thank-you**, beside **Add guest**, opens the wedding-wide
 message template used after an admin confirms a registry payment. Saving the

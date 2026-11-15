@@ -1,13 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { InfoIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ContributionAuditDrawer } from '@/components/admin/contribution-audit'
 import { RecordAmazonPurchaseDrawer } from '@/components/admin/record-amazon-purchase'
 import { AccountForm, GiftItemForm } from '@/components/admin/registry-forms'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { SideDrawer } from '@/components/ui/side-drawer'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { toast } from '@/components/ui/toaster'
 import { adminQueryKeys, registryQueryOptions } from '@/lib/query/admin-queries'
 import { CONTRIBUTION_STATUS_LABELS } from '@/lib/registry/contribution-schema'
@@ -21,9 +22,21 @@ import type {
 } from '@/lib/registry/registry'
 import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
 import type { RegistryAccount } from '@/lib/supabase/types'
+import { paginateItems, parsePage, parsePageSize } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/admin/registry')({
+  validateSearch: (search: Record<string, unknown>) => {
+    const tab: TabId =
+      search.tab === 'accounts' || search.tab === 'transfers'
+        ? search.tab
+        : 'gifts'
+    return {
+      tab,
+      page: parsePage(search.page),
+      pageSize: parsePageSize(search.pageSize),
+    }
+  },
   beforeLoad: ({ context }) => {
     if (!context.session?.wedding) {
       throw redirect({ to: '/admin/onboarding' })
@@ -40,13 +53,35 @@ type AdminGift = RegistryAdminData['items'][number]
 
 function AdminRegistryPage() {
   const initial = Route.useLoaderData()
+  const routeSearch = Route.useSearch()
+  const navigate = Route.useNavigate()
   const queryClient = useQueryClient()
   const { data = initial } = useQuery(registryQueryOptions())
-  const [tab, setTab] = useState<TabId>('gifts')
+  const tab: TabId = routeSearch.tab
   const items = data.items
   const accounts = data.accounts
   const reservations = data.reservations
   const contributions = data.contributions
+  const pagedItems = paginateItems(items, routeSearch.page, routeSearch.pageSize)
+  const pagedContributions = paginateItems(
+    contributions,
+    routeSearch.page,
+    routeSearch.pageSize,
+  )
+  const currentTotal =
+    tab === 'gifts' ? items.length : tab === 'transfers' ? contributions.length : 0
+  const currentPageCount = Math.max(
+    1,
+    Math.ceil(currentTotal / routeSearch.pageSize),
+  )
+
+  useEffect(() => {
+    if (tab === 'accounts' || routeSearch.page <= currentPageCount) return
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, page: currentPageCount }),
+    })
+  }, [currentPageCount, navigate, routeSearch.page, tab])
 
   const [itemDrawerOpen, setItemDrawerOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<AdminGift | null>(null)
@@ -169,7 +204,15 @@ function AdminRegistryPage() {
           <button
             key={id}
             type="button"
-            onClick={() => setTab(id)}
+            onClick={() =>
+              void navigate({
+                search: (previous) => ({
+                  ...previous,
+                  tab: id,
+                  page: 1,
+                }),
+              })
+            }
             className={cn(
               'rounded-lg px-3 py-2 text-sm transition',
               tab === id
@@ -192,7 +235,7 @@ function AdminRegistryPage() {
           </p>
         ) : (
           <ul className="space-y-3">
-            {items.map((item) => (
+            {pagedItems.map((item) => (
               <li
                 key={item.id}
                 className="bg-surface border-border flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4"
@@ -307,7 +350,7 @@ function AdminRegistryPage() {
           </p>
         ) : (
           <ul className="space-y-3">
-            {contributions.map((row) => (
+            {pagedContributions.map((row) => (
               <li
                 key={row.id}
                 className="bg-surface border-border flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4"
@@ -348,6 +391,25 @@ function AdminRegistryPage() {
             ))}
           </ul>
         )
+      ) : null}
+
+      {tab !== 'accounts' && currentTotal > 0 ? (
+        <TablePagination
+          page={routeSearch.page}
+          pageSize={routeSearch.pageSize}
+          totalRows={currentTotal}
+          itemLabel={tab === 'gifts' ? 'gifts' : 'transfers'}
+          onPageChange={(page) =>
+            void navigate({
+              search: (previous) => ({ ...previous, page }),
+            })
+          }
+          onPageSizeChange={(pageSize) =>
+            void navigate({
+              search: (previous) => ({ ...previous, pageSize, page: 1 }),
+            })
+          }
+        />
       ) : null}
 
       <SideDrawer open={itemDrawerOpen} onOpenChange={setItemDrawerOpen}>

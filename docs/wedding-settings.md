@@ -97,6 +97,10 @@ The theme controls the public website's colours and overall style.
 
 Changing the theme does not remove your page content.
 
+On the public website, the Light, Dark, and System appearance control uses the
+same neutral selected and hover states for every wedding theme. Its contrast
+adapts only to the current light or dark appearance.
+
 ## Choose the invitation design
 
 1. Scroll to the invitation design section.

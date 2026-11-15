@@ -21,6 +21,9 @@ If an upload fails:
 
 Do not close the page while photos are still uploading.
 
+The Library and Shares tabs paginate independently. Use the controls below
+each list to choose how many records to show and move between pages.
+
 ## Create a private album
 
 Private albums are called **Shares** in the app.

@@ -70,7 +70,11 @@ Do not add test data on production.
   both read and unread updates. Guest and registry notifications have explicit
   destination actions; other categories remain informational.
 - Guest search and RSVP filters are URL-backed. Summary cards apply the same
-  filters as the filter menu.
+  filters as the filter menu, with full-card hover/selected states. Shared
+  pagination is used for growing admin collections: guests, admins, feedback,
+  registry gifts/transfers, media/shares, notifications, and activity.
+- The public Light/Dark/System control has theme-independent neutral hover and
+  selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation
   email when the sender confirms the transfer, then an admin-controlled
   acknowledgement when payment is first marked Received. The wedding-wide

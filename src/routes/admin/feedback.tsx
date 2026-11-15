@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { toast } from '@/components/ui/toaster'
 import { isSuperAdminProfile } from '@/lib/auth/roles'
 import {
@@ -14,8 +15,13 @@ import {
 import type { FeedbackStatus } from '@/lib/feedback/categories'
 import { updateProductFeedbackStatus } from '@/lib/feedback/feedback'
 import { adminQueryKeys, feedbackQueryOptions } from '@/lib/query/admin-queries'
+import { paginateItems, parsePage, parsePageSize } from '@/lib/pagination'
 
 export const Route = createFileRoute('/admin/feedback')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    page: parsePage(search.page),
+    pageSize: parsePageSize(search.pageSize),
+  }),
   beforeLoad: ({ context }) => {
     if (!context.session || !isSuperAdminProfile(context.session.profile)) {
       throw redirect({ to: '/admin' })
@@ -43,11 +49,27 @@ function statusBadgeVariant(
 
 function AdminFeedbackBacklogPage() {
   const initial = Route.useLoaderData()
+  const routeSearch = Route.useSearch()
+  const navigate = Route.useNavigate()
   const queryClient = useQueryClient()
   const { data = initial } = useQuery(feedbackQueryOptions())
   const items = data.items
   const counts = data.counts
+  const pageCount = Math.max(1, Math.ceil(items.length / routeSearch.pageSize))
+  const visibleItems = paginateItems(
+    items,
+    routeSearch.page,
+    routeSearch.pageSize,
+  )
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (routeSearch.page <= pageCount) return
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, page: pageCount }),
+    })
+  }, [navigate, pageCount, routeSearch.page])
 
   const onStatusChange = async (feedbackId: string, status: FeedbackStatus) => {
     setUpdatingId(feedbackId)
@@ -94,7 +116,7 @@ function AdminFeedbackBacklogPage() {
         <p className="text-foreground-secondary text-sm">No feedback yet.</p>
       ) : (
         <ul className="space-y-3">
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <li
               key={item.id}
               className="bg-surface border-border space-y-3 rounded-xl border p-4"
@@ -146,6 +168,24 @@ function AdminFeedbackBacklogPage() {
           ))}
         </ul>
       )}
+      {items.length > 0 ? (
+        <TablePagination
+          page={routeSearch.page}
+          pageSize={routeSearch.pageSize}
+          totalRows={items.length}
+          itemLabel="feedback items"
+          onPageChange={(page) =>
+            void navigate({
+              search: (previous) => ({ ...previous, page }),
+            })
+          }
+          onPageSizeChange={(pageSize) =>
+            void navigate({
+              search: (previous) => ({ ...previous, pageSize, page: 1 }),
+            })
+          }
+        />
+      ) : null}
     </div>
   )
 }

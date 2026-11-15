@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { DesktopIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import {
   appliedColorMode,
@@ -48,7 +47,7 @@ export function ColorModeToggle({ className }: { className?: string }) {
         role="group"
         aria-label="Colour mode"
         className={cn(
-          'border-border bg-background/80 flex rounded-lg border p-0.5 backdrop-blur-sm',
+          'public-mode-toggle flex rounded-lg border p-0.5 backdrop-blur-sm',
           className,
         )}
       >
@@ -58,14 +57,15 @@ export function ColorModeToggle({ className }: { className?: string }) {
           return (
             <Tooltip key={option.id} placement="bottom">
               <Tooltip.Trigger asChild>
-                <Button
+                <button
                   type="button"
-                  size="xs"
-                  square={!selected}
-                  variant={selected ? 'primary' : 'ghost'}
+                  data-selected={selected || undefined}
                   aria-pressed={selected}
                   aria-label={selected ? undefined : option.label}
-                  className={cn('shadow-none', selected && 'px-2')}
+                  className={cn(
+                    'public-mode-option inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold transition',
+                    !selected && 'w-7 px-0',
+                  )}
                   onClick={() => {
                     setPreference(option.id)
                     persistColorModePreference(option.id)
@@ -73,7 +73,7 @@ export function ColorModeToggle({ className }: { className?: string }) {
                 >
                   <Icon className="size-3.5" weight="regular" aria-hidden />
                   {selected ? option.label : null}
-                </Button>
+                </button>
               </Tooltip.Trigger>
               <Tooltip.Content>{option.label}</Tooltip.Content>
             </Tooltip>

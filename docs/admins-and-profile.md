@@ -24,6 +24,9 @@ Only a super admin can do this.
 
 The person receives an email containing an acceptance link. Their status stays **Pending** until they accept.
 
+Search, cancelled-account visibility, page number, and page size are preserved
+in the Admins page URL. Use the controls below the table for longer lists.
+
 ## Resend or cancel a pending invitation
 
 1. Open **Admins**.

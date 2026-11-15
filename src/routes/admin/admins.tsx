@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -19,6 +20,7 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { TableView } from '@/components/ui/table-view'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { toast } from '@/components/ui/toaster'
 import {
   cancelAdminInvite,
@@ -42,8 +44,15 @@ import {
   raiseRouteError,
   shouldRethrowRouteFailure,
 } from '@/lib/errors/route-error'
+import { parsePage, parsePageSize } from '@/lib/pagination'
 
 export const Route = createFileRoute('/admin/admins')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === 'string' ? search.q.slice(0, 120) : '',
+    showCancelled: search.showCancelled === true,
+    page: parsePage(search.page),
+    pageSize: parsePageSize(search.pageSize),
+  }),
   beforeLoad: ({ context }) => {
     // Soft gate — redirect instead of RouteError so a preload race never
     // flashes the full-page “Something went wrong” UI.
@@ -92,6 +101,8 @@ function formatDateTime(value: string | null) {
 
 function AdminAdminsPage() {
   const initialAdmins = Route.useLoaderData()
+  const routeSearch = Route.useSearch()
+  const navigate = Route.useNavigate()
   const queryClient = useQueryClient()
   const { data: adminsQueryData = initialAdmins } = useQuery(
     adminsQueryOptions(),
@@ -109,8 +120,6 @@ function AdminAdminsPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [isInviting, setIsInviting] = useState(false)
-  const [search, setSearch] = useState('')
-  const [showAllStatuses, setShowAllStatuses] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
   ])
@@ -134,11 +143,11 @@ function AdminAdminsPage() {
   )
 
   const visibleAdmins = useMemo(() => {
-    if (showAllStatuses) return admins
+    if (routeSearch.showCancelled) return admins
     return admins.filter((admin) =>
       DEFAULT_VISIBLE_ADMIN_STATUSES.includes(admin.status),
     )
-  }, [admins, showAllStatuses])
+  }, [admins, routeSearch.showCancelled])
 
   const openInvite = () => {
     setIsCreating(true)
@@ -316,13 +325,23 @@ function AdminAdminsPage() {
     columns,
     state: {
       sorting,
-      globalFilter: search,
+      globalFilter: routeSearch.q,
+      pagination: {
+        pageIndex: routeSearch.page - 1,
+        pageSize: routeSearch.pageSize,
+      },
     },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setSearch,
+    onSortingChange: (next) => {
+      setSorting(next)
+      void navigate({
+        replace: true,
+        search: (previous) => ({ ...previous, page: 1 }),
+      })
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const query = String(filterValue).trim().toLowerCase()
       if (!query) return true
@@ -338,6 +357,19 @@ function AdminAdminsPage() {
       return haystack.includes(query)
     },
   })
+  const filteredAdminCount = table.getFilteredRowModel().rows.length
+  const adminPageCount = Math.max(
+    1,
+    Math.ceil(filteredAdminCount / routeSearch.pageSize),
+  )
+
+  useEffect(() => {
+    if (routeSearch.page <= adminPageCount) return
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, page: adminPageCount }),
+    })
+  }, [adminPageCount, navigate, routeSearch.page])
 
   const onInvite = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -458,8 +490,16 @@ function AdminAdminsPage() {
           <label className="text-foreground-secondary flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              checked={showAllStatuses}
-              onChange={(event) => setShowAllStatuses(event.target.checked)}
+              checked={routeSearch.showCancelled}
+              onChange={(event) =>
+                void navigate({
+                  search: (previous) => ({
+                    ...previous,
+                    showCancelled: event.target.checked,
+                    page: 1,
+                  }),
+                })
+              }
               className="accent-accent size-4"
             />
             Show cancelled
@@ -467,8 +507,17 @@ function AdminAdminsPage() {
           <Input
             size="sm"
             className="w-full max-w-xs"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            value={routeSearch.q}
+            onChange={(event) =>
+              void navigate({
+                replace: true,
+                search: (previous) => ({
+                  ...previous,
+                  q: event.target.value,
+                  page: 1,
+                }),
+              })
+            }
             placeholder="Search name, email, status"
             aria-label="Search admins"
           />
@@ -478,6 +527,22 @@ function AdminAdminsPage() {
           table={table}
           emptyMessage="No admins match your filters."
           onRowClick={openDrawer}
+        />
+        <TablePagination
+          page={routeSearch.page}
+          pageSize={routeSearch.pageSize}
+          totalRows={filteredAdminCount}
+          itemLabel="admins"
+          onPageChange={(page) =>
+            void navigate({
+              search: (previous) => ({ ...previous, page }),
+            })
+          }
+          onPageSizeChange={(pageSize) =>
+            void navigate({
+              search: (previous) => ({ ...previous, pageSize, page: 1 }),
+            })
+          }
         />
       </div>
 
