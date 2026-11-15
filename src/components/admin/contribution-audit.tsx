@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Modal } from '@/components/ui/modal'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { fieldErrorMessage } from '@/lib/forms/field-error'
 import { zodFormFieldErrors } from '@/lib/forms/zod-form-errors'
@@ -15,6 +17,7 @@ import {
   updateContributionAmount,
 } from '@/lib/registry/registry'
 import type { AdminContribution } from '@/lib/registry/registry'
+import { renderRegistryThankYouTemplate } from '@/lib/registry/thank-you-template'
 import type { RegistryContributionStatus } from '@/lib/supabase/types'
 
 function formatWhen(value: string) {
@@ -72,17 +75,23 @@ function mailtoFollowUpUrl(row: AdminContribution) {
 
 type ContributionAuditDrawerProps = {
   contribution: AdminContribution
+  thankYouTemplate: string
+  coupleLabel: string
   onClose: () => void
   onSaved: (row: AdminContribution) => void | Promise<void>
 }
 
 export function ContributionAuditDrawer({
   contribution,
+  thankYouTemplate,
+  coupleLabel,
   onClose,
   onSaved,
 }: ContributionAuditDrawerProps) {
   const [statusBusy, setStatusBusy] =
     useState<RegistryContributionStatus | null>(null)
+  const [thankYouOpen, setThankYouOpen] = useState(false)
+  const [thankYouMessage, setThankYouMessage] = useState('')
   const form = useForm({
     defaultValues: { amount: String(contribution.amount) },
     validators: {
@@ -117,16 +126,32 @@ export function ContributionAuditDrawer({
     form.reset({ amount: String(contribution.amount) })
   }, [contribution.amount, contribution.id, form])
 
-  const setStatus = async (status: RegistryContributionStatus) => {
+  const setStatus = async (
+    status: RegistryContributionStatus,
+    message?: string,
+  ) => {
     setStatusBusy(status)
     try {
       const row = await setContributionStatus({
-        data: { contributionId: contribution.id, status },
+        data: {
+          contributionId: contribution.id,
+          status,
+          thankYouMessage: message,
+        },
       })
-      toast.success(
-        `Marked ${CONTRIBUTION_STATUS_LABELS[status].toLowerCase()}.`,
-      )
       await onSaved(row)
+      if (row.thank_you_delivery_error) {
+        toast.error(
+          `Payment marked received, but the thank-you email failed: ${row.thank_you_delivery_error}`,
+        )
+      } else {
+        toast.success(
+          status === 'received' && row.thank_you_sent_at
+            ? 'Payment marked received and thank-you sent.'
+            : `Marked ${CONTRIBUTION_STATUS_LABELS[status].toLowerCase()}.`,
+        )
+        setThankYouOpen(false)
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Unable to update status.',
@@ -139,6 +164,21 @@ export function ContributionAuditDrawer({
   const whatsappUrl = whatsappFollowUpUrl(contribution)
   const mailtoUrl = mailtoFollowUpUrl(contribution)
   const confirmLine = guestConfirmLabel(contribution)
+  const openReceivedConfirmation = () => {
+    if (contribution.thank_you_sent_at) {
+      void setStatus('received')
+      return
+    }
+    setThankYouMessage(
+      renderRegistryThankYouTemplate(thankYouTemplate, {
+        name: contribution.payer_name,
+        amount: `${contribution.amount} ${contribution.currency}`,
+        gift: contribution.gift_title ?? 'our wedding celebration',
+        couple: coupleLabel,
+      }),
+    )
+    setThankYouOpen(true)
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -226,7 +266,24 @@ export function ContributionAuditDrawer({
             <dt className="text-foreground-secondary">Started</dt>
             <dd className="mt-0.5">{formatWhen(contribution.created_at)}</dd>
           </div>
+          {contribution.thank_you_sent_at ? (
+            <div>
+              <dt className="text-foreground-secondary">Thank-you sent</dt>
+              <dd className="mt-0.5">
+                {formatWhen(contribution.thank_you_sent_at)}
+              </dd>
+            </div>
+          ) : null}
         </dl>
+
+        {contribution.thank_you_message ? (
+          <div>
+            <p className="text-sm font-medium">Sent thank-you message</p>
+            <div className="border-border bg-background mt-2 whitespace-pre-wrap rounded-lg border p-3 text-sm leading-relaxed">
+              {contribution.thank_you_message}
+            </div>
+          </div>
+        ) : null}
 
         <form
           className="space-y-3"
@@ -281,10 +338,19 @@ export function ContributionAuditDrawer({
               variant={
                 contribution.status === 'received' ? 'primary' : 'outline'
               }
-              disabled={statusBusy !== null}
-              onClick={() => void setStatus('received')}
+              disabled={
+                statusBusy !== null ||
+                (contribution.status === 'received' &&
+                  Boolean(contribution.thank_you_sent_at))
+              }
+              onClick={openReceivedConfirmation}
             >
-              {statusBusy === 'received' ? 'Saving…' : 'Received'}
+              {statusBusy === 'received'
+                ? 'Saving…'
+                : contribution.status === 'received' &&
+                    !contribution.thank_you_sent_at
+                  ? 'Retry thank-you'
+                  : 'Received'}
             </Button>
             <Button
               type="button"
@@ -339,6 +405,53 @@ export function ContributionAuditDrawer({
           Close
         </Button>
       </div>
+
+      <Modal
+        open={thankYouOpen}
+        title="Confirm payment and send thank-you"
+        description={`Mark ${contribution.payer_name}’s payment as received and send this one-off acknowledgement.`}
+        size="lg"
+        onOpenChange={(open) => {
+          if (!statusBusy) setThankYouOpen(open)
+        }}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={statusBusy !== null}
+              onClick={() => setThankYouOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              isLoading={statusBusy === 'received'}
+              onClick={() => void setStatus('received', thankYouMessage)}
+            >
+              Mark received and send
+            </Button>
+          </div>
+        }
+      >
+        <Field>
+          <Field.Label>Message for this contributor</Field.Label>
+          <Field.Control>
+            <Textarea
+              rows={10}
+              maxLength={5000}
+              value={thankYouMessage}
+              onChange={(event) => setThankYouMessage(event.target.value)}
+            />
+          </Field.Control>
+          <Field.Description>
+            You can edit this message for this contributor only. The saved
+            template will not change.
+          </Field.Description>
+        </Field>
+      </Modal>
     </div>
   )
 }

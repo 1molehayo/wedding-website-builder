@@ -56,6 +56,8 @@ export type Wedding = {
   invitation_design_mode: 'light' | 'dark'
   /** photos bucket path for the rendered invitation PNG, if generated. */
   invitation_card_path: string | null
+  /** Admin-controlled acknowledgement sent after a contribution is received. */
+  registry_thank_you_template: string | null
   page_blocks: PageBlock[]
   page_blocks_draft: PageBlock[]
   page_draft_updated_at: string | null
@@ -135,6 +137,8 @@ export type RegistryContribution = {
   applied_at: string | null
   external_ref: string | null
   listing_url: string | null
+  thank_you_message: string | null
+  thank_you_sent_at: string | null
   created_at: string
   updated_at: string
 }

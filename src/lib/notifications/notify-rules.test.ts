@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  notificationCtaForHref,
   notificationHrefForAction,
   parseNotificationHref,
   shouldNotifyAction,
@@ -24,5 +25,17 @@ describe('notification rules', () => {
     expect(parseNotificationHref('/admin/pages')).toBe('/admin/pages')
     expect(parseNotificationHref('/admin/not-real')).toBe('/admin/activity')
     expect(parseNotificationHref(null)).toBe('/admin/activity')
+  })
+
+  it('only makes guest and registry notifications actionable', () => {
+    expect(notificationCtaForHref('/admin/guests')).toEqual({
+      label: 'View guest list',
+      href: '/admin/guests',
+    })
+    expect(notificationCtaForHref('/admin/registry')).toEqual({
+      label: 'View registry',
+      href: '/admin/registry',
+    })
+    expect(notificationCtaForHref('/admin/pages')).toBeNull()
   })
 })

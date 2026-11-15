@@ -67,7 +67,15 @@ Do not add test data on production.
 - Sidebar and Overview use **View website** for the live site. Saved-draft
   **Preview website** is available only from Page content.
 - The notification bell links to a paginated Notifications page containing
-  both read and unread updates.
+  both read and unread updates. Guest and registry notifications have explicit
+  destination actions; other categories remain informational.
+- Guest search and RSVP filters are URL-backed. Summary cards apply the same
+  filters as the filter menu.
+- Registry contributions use two distinct emails: a fixed guest-confirmation
+  email when the sender confirms the transfer, then an admin-controlled
+  acknowledgement when payment is first marked Received. The wedding-wide
+  template supports per-contributor overrides, stores the exact sent copy, and
+  supports retry after delivery failure without changing payment status.
 - Public section tracking no longer rewrites the URL during natural scrolling,
   and tall sections can become active without viewport jumps.
 
@@ -81,7 +89,9 @@ Do not add test data on production.
 
 Relevant migrations include registry contributions/activity, Amazon listings,
 admin notifications, `weddings.announcement_text`, and
-`20261113030000_hero_video_storage.sql` for MP4/WebM page media. Record the
+`20261113030000_hero_video_storage.sql` for MP4/WebM page media, plus
+`20261114010000_registry_acknowledgement_thanks.sql` for contribution
+acknowledgements. Record the
 actual applied migration state here after each deployment rather than assuming
 that a successful code deploy applied it.
 
@@ -109,7 +119,8 @@ that a successful code deploy applied it.
   location-aware contribution defaults; gift base-currency reset; more
   prominent gift prices; live-site versus draft-preview action separation;
   complete guest details in email/WhatsApp invites; stable public section
-  scrolling.
+  scrolling; actionable guest/registry notifications; URL-backed guest
+  filters; admin-controlled contribution acknowledgements.
 - Nov 12: Public announcement bar (`weddings.announcement_text`); TanStack
   Query for admin lists, notification bell, contribute FX quotes, and address
   search; FX subscribe + unavailable alert; Amazon optional docs; mobile nav

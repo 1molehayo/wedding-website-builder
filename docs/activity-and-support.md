@@ -29,7 +29,10 @@ The history is not an undo button. Page content has its own restore option under
 
 ## Check notifications
 
-Select the bell icon near the top-right corner to see admin notifications. Open new items and follow their link where one is provided.
+Select the bell icon near the top-right corner to see admin notifications.
+Guest and registry updates show **View guest list** or **View registry** and
+mark the item read when opened. Other updates remain informational for now.
+Select **View all notifications** to see both read and unread history.
 
 ## Send feedback about the app
 

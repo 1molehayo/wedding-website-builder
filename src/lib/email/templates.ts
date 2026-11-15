@@ -576,6 +576,38 @@ export function registryContributionThanksEmailText(
   ].join('\n')
 }
 
+export type RegistryContributionAcknowledgementEmailInput = {
+  coupleLabel: string
+  message: string
+  theme: PublicThemeId
+  mode?: ColorMode
+}
+
+export function registryContributionAcknowledgementEmailHtml(
+  input: RegistryContributionAcknowledgementEmailInput,
+): string {
+  const palette = getEmailThemePalette(
+    input.theme,
+    input.mode ?? EMAIL_SEND_MODE,
+  )
+  const body = `
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:${palette.foregroundSecondary};">
+      A note from ${escapeHtml(input.coupleLabel)}
+    </p>
+    <div style="width:48px;height:1px;background:${palette.highlight};margin:0 0 20px;"></div>
+    <p style="margin:0;font-size:15px;line-height:1.65;white-space:pre-line;color:${palette.foreground};">
+      ${escapeHtml(input.message).replace(/\n/g, '<br/>')}
+    </p>`
+
+  return themedEmailDocument(palette, body)
+}
+
+export function registryContributionAcknowledgementEmailText(
+  input: RegistryContributionAcknowledgementEmailInput,
+): string {
+  return input.message
+}
+
 function ctaButton(href: string, label: string, palette: EmailThemePalette) {
   return `<a href="${escapeAttr(href)}" style="display:inline-block;padding:12px 20px;background:${palette.accent};color:${palette.accentForeground};text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
       ${escapeHtml(label)}

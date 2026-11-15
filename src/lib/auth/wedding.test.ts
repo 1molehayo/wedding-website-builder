@@ -19,6 +19,7 @@ describe('wedding date contract', () => {
       invitation_design_id: 'wreath',
       invitation_design_mode: 'light',
       invitation_card_path: null,
+      registry_thank_you_template: null,
       page_blocks: [],
       page_blocks_draft: [],
       page_draft_updated_at: null,
