@@ -390,6 +390,8 @@ function AdminRegistryPage() {
           <ContributionAuditDrawer
             key={editingTransfer.id}
             contribution={editingTransfer}
+            thankYouTemplate={data.thankYouTemplate}
+            coupleLabel={data.coupleLabel}
             onClose={() => {
               setTransferDrawerOpen(false)
               setEditingTransfer(null)

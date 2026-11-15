@@ -14,6 +14,8 @@ import {
   guestRsvpInviteEmailText,
   inviteEmailHtml,
   inviteEmailText,
+  registryContributionAcknowledgementEmailHtml,
+  registryContributionAcknowledgementEmailText,
   registryContributionConfirmEmailHtml,
   registryContributionConfirmEmailText,
   registryContributionReminderEmailHtml,
@@ -25,6 +27,7 @@ import type {
   GuestDateAnnouncedEmailInput,
   GuestPhotoShareEmailInput,
   GuestRsvpInviteEmailInput,
+  RegistryContributionAcknowledgementEmailInput,
   RegistryContributionConfirmEmailInput,
   RegistryContributionReminderEmailInput,
   RegistryContributionThanksEmailInput,
@@ -408,6 +411,22 @@ export async function sendRegistryContributionThanksEmail(
     subject,
     text: registryContributionThanksEmailText(input),
     html: registryContributionThanksEmailHtml(input),
+  })
+}
+
+export async function sendRegistryContributionAcknowledgementEmail(
+  input: RegistryContributionAcknowledgementEmailInput & {
+    to: string
+    replyTo?: string
+  },
+) {
+  const subject = `A thank-you note from ${input.coupleLabel}`
+  return sendResendEmail({
+    to: input.to,
+    replyTo: input.replyTo,
+    subject,
+    text: registryContributionAcknowledgementEmailText(input),
+    html: registryContributionAcknowledgementEmailHtml(input),
   })
 }
 

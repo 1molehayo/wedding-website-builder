@@ -8,6 +8,7 @@ import {
   markNotificationRead,
 } from '@/lib/notifications/notifications'
 import type { AdminNotificationItem } from '@/lib/notifications/notifications'
+import { notificationCtaForHref } from '@/lib/notifications/notify-rules'
 import {
   adminQueryKeys,
   notificationsPageQueryOptions,
@@ -118,16 +119,10 @@ function AdminNotificationsPage() {
         </div>
       ) : (
         <ul className="border-border bg-surface divide-border divide-y overflow-hidden rounded-xl border">
-          {data.items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className={cn(
-                  'hover:bg-background-secondary flex w-full items-start justify-between gap-4 px-4 py-4 text-left transition md:px-5',
-                  !item.read_at && 'bg-background-secondary/60',
-                )}
-                onClick={() => void onSelect(item)}
-              >
+          {data.items.map((item) => {
+            const cta = notificationCtaForHref(item.href)
+            const content = (
+              <>
                 <span className="min-w-0">
                   <span className="block text-sm leading-relaxed font-medium">
                     {item.summary}
@@ -135,6 +130,11 @@ function AdminNotificationsPage() {
                   <span className="text-foreground-secondary mt-1 block text-xs">
                     {formatWhen(item.created_at)}
                   </span>
+                  {cta ? (
+                    <span className="mt-2 block text-sm font-medium underline underline-offset-4">
+                      {cta.label}
+                    </span>
+                  ) : null}
                 </span>
                 <Badge
                   size="sm"
@@ -143,9 +143,31 @@ function AdminNotificationsPage() {
                 >
                   {item.read_at ? 'Read' : 'Unread'}
                 </Badge>
-              </button>
-            </li>
-          ))}
+              </>
+            )
+            const className = cn(
+              'flex w-full items-start justify-between gap-4 px-4 py-4 text-left md:px-5',
+              !item.read_at && 'bg-background-secondary/60',
+            )
+            return (
+              <li key={item.id}>
+                {cta ? (
+                  <button
+                    type="button"
+                    className={cn(
+                      className,
+                      'hover:bg-background-secondary transition',
+                    )}
+                    onClick={() => void onSelect(item)}
+                  >
+                    {content}
+                  </button>
+                ) : (
+                  <div className={className}>{content}</div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
 

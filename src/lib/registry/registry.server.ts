@@ -16,6 +16,10 @@ import {
 import type { AdminContribution } from '@/lib/registry/contribution.server'
 import { giftStillOpen } from '@/lib/registry/remaining'
 import { formatRegistryPriceLabel } from '@/lib/registry/schema'
+import {
+  DEFAULT_REGISTRY_THANK_YOU_TEMPLATE,
+  registryThankYouTemplateSchema,
+} from '@/lib/registry/thank-you-template'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import { REGISTRY_PROVIDER_LABELS } from '@/lib/registry/providers'
 import type {
@@ -86,6 +90,8 @@ export type RegistryAdminData = {
   accounts: RegistryAccount[]
   reservations: RegistryReservation[]
   contributions: AdminContribution[]
+  thankYouTemplate: string
+  coupleLabel: string
 }
 
 function deriveItemStatus(
@@ -320,7 +326,37 @@ export async function listRegistryAdminHandler(): Promise<RegistryAdminData> {
     accounts: accountsResult.data,
     reservations: reservationsResult.data,
     contributions,
+    thankYouTemplate:
+      session.wedding.registry_thank_you_template ??
+      DEFAULT_REGISTRY_THANK_YOU_TEMPLATE,
+    coupleLabel: `${session.wedding.groom_name} & ${session.wedding.bride_name}`,
   }
+}
+
+export async function saveRegistryThankYouTemplateHandler(
+  template: string,
+): Promise<{ template: string }> {
+  const session = await requireWeddingSession()
+  const value = registryThankYouTemplateSchema.parse(template)
+  const admin = createAdminSupabaseClient()
+  const updated = await admin
+    .from('weddings')
+    .update({ registry_thank_you_template: value })
+    .eq('id', session.wedding.id)
+    .select('id')
+    .maybeSingle()
+
+  if (updated.error) throw new Error(updated.error.message)
+  if (!updated.data) throw new Error('Wedding not found.')
+
+  await logRegistryChange(
+    session,
+    'registry.thank_you_template_updated',
+    session.wedding.id,
+    'Updated the contribution thank-you template.',
+  )
+
+  return { template: value }
 }
 
 export async function createRegistryItemHandler(

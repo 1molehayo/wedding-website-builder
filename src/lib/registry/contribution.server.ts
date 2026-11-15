@@ -3,6 +3,7 @@ import { getAppUrl } from '@/lib/app-url'
 import { requireWeddingSession } from '@/lib/auth/session.server'
 import { formatCoupleNames } from '@/lib/constants'
 import {
+  sendRegistryContributionAcknowledgementEmail,
   sendRegistryContributionConfirmEmail,
   sendRegistryContributionThanksEmail,
 } from '@/lib/email/resend.server'
@@ -16,6 +17,9 @@ import {
   remainingPrices,
 } from '@/lib/registry/remaining'
 import type { AppliedPayment } from '@/lib/registry/remaining'
+import {
+  registryThankYouMessageSchema,
+} from '@/lib/registry/thank-you-template'
 import { createAdminSupabaseClient } from '@/lib/supabase/admin.server'
 import type {
   PublicThemeId,
@@ -81,8 +85,11 @@ export type AdminContribution = {
   payer_phone: string | null
   status: RegistryContributionStatus
   applied_at: string | null
+  thank_you_message: string | null
+  thank_you_sent_at: string | null
   created_at: string
   updated_at: string
+  thank_you_delivery_error?: string
   bank: {
     reference: string
     reminder_count: number
@@ -92,7 +99,7 @@ export type AdminContribution = {
 }
 
 const CONTRIBUTION_ADMIN_SELECT =
-  'id, wedding_id, gift_id, channel, provider, amount, currency, amount_base, base_currency, fx_rate, fx_locked_at, fx_source, payer_name, payer_email, payer_phone, status, applied_at, created_at, updated_at'
+  'id, wedding_id, gift_id, channel, provider, amount, currency, amount_base, base_currency, fx_rate, fx_locked_at, fx_source, payer_name, payer_email, payer_phone, status, applied_at, thank_you_message, thank_you_sent_at, created_at, updated_at'
 
 function amountLabel(amount: number, currency: string): string {
   return `${amount} ${currency}`
@@ -647,6 +654,8 @@ export async function listAdminContributionsHandler(
       payer_phone: row.payer_phone,
       status: row.status,
       applied_at: row.applied_at,
+      thank_you_message: row.thank_you_message,
+      thank_you_sent_at: row.thank_you_sent_at,
       created_at: row.created_at,
       updated_at: row.updated_at,
       bank: bank
@@ -838,6 +847,7 @@ export async function recordExternalContributionHandler(input: {
 export async function setContributionStatusHandler(input: {
   contributionId: string
   status: RegistryContributionStatus
+  thankYouMessage?: string
 }): Promise<AdminContribution> {
   const session = await requireWeddingSession()
   const admin = createAdminSupabaseClient()
@@ -845,7 +855,9 @@ export async function setContributionStatusHandler(input: {
 
   const existing = await admin
     .from('registry_contributions')
-    .select('id, status, amount, currency, gift_id, payer_name')
+    .select(
+      'id, status, amount, currency, gift_id, payer_name, payer_email, thank_you_sent_at',
+    )
     .eq('id', input.contributionId)
     .eq('wedding_id', weddingId)
     .maybeSingle()
@@ -854,46 +866,107 @@ export async function setContributionStatusHandler(input: {
   if (!existing.data) throw new Error('Contribution not found.')
 
   const previousStatus = existing.data.status as RegistryContributionStatus
-  if (previousStatus === input.status) {
+  const needsThankYou =
+    input.status === 'received' && !existing.data.thank_you_sent_at
+  const thankYouMessage = needsThankYou
+    ? registryThankYouMessageSchema.parse(input.thankYouMessage)
+    : null
+  if (previousStatus === input.status && !needsThankYou) {
     return loadAdminContribution(weddingId, input.contributionId)
   }
 
-  const updated = await admin
-    .from('registry_contributions')
-    .update({ status: input.status })
-    .eq('id', input.contributionId)
-    .eq('wedding_id', weddingId)
-    .select('id')
-    .maybeSingle()
+  if (previousStatus !== input.status) {
+    const updated = await admin
+      .from('registry_contributions')
+      .update({ status: input.status })
+      .eq('id', input.contributionId)
+      .eq('wedding_id', weddingId)
+      .select('id')
+      .maybeSingle()
 
-  if (updated.error) throw new Error(updated.error.message)
-  if (!updated.data) throw new Error('Contribution not found.')
+    if (updated.error) throw new Error(updated.error.message)
+    if (!updated.data) throw new Error('Contribution not found.')
 
-  const action =
-    input.status === 'received'
-      ? 'registry.contribution_received'
-      : input.status === 'not_received'
-        ? 'registry.contribution_not_received'
-        : 'registry.contribution_status_updated'
+    const action =
+      input.status === 'received'
+        ? 'registry.contribution_received'
+        : input.status === 'not_received'
+          ? 'registry.contribution_not_received'
+          : 'registry.contribution_status_updated'
 
-  await recordActivity({
-    weddingId,
-    actorId: session.user.id,
-    actorEmail: session.profile.email ?? session.user.email ?? null,
-    actorRole: session.profile.role,
-    action,
-    entityType: 'registry_contribution',
-    entityId: input.contributionId,
-    summary: `Marked contribution as ${CONTRIBUTION_STATUS_LABELS[input.status].toLowerCase()} (was ${CONTRIBUTION_STATUS_LABELS[previousStatus].toLowerCase()}).`,
-    metadata: {
-      previousStatus,
-      status: input.status,
-      amount: Number(existing.data.amount),
-      currency: existing.data.currency,
-      giftId: existing.data.gift_id,
-      payerName: existing.data.payer_name,
-    },
-  })
+    await recordActivity({
+      weddingId,
+      actorId: session.user.id,
+      actorEmail: session.profile.email ?? session.user.email ?? null,
+      actorRole: session.profile.role,
+      action,
+      entityType: 'registry_contribution',
+      entityId: input.contributionId,
+      summary: `Marked contribution as ${CONTRIBUTION_STATUS_LABELS[input.status].toLowerCase()} (was ${CONTRIBUTION_STATUS_LABELS[previousStatus].toLowerCase()}).`,
+      metadata: {
+        previousStatus,
+        status: input.status,
+        amount: Number(existing.data.amount),
+        currency: existing.data.currency,
+        giftId: existing.data.gift_id,
+        payerName: existing.data.payer_name,
+      },
+    })
+  }
+
+  if (needsThankYou && thankYouMessage) {
+    const coupleLabel = formatCoupleNames(
+      session.wedding.groom_name,
+      session.wedding.bride_name,
+    )
+
+    try {
+      await sendRegistryContributionAcknowledgementEmail({
+        to: existing.data.payer_email,
+        coupleLabel,
+        message: thankYouMessage,
+        theme: session.wedding.active_public_theme,
+      })
+    } catch (error) {
+      const row = await loadAdminContribution(weddingId, input.contributionId)
+      return {
+        ...row,
+        thank_you_delivery_error:
+          error instanceof Error ? error.message : 'Unable to send thank-you.',
+      }
+    }
+
+    const sentAt = new Date().toISOString()
+    const saved = await admin
+      .from('registry_contributions')
+      .update({
+        thank_you_message: thankYouMessage,
+        thank_you_sent_at: sentAt,
+      })
+      .eq('id', input.contributionId)
+      .eq('wedding_id', weddingId)
+      .is('thank_you_sent_at', null)
+      .select('id')
+      .maybeSingle()
+
+    if (saved.error) throw new Error(saved.error.message)
+
+    await recordActivity({
+      weddingId,
+      actorId: session.user.id,
+      actorEmail: session.profile.email ?? session.user.email ?? null,
+      actorRole: session.profile.role,
+      action: 'registry.acknowledgement_sent',
+      entityType: 'registry_contribution',
+      entityId: input.contributionId,
+      summary: `Sent contribution acknowledgement to ${existing.data.payer_name}.`,
+      metadata: {
+        amount: Number(existing.data.amount),
+        currency: existing.data.currency,
+        giftId: existing.data.gift_id,
+      },
+    })
+  }
 
   return loadAdminContribution(weddingId, input.contributionId)
 }

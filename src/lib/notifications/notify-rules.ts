@@ -75,6 +75,18 @@ export function parseNotificationHref(value: string | null): NotificationHref {
   }
 }
 
+export function notificationCtaForHref(
+  href: NotificationHref,
+): { label: string; href: NotificationHref } | null {
+  if (href === '/admin/guests') {
+    return { label: 'View guest list', href }
+  }
+  if (href === '/admin/registry') {
+    return { label: 'View registry', href }
+  }
+  return null
+}
+
 export function notificationHrefForAction(
   action: string,
 ): NotificationHref {

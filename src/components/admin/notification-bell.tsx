@@ -21,6 +21,7 @@ import {
   markNotificationRead,
 } from '@/lib/notifications/notifications'
 import type { AdminNotificationItem } from '@/lib/notifications/notifications'
+import { notificationCtaForHref } from '@/lib/notifications/notify-rules'
 import {
   adminQueryKeys,
   notificationsQueryOptions,
@@ -153,23 +154,49 @@ export function NotificationBell() {
                   </p>
                 ) : (
                   <ul className="divide-border divide-y">
-                    {items.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          type="button"
-                          className={cn(
-                            'hover:bg-background-secondary w-full px-3 py-2.5 text-left transition',
-                            !item.read_at && 'bg-background-secondary/60',
-                          )}
-                          onClick={() => void onSelect(item)}
-                        >
+                    {items.map((item) => {
+                      const cta = notificationCtaForHref(item.href)
+                      const content = (
+                        <>
                           <p className="text-sm leading-snug">{item.summary}</p>
                           <p className="text-foreground-secondary mt-1 text-xs">
                             {formatWhen(item.created_at)}
                           </p>
-                        </button>
-                      </li>
-                    ))}
+                          {cta ? (
+                            <p className="mt-2 text-xs font-medium underline underline-offset-4">
+                              {cta.label}
+                            </p>
+                          ) : null}
+                        </>
+                      )
+                      return (
+                        <li key={item.id}>
+                          {cta ? (
+                            <button
+                              type="button"
+                              className={cn(
+                                'hover:bg-background-secondary w-full px-3 py-2.5 text-left transition',
+                                !item.read_at &&
+                                  'bg-background-secondary/60',
+                              )}
+                              onClick={() => void onSelect(item)}
+                            >
+                              {content}
+                            </button>
+                          ) : (
+                            <div
+                              className={cn(
+                                'w-full px-3 py-2.5 text-left',
+                                !item.read_at &&
+                                  'bg-background-secondary/60',
+                              )}
+                            >
+                              {content}
+                            </div>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
               </div>
