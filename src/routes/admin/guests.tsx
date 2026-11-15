@@ -18,6 +18,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -37,6 +38,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { TableView } from '@/components/ui/table-view'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/components/ui/toaster'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -73,6 +75,7 @@ import {
 } from '@/lib/guests/whatsapp'
 import { regenerateInvitationCardForEmail } from '@/lib/invitation/regenerate-card-client'
 import { adminQueryKeys, guestsQueryOptions } from '@/lib/query/admin-queries'
+import { parsePage, parsePageSize } from '@/lib/pagination'
 import { updateGuestRsvp } from '@/lib/rsvp/rsvp'
 import { DEFAULT_REGISTRY_THANK_YOU_TEMPLATE } from '@/lib/registry/thank-you-template'
 import {
@@ -98,6 +101,8 @@ export const Route = createFileRoute('/admin/guests')({
     return {
       q: typeof search.q === 'string' ? search.q.slice(0, 120) : '',
       status,
+      page: parsePage(search.page),
+      pageSize: parsePageSize(search.pageSize),
     }
   },
   beforeLoad: ({ context }) => {
@@ -717,7 +722,7 @@ function AdminGuestsPage() {
 
   const applyStatusFilter = (status: GuestStatusFilter) => {
     void navigate({
-      search: (previous) => ({ ...previous, status }),
+      search: (previous) => ({ ...previous, status, page: 1 }),
     })
   }
 
@@ -850,19 +855,33 @@ function AdminGuestsPage() {
   const table = useReactTable({
     data: filteredGuests,
     columns,
-    state: { sorting, globalFilter: routeSearch.q },
-    onSortingChange: setSorting,
+    state: {
+      sorting,
+      globalFilter: routeSearch.q,
+      pagination: {
+        pageIndex: routeSearch.page - 1,
+        pageSize: routeSearch.pageSize,
+      },
+    },
+    onSortingChange: (next) => {
+      setSorting(next)
+      void navigate({
+        replace: true,
+        search: (previous) => ({ ...previous, page: 1 }),
+      })
+    },
     onGlobalFilterChange: (next) => {
       const q =
         typeof next === 'function' ? String(next(routeSearch.q)) : String(next)
       void navigate({
         replace: true,
-        search: (previous) => ({ ...previous, q }),
+        search: (previous) => ({ ...previous, q, page: 1 }),
       })
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const query = String(filterValue).trim().toLowerCase()
       if (!query) return true
@@ -882,6 +901,19 @@ function AdminGuestsPage() {
       return haystack.includes(query)
     },
   })
+  const filteredGuestCount = table.getFilteredRowModel().rows.length
+  const guestPageCount = Math.max(
+    1,
+    Math.ceil(filteredGuestCount / routeSearch.pageSize),
+  )
+
+  useEffect(() => {
+    if (routeSearch.page <= guestPageCount) return
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, page: guestPageCount }),
+    })
+  }, [guestPageCount, navigate, routeSearch.page])
 
   const onDelete = async () => {
     const guest = guestPendingDelete
@@ -974,7 +1006,7 @@ function AdminGuestsPage() {
       <div className="space-y-3">
         <div className="flex flex-wrap justify-end gap-2">
           <details ref={filterDetailsRef} className="relative">
-            <summary className="border-border bg-surface hover:bg-background-secondary flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg border px-3 text-sm font-medium transition">
+            <summary className="border-border bg-surface hover:bg-background-secondary flex h-8 cursor-pointer list-none items-center gap-2 rounded-lg border px-3 text-sm font-medium transition">
               <FunnelIcon />
               Filters
               {routeSearch.status !== 'all' ? (
@@ -1038,6 +1070,7 @@ function AdminGuestsPage() {
                 search: (previous) => ({
                   ...previous,
                   q: event.target.value,
+                  page: 1,
                 }),
               })
             }
@@ -1050,6 +1083,22 @@ function AdminGuestsPage() {
           table={table}
           emptyMessage="No guests yet. Add your first guest to get started."
           onRowClick={openView}
+        />
+        <TablePagination
+          page={routeSearch.page}
+          pageSize={routeSearch.pageSize}
+          totalRows={filteredGuestCount}
+          itemLabel="guests"
+          onPageChange={(page) =>
+            void navigate({
+              search: (previous) => ({ ...previous, page }),
+            })
+          }
+          onPageSizeChange={(pageSize) =>
+            void navigate({
+              search: (previous) => ({ ...previous, pageSize, page: 1 }),
+            })
+          }
         />
       </div>
 

@@ -91,6 +91,60 @@ html {
   --admin-accent: #2f5d50;
 }
 
+/*
+  Public appearance control uses fixed neutral colours. It must stay legible
+  and recognisable regardless of the selected wedding colour theme.
+*/
+.public-mode-toggle {
+  border-color: #cbd5e1;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
+}
+
+.public-mode-option {
+  color: #475569;
+}
+
+.public-mode-option:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+.public-mode-option[data-selected='true'] {
+  color: #ffffff;
+  background: #1e293b;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 24%);
+}
+
+.public-mode-option:focus-visible {
+  outline: 2px solid #64748b;
+  outline-offset: 2px;
+}
+
+html[data-mode='dark'] .public-mode-toggle {
+  border-color: #475569;
+  background: rgb(15 23 42 / 92%);
+}
+
+html[data-mode='dark'] .public-mode-option {
+  color: #cbd5e1;
+}
+
+html[data-mode='dark'] .public-mode-option:hover {
+  color: #ffffff;
+  background: #334155;
+}
+
+html[data-mode='dark'] .public-mode-option[data-selected='true'] {
+  color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 35%);
+}
+
+html[data-mode='dark'] .public-mode-option:focus-visible {
+  outline-color: #cbd5e1;
+}
+
 /* Default / Celeste light */
 :root,
 [data-theme='celeste'][data-mode='light'],

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { TablePagination } from '@/components/ui/table-pagination'
 import { ACTIVITY_AREAS } from '@/lib/activity/activity'
 import type { ListActivityLogsResult } from '@/lib/activity/activity'
 import { activityQueryOptions } from '@/lib/query/admin-queries'
@@ -114,9 +115,6 @@ function AdminActivityPage() {
       },
     })
   }
-
-  const totalPages = Math.max(1, Math.ceil(data.total / data.limit))
-  const page = search.page
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -250,39 +248,16 @@ function AdminActivityPage() {
       )}
 
       {data.total > data.limit ? (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-foreground-secondary text-sm">
-            {data.total} events · page {page} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => {
-                void navigate({
-                  search: { ...search, page: page - 1 },
-                })
-              }}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => {
-                void navigate({
-                  search: { ...search, page: page + 1 },
-                })
-              }}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <TablePagination
+          page={search.page}
+          pageSize={data.limit}
+          totalRows={data.total}
+          itemLabel="events"
+          showPageSize={false}
+          onPageChange={(page) =>
+            void navigate({ search: { ...search, page } })
+          }
+        />
       ) : null}
     </div>
   )
