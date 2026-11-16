@@ -84,7 +84,8 @@ Do not add test data on production.
   type for clearer selection across themes. Document responses use
   `no-store` cache headers so browsers do not keep a stale HTML shell
   across deploys; missing `/assets/*` paths 404 instead of returning a
-  cacheable SPA shell.
+  cacheable SPA shell. Public wedding loaders only map a missing slug to
+  404; other loader failures surface as 500 instead of a false not-found.
 - The public Light/Dark/System control has theme-independent neutral hover and
   selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation

@@ -9,10 +9,22 @@ import { RegistrySection } from '@/components/blocks/registry-section'
 import { PublicShell } from '@/components/public-shell'
 import { getAppUrl } from '@/lib/app-url'
 import { formatCoupleNames } from '@/lib/constants'
+import {
+  internalError,
+  raiseRouteError,
+  shouldRethrowRouteFailure,
+} from '@/lib/errors/route-error'
 import { getPublicHomeData } from '@/lib/page-blocks/settings'
 import { getPublicSectionNav } from '@/lib/page-blocks/types'
 import { isReservedPublicSlug } from '@/lib/wedding/slug'
 import { formatWeddingDate } from '@/lib/wedding/public-settings'
+
+function isMissingWeddingError(cause: unknown) {
+  const message = cause instanceof Error ? cause.message : String(cause ?? '')
+  return (
+    message === 'Wedding not found.' || message === 'Wedding slug is required.'
+  )
+}
 
 function buildPublicDescription(input: {
   coupleLabel: string
@@ -73,8 +85,18 @@ export const Route = createFileRoute('/$weddingSlug')({
       return await getPublicHomeData({
         data: { slug: params.weddingSlug, preview: deps.preview },
       })
-    } catch {
-      throw notFound()
+    } catch (cause) {
+      // Only a missing wedding is a 404. Deploy/transient failures must surface
+      // as 500 so they are not mistaken for a bad public URL.
+      if (shouldRethrowRouteFailure(cause)) throw cause
+      if (isMissingWeddingError(cause)) throw notFound()
+      throw raiseRouteError(
+        internalError({
+          message: `Failed to load public wedding /${params.weddingSlug}`,
+          cause,
+        }),
+        { source: 'ssr', pathname: `/${params.weddingSlug}` },
+      )
     }
   },
   head: ({ loaderData, params }) => {
