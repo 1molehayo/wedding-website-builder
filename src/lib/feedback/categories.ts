@@ -20,3 +20,16 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number]
 export function feedbackCategoryLabel(id: string): string {
   return FEEDBACK_CATEGORIES.find((item) => item.id === id)?.label ?? id
 }
+
+export function feedbackStatusLabel(status: FeedbackStatus): string {
+  switch (status) {
+    case 'new':
+      return 'New'
+    case 'planned':
+      return 'Planned'
+    case 'done':
+      return 'Done'
+    case 'dismissed':
+      return 'Dismissed'
+  }
+}

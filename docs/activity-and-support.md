@@ -46,7 +46,10 @@ Use it to report:
 
 Explain what you were trying to do, what happened, and which page you were using.
 
-Super admins can open **Backlog** to review submitted feedback.
+Super admins can open **Backlog** to review submitted feedback in a table
+(category, status, author, page, and submitted time). Overview cards filter by
+category; the Filters menu filters by status; the row actions menu updates
+status.
 
 ## Contact support
 

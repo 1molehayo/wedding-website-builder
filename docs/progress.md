@@ -73,6 +73,9 @@ Do not add test data on production.
   filters as the filter menu, with full-card hover/selected states. Shared
   pagination is used for growing admin collections: guests, admins, feedback,
   registry gifts/transfers, media/shares, notifications, and activity.
+  Disabled page controls use a not-allowed cursor; the page-size control is
+  fit-content. The super-admin Backlog is a filterable table with a row status
+  actions menu and clickable category overview cards.
 - The public Light/Dark/System control has theme-independent neutral hover and
   selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation
