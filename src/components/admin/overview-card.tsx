@@ -46,7 +46,7 @@ export function OverviewCard({
         <button
           type="button"
           aria-pressed={active}
-          aria-label={`Filter guests by ${label.toLowerCase()}`}
+          aria-label={`Filter by ${label.toLowerCase()}`}
           className="focus-visible:ring-ring absolute inset-0 z-0 rounded-xl focus-visible:ring-2 focus-visible:outline-none"
           onClick={onClick}
         />

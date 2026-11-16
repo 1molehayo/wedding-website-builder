@@ -39,7 +39,7 @@ export function TablePagination({
         {showPageSize ? (
           <Select
             size="sm"
-            className="min-w-32"
+            className="w-fit"
             aria-label={`${itemLabel} per page`}
             value={pageSize}
             onChange={(event) =>

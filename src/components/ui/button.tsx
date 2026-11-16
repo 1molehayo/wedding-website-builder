@@ -6,7 +6,7 @@ import { cn, cva } from '@/lib/utils'
 const buttonStyle = cva({
   base: [
     'relative inline-flex h-(--button-height) shrink-0 items-center justify-center gap-1.5 whitespace-nowrap font-medium text-(--button-text-color) shadow-xs [--button-text-color:var(--color-foreground)]',
-    'transition enabled:cursor-pointer disabled:opacity-40',
+    'transition enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-40',
     'active:scale-98',
     'focus-visible:ring-(length:--ring-width) ring-ring focus-visible:outline-none',
   ],
