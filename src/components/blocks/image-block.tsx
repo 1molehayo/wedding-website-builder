@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ImageLightbox } from '@/components/ui/image-lightbox'
+import { Skeleton } from '@/components/ui/skeleton'
 import type {
   ImagePageBlock,
   ResponsiveMediaUrls,
@@ -15,11 +16,17 @@ export function ImageBlock({
   mediaUrls?: ResponsiveMediaUrls
 }) {
   const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const desktopImage = mediaUrls?.desktop ?? null
   const mobileImage = mediaUrls?.mobile ?? null
   const showImage = Boolean(desktopImage) && !failed
   const alt = block.fields.title ?? 'Wedding photo'
+
+  useEffect(() => {
+    setFailed(false)
+    setLoaded(false)
+  }, [desktopImage, mobileImage])
 
   return (
     <section
@@ -51,10 +58,13 @@ export function ImageBlock({
           {showImage && desktopImage ? (
             <button
               type="button"
-              className="block h-full w-full cursor-zoom-in text-left"
+              className="relative block h-full w-full cursor-zoom-in text-left"
               aria-label={`Open larger view of ${alt}`}
               onClick={() => setLightboxOpen(true)}
             >
+              {!loaded ? (
+                <Skeleton className="absolute inset-0" aria-hidden />
+              ) : null}
               <picture className="block h-full w-full">
                 {mobileImage ? (
                   <source
@@ -68,8 +78,15 @@ export function ImageBlock({
                   loading="lazy"
                   decoding="async"
                   sizes="(min-width: 1024px) 64rem, 100vw"
-                  className="public-image h-full w-full object-contain"
-                  onError={() => setFailed(true)}
+                  className={cn(
+                    'public-image h-full w-full object-contain transition-opacity duration-300',
+                    loaded ? 'opacity-100' : 'opacity-0',
+                  )}
+                  onLoad={() => setLoaded(true)}
+                  onError={() => {
+                    setFailed(true)
+                    setLoaded(true)
+                  }}
                 />
               </picture>
             </button>

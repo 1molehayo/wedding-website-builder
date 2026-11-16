@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Field } from '@/components/ui/field'
+import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
 import { SideDrawer } from '@/components/ui/side-drawer'
@@ -724,10 +725,10 @@ function AdminMediaPage() {
                 >
                   <div className="bg-background-secondary aspect-4/3">
                     {asset.signedUrl ? (
-                      <img
+                      <ImageWithSkeleton
                         src={asset.signedUrl}
                         alt={asset.filename}
-                        className="h-full w-full object-cover"
+                        className="size-full"
                       />
                     ) : (
                       <div className="text-foreground-secondary flex h-full items-center justify-center text-xs uppercase tracking-wider">
@@ -958,10 +959,10 @@ function AdminMediaPage() {
                     className="border-border relative aspect-square overflow-hidden rounded-lg border"
                   >
                     {asset.signedUrl ? (
-                      <img
+                      <ImageWithSkeleton
                         src={asset.signedUrl}
                         alt={asset.filename}
-                        className="h-full w-full object-cover"
+                        className="size-full"
                       />
                     ) : (
                       <div className="bg-background-secondary h-full w-full" />
@@ -1024,10 +1025,10 @@ function AdminMediaPage() {
                           className="border-border relative aspect-square overflow-hidden rounded-lg border"
                         >
                           {asset.signedUrl ? (
-                            <img
+                            <ImageWithSkeleton
                               src={asset.signedUrl}
                               alt={asset.filename}
-                              className="h-full w-full object-cover"
+                              className="size-full"
                             />
                           ) : (
                             <div className="bg-background-secondary h-full w-full" />

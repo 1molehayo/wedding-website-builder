@@ -86,6 +86,8 @@ Do not add test data on production.
   across deploys; missing `/assets/*` paths 404 instead of returning a
   cacheable SPA shell. Public wedding loaders only map a missing slug to
   404; other loader failures surface as 500 instead of a false not-found.
+  Image previews use a shared skeleton until decode (admin page/gift media,
+  public registry and image blocks); public hero is unchanged.
 - The public Light/Dark/System control has theme-independent neutral hover and
   selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation

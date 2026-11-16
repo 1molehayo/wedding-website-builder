@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import { Field } from '@/components/ui/field'
+import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
 import { Select } from '@/components/ui/select'
@@ -232,10 +233,10 @@ function MediaUploadField({
             className="border-border mt-3 max-h-56 w-full rounded-lg border object-cover"
           />
         ) : (
-          <img
+          <ImageWithSkeleton
             src={previewUrl}
             alt={`${label} preview`}
-            className="border-border mt-3 max-h-56 w-full rounded-lg border object-cover"
+            className="border-border mt-3 aspect-4/3 w-full rounded-lg border"
           />
         )
       ) : null}
