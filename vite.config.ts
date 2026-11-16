@@ -20,7 +20,27 @@ const config = defineConfig(({ mode }) => {
     // Demo: disable Vite .env file loading so demo never reads `.env` /
     // `.env.local`. `pnpm dev:demo` injects vars from `.env.demo` only.
     envDir: isDemo ? false : undefined,
-    plugins: [nitro(), tailwindcss(), tanstackStart(), viteReact()],
+    plugins: [
+      nitro({
+        routeRules: {
+          '/**': {
+            headers: {
+              'Cache-Control':
+                'private, no-store, no-cache, must-revalidate',
+              Pragma: 'no-cache',
+            },
+          },
+          '/assets/**': {
+            headers: {
+              'Cache-Control': 'public, max-age=31536000, immutable',
+            },
+          },
+        },
+      }),
+      tailwindcss(),
+      tanstackStart(),
+      viteReact(),
+    ],
     server: {
       port: isDemo ? 3001 : 3000,
       strictPort: true,
