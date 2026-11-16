@@ -4,19 +4,19 @@
 
 Open **Activity** to see a read-only history of important actions by admins, guests, and the system. Newest actions appear first.
 
-You can filter the list by:
+Use the search box to match actor email or summary text. Open **Filters** to
+narrow by:
 
 - area, such as Guests, Registry, Pages, Media, or Settings;
-- who performed the action;
-- an admin email address; and
+- who performed the action; and
 - a date range.
 
 ### Apply filters
 
-1. Choose one or more filters.
-2. Select **Apply filters**.
+1. Open **Filters**, choose one or more options, then select **Apply**.
+2. Type in the search box to filter as you type.
 3. Use **Previous** and **Next** if there are several pages.
-4. Select **Clear** to return to the complete list.
+4. Select **Clear** in the Filters menu to reset area, actor, and dates.
 
 The Activity page is useful when you need to answer questions such as:
 
