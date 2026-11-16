@@ -236,9 +236,7 @@ function AdminFeedbackBacklogPage() {
         cell: ({ row }) => {
           const item = row.original
           if (item.category === 'praise') {
-            return (
-              <span className="text-foreground-secondary text-sm">Thanked</span>
-            )
+            return null
           }
           const busy = updatingId === item.id
           const menuItems: DropdownMenuItem[] = FEEDBACK_STATUSES.map(
