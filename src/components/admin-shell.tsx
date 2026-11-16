@@ -60,7 +60,8 @@ function SidebarNav({
           className="rounded-lg px-3 py-2 transition"
           activeOptions={{ exact: item.exact }}
           activeProps={{
-            className: 'bg-accent/25 text-sidebar-foreground',
+            className:
+              'bg-accent/25 text-sidebar-foreground font-semibold',
           }}
           inactiveProps={{
             className: 'text-sidebar-foreground/70 hover:bg-white/5',

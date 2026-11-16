@@ -705,7 +705,7 @@ export async function getPublicRegistryForWeddingId(
   const grouped = pricesByItem(prices)
   const listingsGrouped = listingsByItem(listings)
 
-  const items: PublicRegistryItem[] = await Promise.all(
+  const mappedItems: PublicRegistryItem[] = await Promise.all(
     itemsResult.data.map(async (row) => {
       const desired = Number(row.desired_qty)
       const claimed = Number(row.claimed_qty)
@@ -738,6 +738,8 @@ export async function getPublicRegistryForWeddingId(
       }
     }),
   )
+  // Guests only see gifts that still need funding.
+  const items = mappedItems.filter((item) => item.is_open)
 
   const accounts: PublicRegistryAccount[] = accountsResult.data
 
