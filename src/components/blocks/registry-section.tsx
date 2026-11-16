@@ -6,6 +6,7 @@ import { PhoneField } from '@/components/phone-field'
 import { Button } from '@/components/ui/button'
 import { CurrencyAmountField } from '@/components/ui/currency-amount-field'
 import { Field } from '@/components/ui/field'
+import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Input } from '@/components/ui/input'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { toast } from '@/components/ui/toaster'
@@ -111,10 +112,11 @@ function GiftItemCard({
           onClick={onViewDetails}
           aria-label={`View details for ${item.title}`}
         >
-          <img
+          <ImageWithSkeleton
             src={giftPhotoUrl(item.photo_path)}
             alt=""
-            className="aspect-4/3 w-full object-cover transition hover:opacity-95"
+            className="aspect-4/3 w-full"
+            imgClassName="transition hover:opacity-95"
           />
         </button>
       ) : null}
@@ -195,10 +197,10 @@ function GiftDetailsDrawer({
       <SideDrawer.Header title="Gift details" drawerDescription={item.title} />
       <SideDrawer.Content className="space-y-5">
         {item.photo_path ? (
-          <img
+          <ImageWithSkeleton
             src={giftPhotoUrl(item.photo_path)}
             alt=""
-            className="aspect-4/3 w-full rounded-md object-cover"
+            className="aspect-4/3 w-full rounded-md"
           />
         ) : null}
         <div className="space-y-3">
