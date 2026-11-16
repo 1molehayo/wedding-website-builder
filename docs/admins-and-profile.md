@@ -24,8 +24,8 @@ Only a super admin can do this.
 
 The person receives an email containing an acceptance link. Their status stays **Pending** until they accept.
 
-Search, cancelled-account visibility, page number, and page size are preserved
-in the Admins page URL. Use the controls below the table for longer lists.
+Overview cards and the Filters menu filter by status. Search, status, page
+number, and page size are preserved in the Admins page URL.
 
 ## Resend or cancel a pending invitation
 
@@ -44,7 +44,8 @@ A cancelled account can be invited again later by selecting **Send new invitatio
 - **Deletion requested** — the admin asked for their account to be removed.
 - **Cancelled** — the invitation was cancelled.
 
-Tick **Show cancelled** if you need to find old cancelled invitations.
+Open **Filters** and choose **Cancelled** if you need to find old cancelled
+invitations.
 
 ## Edit an admin's name
 

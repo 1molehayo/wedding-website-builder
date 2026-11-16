@@ -61,6 +61,8 @@ export async function submitProductFeedbackHandler(input: {
       : null
 
   const admin = createAdminSupabaseClient()
+  // Praise is acknowledged automatically — no backlog triage.
+  const status = category === 'praise' ? 'done' : 'new'
   const result = await admin
     .from('product_feedback')
     .insert({
@@ -69,6 +71,7 @@ export async function submitProductFeedbackHandler(input: {
       category,
       message,
       page_path: pagePath || null,
+      status,
     })
     .select('id')
     .single()
@@ -82,7 +85,10 @@ export async function submitProductFeedbackHandler(input: {
     action: 'feedback.submitted',
     entityType: 'product_feedback',
     entityId: result.data.id,
-    summary: `Submitted ${category} feedback.`,
+    summary:
+      category === 'praise'
+        ? 'Submitted praise feedback (auto-thanked).'
+        : `Submitted ${category} feedback.`,
   })
 
   return { ok: true as const }
@@ -98,6 +104,13 @@ export async function listProductFeedbackHandler(): Promise<{
   }
 
   const admin = createAdminSupabaseClient()
+  // Close any older praise still sitting in triage.
+  await admin
+    .from('product_feedback')
+    .update({ status: 'done' })
+    .eq('category', 'praise')
+    .in('status', ['new', 'planned'])
+
   const result = await admin
     .from('product_feedback')
     .select(
@@ -180,6 +193,24 @@ export async function updateProductFeedbackStatusHandler(input: {
   const status = parseStatus(input.status)
 
   const admin = createAdminSupabaseClient()
+  const existing = await admin
+    .from('product_feedback')
+    .select('id, category')
+    .eq('id', feedbackId)
+    .maybeSingle()
+
+  if (existing.error) {
+    throw new Error(existing.error.message)
+  }
+  if (!existing.data) {
+    throw new Error('Feedback not found.')
+  }
+  if (existing.data.category === 'praise') {
+    throw new Error(
+      'Praise is thanked automatically and does not need status changes.',
+    )
+  }
+
   const result = await admin
     .from('product_feedback')
     .update({ status })

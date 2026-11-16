@@ -77,7 +77,9 @@ Do not add test data on production.
   fit-content. The super-admin Backlog is a filterable table with a row status
   actions menu and clickable category overview cards. Activity and Registry
   use the same Filters dropdown + search pattern as Guests; Registry transfers
-  also filter by amount range and date.
+  also filter by amount range and date. Admins overview cards are clickable
+  status filters. Praise feedback is auto-thanked (saved as done) with no
+  triage actions.
 - The public Light/Dark/System control has theme-independent neutral hover and
   selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation

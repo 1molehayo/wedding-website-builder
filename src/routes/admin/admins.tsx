@@ -8,8 +8,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { ColumnDef, SortingState } from '@tanstack/react-table'
-import { useEffect, useMemo, useState } from 'react'
-import { UserPlusIcon } from '@phosphor-icons/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { FunnelIcon, UserPlusIcon } from '@phosphor-icons/react'
 import { OverviewCard } from '@/components/admin/overview-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import { DropdownMenu } from '@/components/ui/dropdown-menu'
 import type { DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { TableView } from '@/components/ui/table-view'
 import { TablePagination } from '@/components/ui/table-pagination'
@@ -46,10 +47,22 @@ import {
 } from '@/lib/errors/route-error'
 import { parsePage, parsePageSize } from '@/lib/pagination'
 
+type AdminStatusFilter = 'all' | AdminAccountStatus
+
+function parseAdminStatusFilter(value: unknown): AdminStatusFilter {
+  if (
+    typeof value === 'string' &&
+    (Object.keys(ADMIN_STATUS_LABELS)).includes(value)
+  ) {
+    return value as AdminAccountStatus
+  }
+  return 'all'
+}
+
 export const Route = createFileRoute('/admin/admins')({
   validateSearch: (search: Record<string, unknown>) => ({
     q: typeof search.q === 'string' ? search.q.slice(0, 120) : '',
-    showCancelled: search.showCancelled === true,
+    status: parseAdminStatusFilter(search.status),
     page: parsePage(search.page),
     pageSize: parsePageSize(search.pageSize),
   }),
@@ -142,12 +155,31 @@ function AdminAdminsPage() {
     [admins, selectedId],
   )
 
+  const filterDetailsRef = useRef<HTMLDetailsElement>(null)
+  const [draftStatus, setDraftStatus] = useState<AdminStatusFilter>(
+    routeSearch.status,
+  )
+
+  useEffect(() => {
+    setDraftStatus(routeSearch.status)
+  }, [routeSearch.status])
+
   const visibleAdmins = useMemo(() => {
-    if (routeSearch.showCancelled) return admins
-    return admins.filter((admin) =>
-      DEFAULT_VISIBLE_ADMIN_STATUSES.includes(admin.status),
-    )
-  }, [admins, routeSearch.showCancelled])
+    if (routeSearch.status === 'all') {
+      return admins.filter((admin) =>
+        DEFAULT_VISIBLE_ADMIN_STATUSES.includes(admin.status),
+      )
+    }
+    return admins.filter((admin) => admin.status === routeSearch.status)
+  }, [admins, routeSearch.status])
+
+  const applyStatusFilter = (status: AdminStatusFilter) => {
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, status, page: 1 }),
+    })
+  }
+
 
   const openInvite = () => {
     setIsCreating(true)
@@ -479,31 +511,90 @@ function AdminAdminsPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <OverviewCard label="Admins" value={admins.length} />
-        <OverviewCard label="Active" value={activeCount} />
-        <OverviewCard label="Pending" value={pendingCount} />
-        <OverviewCard label="Deletion requested" value={deletionCount} />
+        <OverviewCard
+          label="Admins"
+          value={admins.length}
+          active={routeSearch.status === 'all'}
+          onClick={() => applyStatusFilter('all')}
+        />
+        <OverviewCard
+          label="Active"
+          value={activeCount}
+          active={routeSearch.status === 'active'}
+          onClick={() => applyStatusFilter('active')}
+        />
+        <OverviewCard
+          label="Pending"
+          value={pendingCount}
+          active={routeSearch.status === 'pending'}
+          onClick={() => applyStatusFilter('pending')}
+        />
+        <OverviewCard
+          label="Deletion requested"
+          value={deletionCount}
+          active={routeSearch.status === 'deletion_requested'}
+          onClick={() => applyStatusFilter('deletion_requested')}
+        />
       </div>
 
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="text-foreground-secondary flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={routeSearch.showCancelled}
-              onChange={(event) =>
-                void navigate({
-                  search: (previous) => ({
-                    ...previous,
-                    showCancelled: event.target.checked,
-                    page: 1,
-                  }),
-                })
-              }
-              className="accent-accent size-4"
-            />
-            Show cancelled
-          </label>
+        <div className="flex flex-wrap justify-end gap-2">
+          <details ref={filterDetailsRef} className="relative">
+            <summary className="border-border bg-surface hover:bg-background-secondary flex h-8 cursor-pointer list-none items-center gap-2 rounded-lg border px-3 text-sm font-medium transition">
+              <FunnelIcon />
+              Filters
+              {routeSearch.status !== 'all' ? (
+                <Badge size="sm" variant="info">
+                  1
+                </Badge>
+              ) : null}
+            </summary>
+            <div className="border-border bg-surface absolute top-full right-0 z-20 mt-2 w-64 rounded-xl border p-4 shadow-lg">
+              <Field>
+                <Field.Label>Status</Field.Label>
+                <Field.Control>
+                  <Select
+                    value={draftStatus}
+                    onChange={(event) =>
+                      setDraftStatus(event.target.value as AdminStatusFilter)
+                    }
+                  >
+                    <option value="all">All visible</option>
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="deletion_requested">
+                      Deletion requested
+                    </option>
+                    <option value="cancelled">Cancelled</option>
+                  </Select>
+                </Field.Control>
+              </Field>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setDraftStatus('all')
+                    applyStatusFilter('all')
+                    filterDetailsRef.current?.removeAttribute('open')
+                  }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    applyStatusFilter(draftStatus)
+                    filterDetailsRef.current?.removeAttribute('open')
+                  }}
+                >
+                  Apply
+                </Button>
+              </div>
+            </div>
+          </details>
           <Input
             size="sm"
             className="w-full max-w-xs"
