@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button'
 import { CurrencyAmountField } from '@/components/ui/currency-amount-field'
 import { CurrencySelect } from '@/components/ui/currency-select'
 import { Field } from '@/components/ui/field'
+import { ImageWithSkeleton } from '@/components/ui/image-with-skeleton'
 import { Input } from '@/components/ui/input'
 import { PhotoDropzone } from '@/components/ui/photo-dropzone'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { Textarea } from '@/components/ui/textarea'
@@ -188,13 +190,19 @@ function GiftPhotoPreview({ path }: { path: string }) {
     }
   }, [path])
 
-  if (!url) return null
+  if (!path) return null
+
+  if (!url) {
+    return (
+      <Skeleton className="border-border aspect-4/3 w-full rounded-lg border" />
+    )
+  }
 
   return (
-    <img
+    <ImageWithSkeleton
       src={url}
       alt="Gift photo preview"
-      className="border-border max-h-56 w-full rounded-lg border object-cover"
+      className="border-border aspect-4/3 w-full rounded-lg border"
     />
   )
 }
