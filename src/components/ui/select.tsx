@@ -19,7 +19,7 @@ const Select = ({
   ...props
 }: SelectProps) => {
   return (
-    <div className="relative w-full">
+    <div className="relative">
       <select
         ref={ref}
         data-invalid={invalid || undefined}
