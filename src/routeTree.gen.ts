@@ -30,6 +30,7 @@ import { Route as AdminRegistryRouteImport } from './routes/admin/registry'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
+import { Route as AssetsSplatRouteImport } from './routes/assets.$'
 import { Route as PhotosTokenRouteImport } from './routes/photos.$token'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
@@ -141,6 +142,11 @@ const ApiPhotoRoute = ApiPhotoRouteImport.update({
   path: '/api/photo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssetsSplatRoute = AssetsSplatRouteImport.update({
+  id: '/assets/$',
+  path: '/assets/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PhotosTokenRoute = PhotosTokenRouteImport.update({
   id: '/photos/$token',
   path: '/photos/$token',
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/assets/$': typeof AssetsSplatRoute
   '/photos/$token': typeof PhotosTokenRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/assets/$': typeof AssetsSplatRoute
   '/photos/$token': typeof PhotosTokenRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin': typeof AdminIndexRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/support': typeof AdminSupportRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/assets/$': typeof AssetsSplatRoute
   '/photos/$token': typeof PhotosTokenRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
+    | '/assets/$'
     | '/photos/$token'
     | '/rsvp/$token'
     | '/admin/'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
+    | '/assets/$'
     | '/photos/$token'
     | '/rsvp/$token'
     | '/admin'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/support'
     | '/api/photo'
+    | '/assets/$'
     | '/photos/$token'
     | '/rsvp/$token'
     | '/admin/'
@@ -346,6 +358,7 @@ export interface RootRouteChildren {
   DesignRoute: typeof DesignRoute
   PrivacyRoute: typeof PrivacyRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
+  AssetsSplatRoute: typeof AssetsSplatRoute
   PhotosTokenRoute: typeof PhotosTokenRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
   ApiCronRegistryRemindersRoute: typeof ApiCronRegistryRemindersRoute
@@ -501,6 +514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPhotoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assets/$': {
+      id: '/assets/$'
+      path: '/assets/$'
+      fullPath: '/assets/$'
+      preLoaderRoute: typeof AssetsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/photos/$token': {
       id: '/photos/$token'
       path: '/photos/$token'
@@ -587,6 +607,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesignRoute: DesignRoute,
   PrivacyRoute: PrivacyRoute,
   ApiPhotoRoute: ApiPhotoRoute,
+  AssetsSplatRoute: AssetsSplatRoute,
   PhotosTokenRoute: PhotosTokenRoute,
   RsvpTokenRoute: RsvpTokenRoute,
   ApiCronRegistryRemindersRoute: ApiCronRegistryRemindersRoute,

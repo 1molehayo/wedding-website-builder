@@ -12,12 +12,19 @@ import { AppRouteError, NotFoundPage } from '@/components/app-error-page'
 import { formatCoupleNames, PRODUCT_NAME } from '@/lib/constants'
 import { COLOR_MODE_INIT_SCRIPT } from '@/lib/color-mode'
 import { internalError, raiseRouteError } from '@/lib/errors/route-error'
+import { installChunkErrorReload } from '@/lib/reload-on-chunk-error'
 import { FALLBACK_PUBLIC_THEME } from '@/lib/site-settings'
 import { hasPublicWedding } from '@/lib/wedding/public-settings'
 import { getPublicWeddingSettings } from '@/lib/wedding/settings'
 import { isReservedPublicSlug } from '@/lib/wedding/slug'
 
 import appCss from '../styles/app.css?url'
+
+/** Prevent browsers from keeping a stale HTML shell across deploys. */
+const DOCUMENT_CACHE_HEADERS = {
+  'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+  Pragma: 'no-cache',
+} as const
 
 function isPlatformPath(pathname: string): boolean {
   if (pathname === '/') return true
@@ -53,6 +60,7 @@ function themeKeyForPath(pathname: string): string {
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
+  headers: () => DOCUMENT_CACHE_HEADERS,
   // Reloading this route marks it pending and replaces the whole document,
   // including the admin sidebar. Only reload when the public theme scope changes.
   pendingMs: Number.POSITIVE_INFINITY,
@@ -138,6 +146,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     clientThemeKey = themeKeyForPath(pathname)
   }, [pathname])
+
+  useEffect(() => installChunkErrorReload(), [])
 
   return (
     <html lang="en" data-theme={publicTheme} suppressHydrationWarning>

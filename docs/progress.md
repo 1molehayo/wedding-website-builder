@@ -80,8 +80,11 @@ Do not add test data on production.
   also filter by amount range and date. Admins overview cards are clickable
   status filters.   Praise feedback is auto-thanked (saved as done) with no
   triage actions. Fully funded public gifts are omitted from the guest
-  registry. Active public section nav and admin sidebar links use bolder
-  type for clearer selection across themes.
+  registry.   Active public section nav and admin sidebar links use bolder
+  type for clearer selection across themes. Document responses use
+  `no-store` cache headers so browsers do not keep a stale HTML shell
+  across deploys; missing `/assets/*` paths 404 instead of returning a
+  cacheable SPA shell.
 - The public Light/Dark/System control has theme-independent neutral hover and
   selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation
