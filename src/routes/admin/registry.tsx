@@ -1,12 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { InfoIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
-import { useEffect, useMemo, useState } from 'react'
+import { FunnelIcon, InfoIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ContributionAuditDrawer } from '@/components/admin/contribution-audit'
 import { RecordAmazonPurchaseDrawer } from '@/components/admin/record-amazon-purchase'
 import { AccountForm, GiftItemForm } from '@/components/admin/registry-forms'
+import { AmountRangeSlider } from '@/components/ui/amount-range-slider'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { SideDrawer } from '@/components/ui/side-drawer'
 import { TablePagination } from '@/components/ui/table-pagination'
 import { toast } from '@/components/ui/toaster'
@@ -21,9 +26,57 @@ import type {
   RegistryAdminData,
 } from '@/lib/registry/registry'
 import { REGISTRY_ITEM_STATUS_LABELS } from '@/lib/registry/schema'
-import type { RegistryAccount } from '@/lib/supabase/types'
+import type {
+  RegistryAccount,
+  RegistryContributionStatus,
+} from '@/lib/supabase/types'
 import { paginateItems, parsePage, parsePageSize } from '@/lib/pagination'
 import { cn } from '@/lib/utils'
+
+type TabId = 'gifts' | 'accounts' | 'transfers'
+type GiftStatusFilter = 'all' | keyof typeof REGISTRY_ITEM_STATUS_LABELS
+type TransferStatusFilter = 'all' | RegistryContributionStatus
+
+const GIFT_STATUS_OPTIONS = Object.keys(
+  REGISTRY_ITEM_STATUS_LABELS,
+) as Array<keyof typeof REGISTRY_ITEM_STATUS_LABELS>
+
+const TRANSFER_STATUS_OPTIONS = Object.keys(
+  CONTRIBUTION_STATUS_LABELS,
+) as RegistryContributionStatus[]
+
+function parseOptionalNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function parseGiftStatus(value: unknown): GiftStatusFilter {
+  if (
+    typeof value === 'string' &&
+    (GIFT_STATUS_OPTIONS as readonly string[]).includes(value)
+  ) {
+    return value as GiftStatusFilter
+  }
+  return 'all'
+}
+
+function parseTransferStatus(value: unknown): TransferStatusFilter {
+  if (
+    typeof value === 'string' &&
+    (TRANSFER_STATUS_OPTIONS as readonly string[]).includes(value)
+  ) {
+    return value as TransferStatusFilter
+  }
+  return 'all'
+}
+
+function dateKey(value: string) {
+  return value.slice(0, 10)
+}
 
 export const Route = createFileRoute('/admin/registry')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -35,6 +88,13 @@ export const Route = createFileRoute('/admin/registry')({
       tab,
       page: parsePage(search.page),
       pageSize: parsePageSize(search.pageSize),
+      q: typeof search.q === 'string' ? search.q : '',
+      giftStatus: parseGiftStatus(search.giftStatus),
+      transferStatus: parseTransferStatus(search.transferStatus),
+      amountMin: parseOptionalNumber(search.amountMin),
+      amountMax: parseOptionalNumber(search.amountMax),
+      from: typeof search.from === 'string' ? search.from : '',
+      to: typeof search.to === 'string' ? search.to : '',
     }
   },
   beforeLoad: ({ context }) => {
@@ -46,8 +106,6 @@ export const Route = createFileRoute('/admin/registry')({
     context.queryClient.ensureQueryData(registryQueryOptions()),
   component: AdminRegistryPage,
 })
-
-type TabId = 'gifts' | 'accounts' | 'transfers'
 
 type AdminGift = RegistryAdminData['items'][number]
 
@@ -62,14 +120,143 @@ function AdminRegistryPage() {
   const accounts = data.accounts
   const reservations = data.reservations
   const contributions = data.contributions
-  const pagedItems = paginateItems(items, routeSearch.page, routeSearch.pageSize)
-  const pagedContributions = paginateItems(
+  const filterDetailsRef = useRef<HTMLDetailsElement>(null)
+
+  const amountBounds = useMemo(() => {
+    if (contributions.length === 0) {
+      return { min: 0, max: 0, currency: 'USD' }
+    }
+    const values = contributions.map((row) => row.amount_base)
+    const min = Math.floor(Math.min(...values))
+    const max = Math.ceil(Math.max(...values))
+    return {
+      min,
+      max: Math.max(max, min),
+      currency: contributions[0]?.base_currency ?? 'USD',
+    }
+  }, [contributions])
+
+  const [draftGiftStatus, setDraftGiftStatus] = useState(
+    routeSearch.giftStatus,
+  )
+  const [draftTransferStatus, setDraftTransferStatus] = useState(
+    routeSearch.transferStatus,
+  )
+  const [draftFrom, setDraftFrom] = useState(routeSearch.from)
+  const [draftTo, setDraftTo] = useState(routeSearch.to)
+  const [draftAmountMin, setDraftAmountMin] = useState(
+    routeSearch.amountMin ?? amountBounds.min,
+  )
+  const [draftAmountMax, setDraftAmountMax] = useState(
+    routeSearch.amountMax ?? amountBounds.max,
+  )
+
+  useEffect(() => {
+    setDraftGiftStatus(routeSearch.giftStatus)
+    setDraftTransferStatus(routeSearch.transferStatus)
+    setDraftFrom(routeSearch.from)
+    setDraftTo(routeSearch.to)
+    setDraftAmountMin(routeSearch.amountMin ?? amountBounds.min)
+    setDraftAmountMax(routeSearch.amountMax ?? amountBounds.max)
+  }, [
+    amountBounds.max,
+    amountBounds.min,
+    routeSearch.amountMax,
+    routeSearch.amountMin,
+    routeSearch.from,
+    routeSearch.giftStatus,
+    routeSearch.to,
+    routeSearch.transferStatus,
+  ])
+
+  const filteredGifts = useMemo(() => {
+    const query = routeSearch.q.trim().toLowerCase()
+    return items.filter((item) => {
+      if (
+        routeSearch.giftStatus !== 'all' &&
+        item.status !== routeSearch.giftStatus
+      ) {
+        return false
+      }
+      if (!query) return true
+      const haystack = [
+        item.title,
+        item.description ?? '',
+        item.store_url ?? '',
+        REGISTRY_ITEM_STATUS_LABELS[item.status],
+        ...item.prices.map((price) => `${price.amount} ${price.currency}`),
+      ]
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [items, routeSearch.giftStatus, routeSearch.q])
+
+  const filteredContributions = useMemo(() => {
+    const query = routeSearch.q.trim().toLowerCase()
+    return contributions.filter((row) => {
+      if (
+        routeSearch.transferStatus !== 'all' &&
+        row.status !== routeSearch.transferStatus
+      ) {
+        return false
+      }
+      if (
+        routeSearch.amountMin != null &&
+        row.amount_base < routeSearch.amountMin
+      ) {
+        return false
+      }
+      if (
+        routeSearch.amountMax != null &&
+        row.amount_base > routeSearch.amountMax
+      ) {
+        return false
+      }
+      const created = dateKey(row.created_at)
+      if (routeSearch.from && created < routeSearch.from) return false
+      if (routeSearch.to && created > routeSearch.to) return false
+      if (!query) return true
+      const haystack = [
+        row.payer_name,
+        row.payer_email,
+        row.payer_phone ?? '',
+        row.gift_title ?? 'Direct donation',
+        row.bank?.reference ?? '',
+        CONTRIBUTION_STATUS_LABELS[row.status],
+        `${row.amount} ${row.currency}`,
+        `${row.amount_base} ${row.base_currency}`,
+      ]
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [
     contributions,
+    routeSearch.amountMax,
+    routeSearch.amountMin,
+    routeSearch.from,
+    routeSearch.q,
+    routeSearch.to,
+    routeSearch.transferStatus,
+  ])
+
+  const pagedItems = paginateItems(
+    filteredGifts,
+    routeSearch.page,
+    routeSearch.pageSize,
+  )
+  const pagedContributions = paginateItems(
+    filteredContributions,
     routeSearch.page,
     routeSearch.pageSize,
   )
   const currentTotal =
-    tab === 'gifts' ? items.length : tab === 'transfers' ? contributions.length : 0
+    tab === 'gifts'
+      ? filteredGifts.length
+      : tab === 'transfers'
+        ? filteredContributions.length
+        : 0
   const currentPageCount = Math.max(
     1,
     Math.ceil(currentTotal / routeSearch.pageSize),
@@ -117,6 +304,74 @@ function AdminRegistryPage() {
       ),
     ]
   }, [accounts])
+
+  const activeFilterCount =
+    tab === 'gifts'
+      ? routeSearch.giftStatus !== 'all'
+        ? 1
+        : 0
+      : tab === 'transfers'
+        ? (routeSearch.transferStatus !== 'all' ? 1 : 0) +
+          (routeSearch.from ? 1 : 0) +
+          (routeSearch.to ? 1 : 0) +
+          (routeSearch.amountMin != null || routeSearch.amountMax != null
+            ? 1
+            : 0)
+        : 0
+
+  const applyFilters = () => {
+    if (tab === 'gifts') {
+      void navigate({
+        replace: true,
+        search: (previous) => ({
+          ...previous,
+          giftStatus: draftGiftStatus,
+          page: 1,
+        }),
+      })
+    } else if (tab === 'transfers') {
+      const amountMin =
+        draftAmountMin <= amountBounds.min ? null : draftAmountMin
+      const amountMax =
+        draftAmountMax >= amountBounds.max ? null : draftAmountMax
+      void navigate({
+        replace: true,
+        search: (previous) => ({
+          ...previous,
+          transferStatus: draftTransferStatus,
+          from: draftFrom,
+          to: draftTo,
+          amountMin,
+          amountMax,
+          page: 1,
+        }),
+      })
+    }
+    filterDetailsRef.current?.removeAttribute('open')
+  }
+
+  const clearFilters = () => {
+    setDraftGiftStatus('all')
+    setDraftTransferStatus('all')
+    setDraftFrom('')
+    setDraftTo('')
+    setDraftAmountMin(amountBounds.min)
+    setDraftAmountMax(amountBounds.max)
+    void navigate({
+      replace: true,
+      search: (previous) => ({
+        ...previous,
+        giftStatus: 'all',
+        transferStatus: 'all',
+        from: '',
+        to: '',
+        amountMin: null,
+        amountMax: null,
+        page: 1,
+      }),
+    })
+    filterDetailsRef.current?.removeAttribute('open')
+  }
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.registry })
@@ -228,10 +483,149 @@ function AdminRegistryPage() {
         ))}
       </div>
 
+      {tab === 'gifts' || tab === 'transfers' ? (
+        <div className="flex flex-wrap justify-end gap-2">
+          <details ref={filterDetailsRef} className="relative">
+            <summary className="border-border bg-surface hover:bg-background-secondary flex h-8 cursor-pointer list-none items-center gap-2 rounded-lg border px-3 text-sm font-medium transition">
+              <FunnelIcon />
+              Filters
+              {activeFilterCount > 0 ? (
+                <Badge size="sm" variant="info">
+                  {activeFilterCount}
+                </Badge>
+              ) : null}
+            </summary>
+            <div className="border-border bg-surface absolute top-full right-0 z-20 mt-2 w-80 space-y-3 rounded-xl border p-4 shadow-lg">
+              {tab === 'gifts' ? (
+                <Field>
+                  <Field.Label>Status</Field.Label>
+                  <Field.Control>
+                    <Select
+                      value={draftGiftStatus}
+                      onChange={(event) =>
+                        setDraftGiftStatus(
+                          event.target.value as GiftStatusFilter,
+                        )
+                      }
+                    >
+                      <option value="all">All statuses</option>
+                      {GIFT_STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {REGISTRY_ITEM_STATUS_LABELS[status]}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field.Control>
+                </Field>
+              ) : (
+                <>
+                  <Field>
+                    <Field.Label>Status</Field.Label>
+                    <Field.Control>
+                      <Select
+                        value={draftTransferStatus}
+                        onChange={(event) =>
+                          setDraftTransferStatus(
+                            event.target.value as TransferStatusFilter,
+                          )
+                        }
+                      >
+                        <option value="all">All statuses</option>
+                        {TRANSFER_STATUS_OPTIONS.map((status) => (
+                          <option key={status} value={status}>
+                            {CONTRIBUTION_STATUS_LABELS[status]}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field.Control>
+                  </Field>
+                  <Field>
+                    <Field.Label>
+                      Amount ({amountBounds.currency} base)
+                    </Field.Label>
+                    <Field.Control>
+                      <AmountRangeSlider
+                        min={amountBounds.min}
+                        max={amountBounds.max}
+                        valueMin={draftAmountMin}
+                        valueMax={draftAmountMax}
+                        currencyLabel={amountBounds.currency}
+                        onChange={({ min, max }) => {
+                          setDraftAmountMin(min)
+                          setDraftAmountMax(max)
+                        }}
+                      />
+                    </Field.Control>
+                  </Field>
+                  <Field>
+                    <Field.Label>From</Field.Label>
+                    <Field.Control>
+                      <Input
+                        type="date"
+                        value={draftFrom}
+                        onChange={(event) => setDraftFrom(event.target.value)}
+                      />
+                    </Field.Control>
+                  </Field>
+                  <Field>
+                    <Field.Label>To</Field.Label>
+                    <Field.Control>
+                      <Input
+                        type="date"
+                        value={draftTo}
+                        onChange={(event) => setDraftTo(event.target.value)}
+                      />
+                    </Field.Control>
+                  </Field>
+                </>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearFilters}
+                >
+                  Clear
+                </Button>
+                <Button type="button" size="sm" onClick={applyFilters}>
+                  Apply
+                </Button>
+              </div>
+            </div>
+          </details>
+          <Input
+            size="sm"
+            className="w-full max-w-xs"
+            value={routeSearch.q}
+            onChange={(event) =>
+              void navigate({
+                replace: true,
+                search: (previous) => ({
+                  ...previous,
+                  q: event.target.value,
+                  page: 1,
+                }),
+              })
+            }
+            placeholder={
+              tab === 'gifts'
+                ? 'Search title, link, status'
+                : 'Search payer, gift, reference'
+            }
+            aria-label={tab === 'gifts' ? 'Search gifts' : 'Search transfers'}
+          />
+        </div>
+      ) : null}
+
       {tab === 'gifts' ? (
         items.length === 0 ? (
           <p className="text-foreground-secondary text-sm">
             No gifts yet. Add one with a single price.
+          </p>
+        ) : filteredGifts.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            No gifts match these filters.
           </p>
         ) : (
           <ul className="space-y-3">
@@ -347,6 +741,10 @@ function AdminRegistryPage() {
           <p className="text-foreground-secondary text-sm">
             No transfers yet. They appear when a guest starts a contribution on
             the public registry.
+          </p>
+        ) : filteredContributions.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            No transfers match these filters.
           </p>
         ) : (
           <ul className="space-y-3">

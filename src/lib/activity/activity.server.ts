@@ -177,7 +177,10 @@ export async function listActivityLogsHandler(
     query = query.eq('actor_role', input.actorRole)
   }
   if (input.query) {
-    query = query.ilike('actor_email', `%${input.query}%`)
+    const pattern = `%${input.query.replaceAll(/[%_,]/g, '')}%`
+    query = query.or(
+      `actor_email.ilike."${pattern}",summary.ilike."${pattern}"`,
+    )
   }
   if (input.from) {
     query = query.gte('created_at', input.from)
