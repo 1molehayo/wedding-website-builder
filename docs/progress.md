@@ -75,7 +75,9 @@ Do not add test data on production.
   registry gifts/transfers, media/shares, notifications, and activity.
   Disabled page controls use a not-allowed cursor; the page-size control is
   fit-content. The super-admin Backlog is a filterable table with a row status
-  actions menu and clickable category overview cards.
+  actions menu and clickable category overview cards. Activity and Registry
+  use the same Filters dropdown + search pattern as Guests; Registry transfers
+  also filter by amount range and date.
 - The public Light/Dark/System control has theme-independent neutral hover and
   selected states, with separate high-contrast light and dark palettes.
 - Registry contributions use two distinct emails: a fixed guest-confirmation
@@ -240,7 +242,7 @@ Phase 1 schema is in `supabase/migrations/20261108230000_registry_contributions_
 
 **Confirm reminders (Nov 9, in code):** Daily cron `GET/POST /api/cron/registry-reminders` (Bearer `CRON_SECRET`, `vercel.json` at 14:00 UTC). Up to 3 emails, one day apart, stop when `applied_at` is set. Activity `system.reminder_sent`.
 
-**Activity logs (Nov 9, in code):** Admin → Activity (filters: area, actor role, email, date). `recordActivity` / `recordAdminActivity` wired for guests, registry, pages, media/shares, settings, profile, admins, feedback, auth login/logout, and system reminder/thank-you.
+**Activity logs (Nov 9, in code):** Admin → Activity (Filters dropdown: area, actor role, date; live search on email/summary). `recordActivity` / `recordAdminActivity` wired for guests, registry, pages, media/shares, settings, profile, admins, feedback, auth login/logout, and system reminder/thank-you.
 
 **Amazon on a gift (Nov 9, in code):** `registry_item_listings` migration. Admin gift form Amazon link. Public “Buy on Amazon” + bank Contribute. Transfers → Record Amazon (external_store, applied immediately as Received). No Amazon API/webhooks. Apply migration `20261109010000_registry_item_listings.sql`.
 

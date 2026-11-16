@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { FunnelIcon } from '@phosphor-icons/react'
+import { useEffect, useRef, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -89,31 +91,55 @@ function AdminActivityPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const { data = initial } = useQuery(activityQueryOptions(search))
-  const [area, setArea] = useState(search.area)
-  const [actorRole, setActorRole] = useState(search.actorRole)
-  const [query, setQuery] = useState(search.q)
-  const [from, setFrom] = useState(search.from)
-  const [to, setTo] = useState(search.to)
+  const filterDetailsRef = useRef<HTMLDetailsElement>(null)
+  const [draftArea, setDraftArea] = useState(search.area)
+  const [draftActorRole, setDraftActorRole] = useState(search.actorRole)
+  const [draftFrom, setDraftFrom] = useState(search.from)
+  const [draftTo, setDraftTo] = useState(search.to)
 
   useEffect(() => {
-    setArea(search.area)
-    setActorRole(search.actorRole)
-    setQuery(search.q)
-    setFrom(search.from)
-    setTo(search.to)
-  }, [search])
+    setDraftArea(search.area)
+    setDraftActorRole(search.actorRole)
+    setDraftFrom(search.from)
+    setDraftTo(search.to)
+  }, [search.area, search.actorRole, search.from, search.to])
+
+  const activeFilterCount =
+    (search.area ? 1 : 0) +
+    (search.actorRole ? 1 : 0) +
+    (search.from ? 1 : 0) +
+    (search.to ? 1 : 0)
 
   const applyFilters = () => {
     void navigate({
-      search: {
-        area,
-        actorRole,
-        q: query.trim(),
-        from,
-        to,
+      search: (previous) => ({
+        ...previous,
+        area: draftArea,
+        actorRole: draftActorRole,
+        from: draftFrom,
+        to: draftTo,
         page: 1,
-      },
+      }),
     })
+    filterDetailsRef.current?.removeAttribute('open')
+  }
+
+  const clearFilters = () => {
+    setDraftArea('')
+    setDraftActorRole('')
+    setDraftFrom('')
+    setDraftTo('')
+    void navigate({
+      search: (previous) => ({
+        ...previous,
+        area: '',
+        actorRole: '',
+        from: '',
+        to: '',
+        page: 1,
+      }),
+    })
+    filterDetailsRef.current?.removeAttribute('open')
   }
 
   return (
@@ -125,140 +151,145 @@ function AdminActivityPage() {
         </p>
       </div>
 
-      <form
-        className="bg-surface border-border grid gap-3 rounded-xl border p-4 md:grid-cols-2 lg:grid-cols-3"
-        onSubmit={(event) => {
-          event.preventDefault()
-          applyFilters()
-        }}
-      >
-        <Field>
-          <Field.Label>Area</Field.Label>
-          <Field.Control>
-            <Select
-              value={area}
-              onChange={(event) => setArea(event.target.value)}
-            >
-              <option value="">All areas</option>
-              {ACTIVITY_AREAS.map((id) => (
-                <option key={id} value={id}>
-                  {AREA_LABELS[id]}
-                </option>
-              ))}
-            </Select>
-          </Field.Control>
-        </Field>
-        <Field>
-          <Field.Label>Actor</Field.Label>
-          <Field.Control>
-            <Select
-              value={actorRole}
-              onChange={(event) => setActorRole(event.target.value)}
-            >
-              {ACTOR_ROLES.map((role) => (
-                <option key={role.label} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </Select>
-          </Field.Control>
-        </Field>
-        <Field>
-          <Field.Label>Actor email</Field.Label>
-          <Field.Control>
-            <Input
-              value={query}
-              placeholder="Contains…"
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </Field.Control>
-        </Field>
-        <Field>
-          <Field.Label>From</Field.Label>
-          <Field.Control>
-            <Input
-              type="date"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field.Control>
-        </Field>
-        <Field>
-          <Field.Label>To</Field.Label>
-          <Field.Control>
-            <Input
-              type="date"
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field.Control>
-        </Field>
-        <div className="flex items-end gap-2">
-          <Button type="submit" size="sm">
-            Apply filters
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              void navigate({
-                search: {
-                  area: '',
-                  actorRole: '',
-                  q: '',
-                  from: '',
-                  to: '',
-                  page: 1,
-                },
-              })
-            }}
-          >
-            Clear
-          </Button>
-        </div>
-      </form>
-
-      {data.items.length === 0 ? (
-        <p className="text-foreground-secondary text-sm">
-          No activity matches these filters yet.
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {data.items.map((row) => (
-            <li
-              key={row.id}
-              className="bg-surface border-border rounded-xl border p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <p className="font-medium">{row.summary}</p>
-                <p className="text-foreground-secondary text-xs whitespace-nowrap">
-                  {formatWhen(row.created_at)}
-                </p>
+      <div className="space-y-3">
+        <div className="flex flex-wrap justify-end gap-2">
+          <details ref={filterDetailsRef} className="relative">
+            <summary className="border-border bg-surface hover:bg-background-secondary flex h-8 cursor-pointer list-none items-center gap-2 rounded-lg border px-3 text-sm font-medium transition">
+              <FunnelIcon />
+              Filters
+              {activeFilterCount > 0 ? (
+                <Badge size="sm" variant="info">
+                  {activeFilterCount}
+                </Badge>
+              ) : null}
+            </summary>
+            <div className="border-border bg-surface absolute top-full right-0 z-20 mt-2 w-72 space-y-3 rounded-xl border p-4 shadow-lg">
+              <Field>
+                <Field.Label>Area</Field.Label>
+                <Field.Control>
+                  <Select
+                    value={draftArea}
+                    onChange={(event) => setDraftArea(event.target.value)}
+                  >
+                    <option value="">All areas</option>
+                    {ACTIVITY_AREAS.map((id) => (
+                      <option key={id} value={id}>
+                        {AREA_LABELS[id]}
+                      </option>
+                    ))}
+                  </Select>
+                </Field.Control>
+              </Field>
+              <Field>
+                <Field.Label>Actor</Field.Label>
+                <Field.Control>
+                  <Select
+                    value={draftActorRole}
+                    onChange={(event) => setDraftActorRole(event.target.value)}
+                  >
+                    {ACTOR_ROLES.map((role) => (
+                      <option key={role.label} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
+                  </Select>
+                </Field.Control>
+              </Field>
+              <Field>
+                <Field.Label>From</Field.Label>
+                <Field.Control>
+                  <Input
+                    type="date"
+                    value={draftFrom}
+                    onChange={(event) => setDraftFrom(event.target.value)}
+                  />
+                </Field.Control>
+              </Field>
+              <Field>
+                <Field.Label>To</Field.Label>
+                <Field.Control>
+                  <Input
+                    type="date"
+                    value={draftTo}
+                    onChange={(event) => setDraftTo(event.target.value)}
+                  />
+                </Field.Control>
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearFilters}
+                >
+                  Clear
+                </Button>
+                <Button type="button" size="sm" onClick={applyFilters}>
+                  Apply
+                </Button>
               </div>
-              <p className="text-foreground-secondary mt-1 text-sm">
-                {areaFromAction(row.action)} · {row.action}
-                {row.actor_email
-                  ? ` · ${row.actor_email}`
-                  : ` · ${row.actor_role}`}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
+            </div>
+          </details>
+          <Input
+            size="sm"
+            className="w-full max-w-xs"
+            value={search.q}
+            onChange={(event) =>
+              void navigate({
+                replace: true,
+                search: (previous) => ({
+                  ...previous,
+                  q: event.target.value,
+                  page: 1,
+                }),
+              })
+            }
+            placeholder="Search email or summary"
+            aria-label="Search activity"
+          />
+        </div>
 
-      {data.total > data.limit ? (
-        <TablePagination
-          page={search.page}
-          pageSize={data.limit}
-          totalRows={data.total}
-          itemLabel="events"
-          showPageSize={false}
-          onPageChange={(page) =>
-            void navigate({ search: { ...search, page } })
-          }
-        />
-      ) : null}
+        {data.items.length === 0 ? (
+          <p className="text-foreground-secondary text-sm">
+            No activity matches these filters yet.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {data.items.map((row) => (
+              <li
+                key={row.id}
+                className="bg-surface border-border rounded-xl border p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-medium">{row.summary}</p>
+                  <p className="text-foreground-secondary text-xs whitespace-nowrap">
+                    {formatWhen(row.created_at)}
+                  </p>
+                </div>
+                <p className="text-foreground-secondary mt-1 text-sm">
+                  {areaFromAction(row.action)} · {row.action}
+                  {row.actor_email
+                    ? ` · ${row.actor_email}`
+                    : ` · ${row.actor_role}`}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {data.total > data.limit ? (
+          <TablePagination
+            page={search.page}
+            pageSize={data.limit}
+            totalRows={data.total}
+            itemLabel="events"
+            showPageSize={false}
+            onPageChange={(page) =>
+              void navigate({ search: (previous) => ({ ...previous, page }) })
+            }
+          />
+        ) : null}
+      </div>
     </div>
   )
 }

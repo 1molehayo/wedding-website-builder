@@ -10,6 +10,10 @@ The app does not take card payments. Guests send money by bank transfer, and adm
 - **Cash accounts** — the bank accounts guests can pay into.
 - **Transfers** — guest contributions that need to be checked.
 
+Gift items and Transfers include a search box and a **Filters** menu (same
+pattern as Guests). Transfers can also filter by status, amount range (base
+currency), and date.
+
 ## Add a gift
 
 Most gifts only need a **title**, a **price**, and at least one **bank account**.
