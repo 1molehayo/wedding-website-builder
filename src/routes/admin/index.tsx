@@ -77,7 +77,7 @@ function AdminOverviewPage() {
                   to="/admin/admins"
                   search={{
                     q: '',
-                    showCancelled: false,
+                    status: 'all',
                     page: 1,
                     pageSize: 10,
                   }}

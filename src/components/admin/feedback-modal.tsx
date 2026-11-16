@@ -46,7 +46,11 @@ export function FeedbackModal({
           pagePath: pathname,
         },
       })
-      toast.success('Thanks. We received your feedback.')
+      toast.success(
+        category === 'praise'
+          ? "Thank you — we're glad you enjoyed it."
+          : 'Thanks. We received your feedback.',
+      )
       setMessage('')
       setCategory('general')
       onOpenChange(false)
