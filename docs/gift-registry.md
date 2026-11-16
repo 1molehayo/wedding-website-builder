@@ -99,7 +99,10 @@ Amazon’s guest list often shows **Contribute** / **Buying options** instead of
 The app does not import Amazon orders automatically. Record the purchase under **Transfers → Record Amazon**.
 
 ::: warning Gift status does not stop payments
-Changing **Status** to Reserved or Purchased does not by itself remove the **Send money** option. To stop new contributions, untick **Visible on public registry** or make sure the gift is fully funded.
+Changing **Status** to Reserved or Purchased does not by itself remove a gift
+from the public list. Fully funded gifts (remaining amount is zero) are hidden
+from the public website automatically. To hide a gift earlier, untick
+**Visible on public registry**.
 :::
 
 ## Edit or hide a gift

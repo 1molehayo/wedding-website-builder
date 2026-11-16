@@ -583,6 +583,7 @@ html[data-theme='nocturne'][data-mode='dark'] .public-hero-photo-overlay {
 
 .public-section-nav-link[data-active='true'] {
   color: var(--color-foreground);
+  font-weight: 700;
 }
 
 .public-image {
